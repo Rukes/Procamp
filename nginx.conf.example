@@ -1,0 +1,59 @@
+# Nginx konfigurace pro ProCamp
+# Soubor zkopírujte do /etc/nginx/sites-available/procamp a upravte domény
+
+# API backend
+server {
+    listen 80;
+    server_name api.vas-domen.cz;
+
+    location / {
+        proxy_pass http://127.0.0.1:3001;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+
+# Admin panel
+server {
+    listen 80;
+    server_name admin.vas-domen.cz;
+
+    root /var/www/procamp/admin;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}
+
+# Rezervační formuláře (iframe)
+server {
+    listen 80;
+    server_name form.vas-domen.cz;
+
+    root /var/www/procamp/form;
+    index index.html;
+
+    # Povolení iframe vložení z jakékoli domény
+    add_header X-Frame-Options "";
+    add_header Content-Security-Policy "frame-ancestors *";
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+}

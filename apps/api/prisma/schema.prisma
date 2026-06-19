@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  isSuperAdmin Boolean  @default(false)
+  permissions  Json     @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Language {
+  id        String   @id @default(cuid())
+  code      String   @unique
+  name      String
+  isDefault Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model Camp {
+  id                    String         @id @default(cuid())
+  name                  String
+  slug                  String         @unique
+  notificationEmail     String
+  smtpHost              String         @default("")
+  smtpPort              Int            @default(587)
+  smtpUser              String         @default("")
+  smtpPasswordEncrypted String         @default("")
+  smtpFrom              String         @default("")
+  caravanCapacity       Int            @default(0)
+  tentCapacity          Int            @default(0)
+  caravanPricePerNight  Float          @default(0)
+  tentPricePerNight     Float          @default(0)
+  adultPricePerNight    Float          @default(0)
+  childPricePerNight    Float          @default(0)
+  currency              String         @default("CZK")
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  surcharges            Surcharge[]
+  reservations          Reservation[]
+  emailTemplates        EmailTemplate[]
+}
+
+model Surcharge {
+  id            String   @id @default(cuid())
+  campId        String
+  camp          Camp     @relation(fields: [campId], references: [id], onDelete: Cascade)
+  pricePerNight Float
+  isOptional    Boolean  @default(true)
+  translations  Json     @default("{}")
+  createdAt     DateTime @default(now())
+
+  reservationSurcharges ReservationSurcharge[]
+}
+
+model Reservation {
+  id                 String               @id @default(cuid())
+  campId             String
+  camp               Camp                 @relation(fields: [campId], references: [id], onDelete: Restrict)
+  accommodationType  String
+  checkIn            DateTime
+  checkOut           DateTime
+  adults             Int
+  children           Int
+  firstName          String
+  lastName           String
+  email              String
+  phone              String
+  licensePlate       String?
+  expectedArrival    String?
+  note               String?
+  totalPrice         Float
+  status             String               @default("PENDING")
+  languageCode       String               @default("cs")
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  surcharges         ReservationSurcharge[]
+}
+
+model ReservationSurcharge {
+  id            String      @id @default(cuid())
+  reservationId String
+  reservation   Reservation @relation(fields: [reservationId], references: [id], onDelete: Cascade)
+  surchargeId   String
+  surcharge     Surcharge   @relation(fields: [surchargeId], references: [id], onDelete: Restrict)
+  priceSnapshot Float
+
+  @@unique([reservationId, surchargeId])
+}
+
+model EmailTemplate {
+  id           String   @id @default(cuid())
+  campId       String
+  camp         Camp     @relation(fields: [campId], references: [id], onDelete: Cascade)
+  type         String
+  languageCode String
+  subject      String
+  body         String   @db.Text
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([campId, type, languageCode])
+}
