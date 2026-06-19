@@ -1,5 +1,3 @@
-export type AccommodationType = "CARAVAN" | "TENT";
-
 export type ReservationStatus = "PENDING" | "CONFIRMED" | "CANCELLED";
 
 export interface Permission {
@@ -22,6 +20,7 @@ export interface User {
   email: string;
   isSuperAdmin: boolean;
   permissions: Permission;
+  reservationsDefaultView: "list" | "calendar";
   createdAt: string;
 }
 
@@ -30,14 +29,51 @@ export interface Language {
   code: string;
   name: string;
   isDefault: boolean;
+  currencyCode: string;
+  currencySymbol: string;
+  currencyPosition: "before" | "after";
+}
+
+export function formatPrice(amount: number, lang: Language): string {
+  const sym = lang.currencySymbol;
+  const formatted = new Intl.NumberFormat(lang.code, {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  }).format(amount);
+  return lang.currencyPosition === "before" ? `${sym}${formatted}` : `${formatted} ${sym}`;
+}
+
+export interface SurchargePrice {
+  id: string;
+  surchargeId: string;
+  languageCode: string;
+  pricePerNight: number;
 }
 
 export interface Surcharge {
   id: string;
   campId: string;
-  pricePerNight: number;
   isOptional: boolean;
   translations: Record<string, { name: string }>;
+  prices: SurchargePrice[];
+}
+
+export interface AccommodationTypePrice {
+  id: string;
+  accommodationTypeId: string;
+  languageCode: string;
+  pricePerNight: number;
+  adultPricePerNight: number;
+  childPricePerNight: number;
+}
+
+export interface AccommodationType {
+  id: string;
+  campId: string;
+  translations: Record<string, { name: string }>;
+  capacity: number;
+  sortOrder: number;
+  prices: AccommodationTypePrice[];
 }
 
 export interface Camp {
@@ -49,14 +85,9 @@ export interface Camp {
   smtpPort: number;
   smtpUser: string;
   smtpFrom: string;
-  caravanCapacity: number;
-  tentCapacity: number;
-  caravanPricePerNight: number;
-  tentPricePerNight: number;
-  adultPricePerNight: number;
-  childPricePerNight: number;
-  currency: string;
+  requiresConfirmation: boolean;
   surcharges: Surcharge[];
+  accommodationTypes: AccommodationType[];
   createdAt: string;
 }
 
@@ -64,12 +95,12 @@ export interface Reservation {
   id: string;
   campId: string;
   camp?: Camp;
-  accommodationType: AccommodationType;
+  accommodationTypeId: string;
+  accommodationType?: AccommodationType;
   checkIn: string;
   checkOut: string;
   adults: number;
   children: number;
-  selectedSurchargeIds: string[];
   firstName: string;
   lastName: string;
   email: string;
@@ -79,6 +110,7 @@ export interface Reservation {
   note?: string;
   totalPrice: number;
   status: ReservationStatus;
+  languageCode: string;
   createdAt: string;
 }
 

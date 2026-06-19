@@ -1,9 +1,13 @@
+import { Language } from "@procamp/shared";
+import { useT } from "../i18n";
+
 interface Props {
   adults: number;
   children: number;
   onChange: (adults: number, children: number) => void;
   onNext: () => void;
   onBack: () => void;
+  lang: Language;
 }
 
 function Counter({ label, sub, value, onChange }: { label: string; sub: string; value: number; onChange: (v: number) => void }) {
@@ -33,21 +37,22 @@ function Counter({ label, sub, value, onChange }: { label: string; sub: string; 
   );
 }
 
-export default function GuestsStep({ adults, children, onChange, onNext, onBack }: Props) {
+export default function GuestsStep({ adults, children, onChange, onNext, onBack, lang }: Props) {
+  const t = useT(lang.code);
+
   return (
     <div className="step-card">
-      <h2 className="text-lg font-semibold text-gray-900 mb-1">Počet osob</h2>
-      <p className="text-sm text-gray-500 mb-4">Zadejte počet dospělých a dětí.</p>
+      <h2 className="text-lg font-semibold text-gray-900 mb-1">{t.configPersonsTitle}</h2>
 
       <div className="mb-6">
-        <Counter label="Dospělí" sub="15 let a více" value={adults} onChange={(v) => onChange(v, children)} />
-        <Counter label="Děti" sub="Do 15 let" value={children} onChange={(v) => onChange(adults, v)} />
+        <Counter label={t.configAdults} sub={t.configAdultsSub} value={adults} onChange={(v) => onChange(v, children)} />
+        <Counter label={t.configChildren} sub={t.configChildrenSub} value={children} onChange={(v) => onChange(adults, v)} />
       </div>
 
       <div className="flex gap-3">
-        <button className="btn-secondary" onClick={onBack}>← Zpět</button>
+        <button className="btn-secondary" onClick={onBack}>{t.back}</button>
         <button className="btn-primary" onClick={onNext} disabled={adults === 0}>
-          Pokračovat →
+          {t.next}
         </button>
       </div>
     </div>

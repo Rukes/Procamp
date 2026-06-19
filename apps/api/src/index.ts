@@ -4,10 +4,12 @@ import jwt from "@fastify/jwt";
 import { prismaPlugin } from "./plugins/prisma";
 import { authRoutes } from "./routes/auth";
 import { campRoutes } from "./routes/camps";
+import { accommodationTypeRoutes } from "./routes/accommodation-types";
 import { reservationRoutes } from "./routes/reservations";
 import { userRoutes } from "./routes/users";
 import { languageRoutes } from "./routes/languages";
 import { emailTemplateRoutes } from "./routes/email-templates";
+import { systemSettingsRoutes } from "./routes/system-settings";
 import { publicFormRoutes } from "./routes/public/form";
 
 const app = Fastify({ logger: true });
@@ -30,10 +32,12 @@ const start = async () => {
   // Protected routes
   await app.register(authRoutes, { prefix: "/api/auth" });
   await app.register(campRoutes, { prefix: "/api/camps" });
+  await app.register(accommodationTypeRoutes, { prefix: "/api/camps" });
   await app.register(reservationRoutes, { prefix: "/api/reservations" });
   await app.register(userRoutes, { prefix: "/api/users" });
   await app.register(languageRoutes, { prefix: "/api/languages" });
   await app.register(emailTemplateRoutes, { prefix: "/api/email-templates" });
+  await app.register(systemSettingsRoutes, { prefix: "/api/system-settings" });
 
   app.get("/api/health", async () => ({ status: "ok" }));
 

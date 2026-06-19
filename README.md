@@ -8,6 +8,18 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 
 ---
 
+## Co je nového (červen 2026)
+
+- **Překlady formuláře** — rezervační formulář je plně přeložen do 11 jazyků (cs, en, de, pl, it, es, fr, ru, uk, sk, hu) včetně správného formátování dat a cen podle měny jazyka
+- **Nová rezervace** — výběr termínu přes kalendář (react-day-picker), automatický výběr objektu pokud existuje jen jeden, živá kalkulace ceny (příplatky, osoby, počet nocí) při ručním zadávání
+- **Seznam rezervací** — virtuální stavy „Proběhla" a „Propadlá", řazení kliknutím na hlavičku, zelené zvýraznění probíhajících pobytů, ikonka poznámky s hover/toggle popoverem, filtr podle stavu včetně „Propadlá"
+- **Detail rezervace** — nepovinná pole vždy zobrazena (šedé „nevyplněno"), vyplněná poznámka zvýrazněna amber boxem, označení aktuálního dne v kalendáři
+- **Paginator** — na všech výpisech (rezervace 25/str, objekty/jazyky/uživatelé 20/str)
+- **Správa uživatelů** — formulář nového/editovaného uživatele otevírán jako modal
+- **Prostředí** — URL formuláře přesunuta do `VITE_FORM_BASE_URL` env proměnné
+
+---
+
 ## Tech stack
 
 | Vrstva | Technologie |

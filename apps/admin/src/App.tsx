@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ToastProvider } from "./contexts/ToastContext";
 import Layout from "./components/Layout";
 import LoginPage from "./pages/Login";
 import DashboardPage from "./pages/Dashboard";
@@ -7,8 +8,10 @@ import CampsPage from "./pages/Camps";
 import CampDetailPage from "./pages/CampDetail";
 import ReservationsPage from "./pages/Reservations";
 import ReservationDetailPage from "./pages/ReservationDetail";
+import ReservationNewPage from "./pages/ReservationNew";
 import UsersPage from "./pages/Users";
 import LanguagesPage from "./pages/Languages";
+import SystemSettingsPage from "./pages/SystemSettings";
 
 function Guard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -20,6 +23,7 @@ function Guard({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <AuthProvider>
+      <ToastProvider>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<Guard><Layout /></Guard>}>
@@ -28,12 +32,15 @@ export default function App() {
           <Route path="camps" element={<CampsPage />} />
           <Route path="camps/:id" element={<CampDetailPage />} />
           <Route path="reservations" element={<ReservationsPage />} />
+          <Route path="reservations/new" element={<ReservationNewPage />} />
           <Route path="reservations/:id" element={<ReservationDetailPage />} />
           <Route path="users" element={<UsersPage />} />
           <Route path="languages" element={<LanguagesPage />} />
+          <Route path="system-settings" element={<SystemSettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
+      </ToastProvider>
     </AuthProvider>
   );
 }

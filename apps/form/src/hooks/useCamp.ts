@@ -1,9 +1,26 @@
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
-import { Camp, Language, Surcharge } from "@procamp/shared";
+import { Camp, Language } from "@procamp/shared";
 
-interface CampPublic extends Omit<Camp, "surcharges"> {
-  surcharges: (Surcharge & { name: string })[];
+export interface PublicAccommodationType {
+  id: string;
+  name: string;
+  capacity: number;
+  pricePerNight: number;
+  adultPricePerNight: number;
+  childPricePerNight: number;
+}
+
+export interface PublicSurcharge {
+  id: string;
+  name: string;
+  pricePerNight: number;
+  isOptional: boolean;
+}
+
+interface CampPublic extends Omit<Camp, "surcharges" | "accommodationTypes"> {
+  surcharges: PublicSurcharge[];
+  accommodationTypes: PublicAccommodationType[];
 }
 
 interface CampData {

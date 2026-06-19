@@ -1,6 +1,15 @@
-const STEPS = ["Typ", "Termín", "Osoby", "Příplatky", "Souhrn", "Kontakt"];
+import { useT } from "../i18n";
+import { Language } from "@procamp/shared";
 
-export default function StepIndicator({ current }: { current: number }) {
+interface Props {
+  current: number;
+  lang: Language;
+}
+
+export default function StepIndicator({ current, lang }: Props) {
+  const t = useT(lang.code);
+  const STEPS = [t.stepType, t.stepDate, t.stepConfig, t.stepContact];
+
   return (
     <div className="flex items-center gap-0 mb-8">
       {STEPS.map((label, i) => {

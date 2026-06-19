@@ -3,19 +3,18 @@ import { PrismaClient } from "@prisma/client";
 export async function checkAvailability(
   prisma: PrismaClient,
   campId: string,
-  accommodationType: "CARAVAN" | "TENT",
+  accommodationTypeId: string,
   checkIn: Date,
   checkOut: Date,
   excludeReservationId?: string,
 ): Promise<{ available: boolean; capacity: number; booked: number }> {
-  const camp = await prisma.camp.findUniqueOrThrow({ where: { id: campId } });
-  const capacity = accommodationType === "CARAVAN" ? camp.caravanCapacity : camp.tentCapacity;
+  const accType = await prisma.accommodationType.findUniqueOrThrow({ where: { id: accommodationTypeId } });
+  const capacity = accType.capacity;
 
-  // Find overlapping confirmed/pending reservations
   const overlapping = await prisma.reservation.count({
     where: {
       campId,
-      accommodationType,
+      accommodationTypeId,
       status: { in: ["PENDING", "CONFIRMED"] },
       id: excludeReservationId ? { not: excludeReservationId } : undefined,
       AND: [
@@ -31,17 +30,16 @@ export async function checkAvailability(
 export async function getOccupiedDates(
   prisma: PrismaClient,
   campId: string,
-  accommodationType: "CARAVAN" | "TENT",
+  accommodationTypeId: string,
 ): Promise<string[]> {
-  const camp = await prisma.camp.findUniqueOrThrow({ where: { id: campId } });
-  const capacity = accommodationType === "CARAVAN" ? camp.caravanCapacity : camp.tentCapacity;
+  const accType = await prisma.accommodationType.findUniqueOrThrow({ where: { id: accommodationTypeId } });
+  const capacity = accType.capacity;
 
   const reservations = await prisma.reservation.findMany({
-    where: { campId, accommodationType, status: { in: ["PENDING", "CONFIRMED"] } },
+    where: { campId, accommodationTypeId, status: { in: ["PENDING", "CONFIRMED"] } },
     select: { checkIn: true, checkOut: true },
   });
 
-  // Count bookings per day
   const dayCount: Record<string, number> = {};
   for (const r of reservations) {
     const cur = new Date(r.checkIn);

@@ -8,82 +8,129 @@ datasource db {
 }
 
 model User {
-  id           String   @id @default(cuid())
-  name         String
-  email        String   @unique
-  passwordHash String
-  isSuperAdmin Boolean  @default(false)
-  permissions  Json     @default("{}")
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id                      String   @id @default(cuid())
+  name                    String
+  email                   String   @unique
+  passwordHash            String
+  isSuperAdmin            Boolean  @default(false)
+  permissions             Json     @default("{}")
+  reservationsDefaultView String   @default("list")
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+model SystemSettings {
+  id                  String   @id @default("singleton")
+  defaultLanguageCode String   @default("cs")
+  thousandsSeparator  String   @default(" ")
+  decimalSeparator    String   @default(",")
+  updatedAt           DateTime @updatedAt
 }
 
 model Language {
-  id        String   @id @default(cuid())
-  code      String   @unique
-  name      String
-  isDefault Boolean  @default(false)
-  createdAt DateTime @default(now())
+  id               String   @id @default(cuid())
+  code             String   @unique
+  name             String
+  isDefault        Boolean  @default(false)
+  currencyCode     String   @default("CZK")
+  currencySymbol   String   @default("Kč")
+  currencyPosition String   @default("after")
+  createdAt        DateTime @default(now())
 }
 
 model Camp {
-  id                    String         @id @default(cuid())
+  id                    String              @id @default(cuid())
   name                  String
-  slug                  String         @unique
+  slug                  String              @unique
   notificationEmail     String
-  smtpHost              String         @default("")
-  smtpPort              Int            @default(587)
-  smtpUser              String         @default("")
-  smtpPasswordEncrypted String         @default("")
-  smtpFrom              String         @default("")
-  caravanCapacity       Int            @default(0)
-  tentCapacity          Int            @default(0)
-  caravanPricePerNight  Float          @default(0)
-  tentPricePerNight     Float          @default(0)
-  adultPricePerNight    Float          @default(0)
-  childPricePerNight    Float          @default(0)
-  currency              String         @default("CZK")
-  createdAt             DateTime       @default(now())
-  updatedAt             DateTime       @updatedAt
+  smtpHost              String              @default("")
+  smtpPort              Int                 @default(587)
+  smtpUser              String              @default("")
+  smtpPasswordEncrypted String              @default("")
+  smtpFrom              String              @default("")
+  requiresConfirmation  Boolean             @default(true)
+  createdAt             DateTime            @default(now())
+  updatedAt             DateTime            @updatedAt
+  accommodationTypes    AccommodationType[]
   surcharges            Surcharge[]
   reservations          Reservation[]
   emailTemplates        EmailTemplate[]
 }
 
-model Surcharge {
-  id            String   @id @default(cuid())
-  campId        String
-  camp          Camp     @relation(fields: [campId], references: [id], onDelete: Cascade)
-  pricePerNight Float
-  isOptional    Boolean  @default(true)
-  translations  Json     @default("{}")
-  createdAt     DateTime @default(now())
+model AccommodationType {
+  id           String                  @id @default(cuid())
+  campId       String
+  camp         Camp                    @relation(fields: [campId], references: [id], onDelete: Cascade)
+  translations Json                    @default("{}")
+  capacity     Int                     @default(0)
+  sortOrder    Int                     @default(0)
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  prices       AccommodationTypePrice[]
+  reservations Reservation[]
+}
 
+model AccommodationTypePrice {
+  id                  String            @id @default(cuid())
+  accommodationTypeId String
+  accommodationType   AccommodationType @relation(fields: [accommodationTypeId], references: [id], onDelete: Cascade)
+  languageCode        String
+  pricePerNight       Float             @default(0)
+  adultPricePerNight  Float             @default(0)
+  childPricePerNight  Float             @default(0)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@unique([accommodationTypeId, languageCode])
+}
+
+model Surcharge {
+  id            String               @id @default(cuid())
+  campId        String
+  camp          Camp                 @relation(fields: [campId], references: [id], onDelete: Cascade)
+  isOptional    Boolean              @default(true)
+  translations  Json                 @default("{}")
+  createdAt     DateTime             @default(now())
+  prices        SurchargePrice[]
   reservationSurcharges ReservationSurcharge[]
 }
 
+model SurchargePrice {
+  id           String    @id @default(cuid())
+  surchargeId  String
+  surcharge    Surcharge @relation(fields: [surchargeId], references: [id], onDelete: Cascade)
+  languageCode String
+  pricePerNight Float    @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@unique([surchargeId, languageCode])
+}
+
 model Reservation {
-  id                 String               @id @default(cuid())
-  campId             String
-  camp               Camp                 @relation(fields: [campId], references: [id], onDelete: Restrict)
-  accommodationType  String
-  checkIn            DateTime
-  checkOut           DateTime
-  adults             Int
-  children           Int
-  firstName          String
-  lastName           String
-  email              String
-  phone              String
-  licensePlate       String?
-  expectedArrival    String?
-  note               String?
-  totalPrice         Float
-  status             String               @default("PENDING")
-  languageCode       String               @default("cs")
-  createdAt          DateTime             @default(now())
-  updatedAt          DateTime             @updatedAt
-  surcharges         ReservationSurcharge[]
+  id                  String               @id @default(cuid())
+  campId              String
+  camp                Camp                 @relation(fields: [campId], references: [id], onDelete: Restrict)
+  accommodationTypeId String
+  accommodationType   AccommodationType    @relation(fields: [accommodationTypeId], references: [id], onDelete: Restrict)
+  checkIn             DateTime
+  checkOut            DateTime
+  adults              Int
+  children            Int
+  firstName           String
+  lastName            String
+  email               String
+  phone               String
+  licensePlate        String?
+  expectedArrival     String?
+  note                String?
+  totalPrice          Float
+  priceSnapshot       Json?
+  status              String               @default("PENDING")
+  languageCode        String               @default("cs")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  surcharges          ReservationSurcharge[]
 }
 
 model ReservationSurcharge {

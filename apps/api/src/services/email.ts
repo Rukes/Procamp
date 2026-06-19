@@ -62,7 +62,7 @@ export async function sendReservationEmails(
   if (adminTpl) {
     await transport.sendMail({
       from,
-      to: camp.notificationEmail,
+      to: camp.notificationEmail.split(",").map((e) => e.trim()).filter(Boolean).join(", "),
       subject: renderTemplate(adminTpl.subject, vars),
       html: renderTemplate(adminTpl.body, vars),
     });

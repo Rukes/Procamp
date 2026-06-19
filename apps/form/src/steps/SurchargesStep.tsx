@@ -1,4 +1,6 @@
-import { CampPublic } from "../hooks/useCamp";
+import { Language, formatPrice } from "@procamp/shared";
+import { CampPublic, PublicSurcharge } from "../hooks/useCamp";
+import { useT } from "../i18n";
 
 interface Props {
   camp: CampPublic;
@@ -7,10 +9,11 @@ interface Props {
   onChange: (ids: string[]) => void;
   onNext: () => void;
   onBack: () => void;
-  currency: string;
+  lang: Language;
 }
 
-export default function SurchargesStep({ camp, selected, nights, onChange, onNext, onBack, currency }: Props) {
+export default function SurchargesStep({ camp, selected, nights, onChange, onNext, onBack, lang }: Props) {
+  const t = useT(lang.code);
   const optional = camp.surcharges.filter((s) => s.isOptional);
   const mandatory = camp.surcharges.filter((s) => !s.isOptional);
 
@@ -21,11 +24,10 @@ export default function SurchargesStep({ camp, selected, nights, onChange, onNex
   if (camp.surcharges.length === 0) {
     return (
       <div className="step-card">
-        <h2 className="text-lg font-semibold text-gray-900 mb-1">Příplatky</h2>
-        <p className="text-sm text-gray-500 mb-6">Žádné příplatky nejsou k dispozici.</p>
-        <div className="flex gap-3">
-          <button className="btn-secondary" onClick={onBack}>← Zpět</button>
-          <button className="btn-primary" onClick={onNext}>Pokračovat →</button>
+        <h2 className="text-lg font-semibold text-gray-900 mb-1">{t.configSurchargesTitle}</h2>
+        <div className="flex gap-3 mt-4">
+          <button className="btn-secondary" onClick={onBack}>{t.back}</button>
+          <button className="btn-primary" onClick={onNext}>{t.next}</button>
         </div>
       </div>
     );
@@ -33,19 +35,17 @@ export default function SurchargesStep({ camp, selected, nights, onChange, onNex
 
   return (
     <div className="step-card">
-      <h2 className="text-lg font-semibold text-gray-900 mb-1">Příplatky</h2>
-      <p className="text-sm text-gray-500 mb-5">Vyberte doplňkové služby.</p>
+      <h2 className="text-lg font-semibold text-gray-900 mb-5">{t.configSurchargesTitle}</h2>
 
       {mandatory.length > 0 && (
         <div className="mb-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Povinné příplatky</p>
           {mandatory.map((s) => (
             <div key={s.id} className="flex items-center justify-between py-3 border-b border-gray-100">
               <div>
                 <p className="font-medium text-gray-900">{s.name}</p>
-                <p className="text-sm text-gray-500">{s.pricePerNight} {currency} × {nights} nocí = {s.pricePerNight * nights} {currency}</p>
+                <p className="text-sm text-gray-500">{formatPrice(s.pricePerNight, lang)} {t.configPerNight} {t.configNights(nights)} = {formatPrice(s.pricePerNight * nights, lang)}</p>
               </div>
-              <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">Povinný</span>
+              <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">{t.configMandatory}</span>
             </div>
           ))}
         </div>
@@ -53,7 +53,6 @@ export default function SurchargesStep({ camp, selected, nights, onChange, onNex
 
       {optional.length > 0 && (
         <div className="mb-6">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Volitelné příplatky</p>
           {optional.map((s) => {
             const checked = selected.includes(s.id);
             return (
@@ -66,7 +65,7 @@ export default function SurchargesStep({ camp, selected, nights, onChange, onNex
                 />
                 <div className="flex-1">
                   <p className="font-medium text-gray-900">{s.name}</p>
-                  <p className="text-sm text-gray-500">{s.pricePerNight} {currency} / noc{checked ? ` × ${nights} = ${s.pricePerNight * nights} ${currency}` : ""}</p>
+                  <p className="text-sm text-gray-500">{formatPrice(s.pricePerNight, lang)} {t.configPerNight}{checked ? ` ${t.configNights(nights)} = ${formatPrice(s.pricePerNight * nights, lang)}` : ""}</p>
                 </div>
               </label>
             );
@@ -75,8 +74,8 @@ export default function SurchargesStep({ camp, selected, nights, onChange, onNex
       )}
 
       <div className="flex gap-3">
-        <button className="btn-secondary" onClick={onBack}>← Zpět</button>
-        <button className="btn-primary" onClick={onNext}>Pokračovat →</button>
+        <button className="btn-secondary" onClick={onBack}>{t.back}</button>
+        <button className="btn-primary" onClick={onNext}>{t.next}</button>
       </div>
     </div>
   );

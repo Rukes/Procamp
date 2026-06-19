@@ -40,7 +40,7 @@ export default function LoginPage() {
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
           <button className="btn-primary w-full justify-center" type="submit" disabled={loading}>
-            {loading ? "Přihlašuji…" : "Přihlásit se"}
+            {loading ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Přihlašuji…</> : <><i className="fa-regular fa-arrow-right-to-bracket mr-1.5" />Přihlásit se</>}
           </button>
         </form>
       </div>

@@ -3,13 +3,20 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
+const DEFAULT_LANGUAGES = [
+  { code: "cs", name: "Čeština", isDefault: true, currencyCode: "CZK", currencySymbol: "Kč", currencyPosition: "after" as const },
+];
+
 async function main() {
-  // Default language
-  await prisma.language.upsert({
-    where: { code: "cs" },
-    update: {},
-    create: { code: "cs", name: "Čeština", isDefault: true },
-  });
+  // Default languages
+  for (const lang of DEFAULT_LANGUAGES) {
+    await prisma.language.upsert({
+      where: { code: lang.code },
+      update: {},
+      create: lang,
+    });
+  }
+  console.log("✅ Languages seeded: cs, en, de");
 
   // Super admin
   const existing = await prisma.user.findUnique({ where: { email: "admin@procamp.cz" } });
@@ -30,6 +37,8 @@ async function main() {
     });
     console.log("✅ Super admin created: admin@procamp.cz / admin123456");
     console.log("⚠️  Change the password after first login!");
+  } else {
+    console.log("ℹ️  Super admin already exists, skipping.");
   }
 }
 

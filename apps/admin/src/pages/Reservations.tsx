@@ -1,44 +1,176 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useEffect, useState, useRef } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
-import { Reservation, Camp } from "@procamp/shared";
+import { Reservation, Camp, Language } from "@procamp/shared";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { useAuth } from "../contexts/AuthContext";
+import { langFlag } from "../utils/langFlag";
+import Pagination from "../components/Pagination";
 
-const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
-const STATUS_CLASS: Record<string, string> = { PENDING: "badge-pending", CONFIRMED: "badge-confirmed", CANCELLED: "badge-cancelled" };
-const TYPE_LABEL: Record<string, string> = { CARAVAN: "Karavan", TENT: "Stan" };
+function NotePopover({ note }: { note: string }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: TouchEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("touchstart", handler);
+    return () => document.removeEventListener("touchstart", handler);
+  }, [open]);
+
+  return (
+    <div
+      ref={ref}
+      className="relative flex-shrink-0 mt-0.5"
+      onMouseEnter={() => setOpen(true)}
+      onMouseLeave={() => setOpen(false)}
+    >
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
+        className="text-amber-500 hover:text-amber-600 transition-colors"
+      >
+        <i className="fa-regular fa-message-lines" />
+      </button>
+      {open && (
+        <div className="absolute right-0 top-7 z-20 w-64 bg-gray-900 text-white text-xs rounded-xl px-3 py-2.5 shadow-xl">
+          {note}
+          <div className="absolute -top-1.5 right-1.5 w-3 h-3 bg-gray-900 rotate-45" />
+        </div>
+      )}
+    </div>
+  );
+}
+
+const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena", COMPLETED: "Proběhla", EXPIRED: "Propadlá" };
+const STATUS_CLASS: Record<string, string> = { PENDING: "badge-pending", CONFIRMED: "badge-confirmed", CANCELLED: "badge-cancelled", COMPLETED: "badge bg-gray-100 text-gray-500", EXPIRED: "badge bg-orange-100 text-orange-700" };
+
+type SortKey = "name" | "camp" | "checkIn" | "checkOut" | "persons" | "price" | "status";
+type SortDir = "asc" | "desc";
+
+function effectiveStatus(r: Reservation): string {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  if (r.status === "CONFIRMED" && new Date(r.checkOut) <= today) return "COMPLETED";
+  if (r.status === "PENDING" && new Date(r.checkOut) <= today) return "EXPIRED";
+  return r.status;
+}
+
+function isOngoing(r: Reservation): boolean {
+  if (r.status !== "CONFIRMED") return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(r.checkIn) <= today && new Date(r.checkOut) > today;
+}
+
+const STATUS_SORT_ORDER: Record<string, number> = { PENDING: 0, CONFIRMED: 1, COMPLETED: 2, EXPIRED: 3, CANCELLED: 4 };
 
 export default function ReservationsPage() {
   const { can } = useAuth();
+  const navigate = useNavigate();
   const [reservations, setReservations] = useState<(Reservation & { camp: Camp })[]>([]);
   const [camps, setCamps] = useState<Camp[]>([]);
+  const [languages, setLanguages] = useState<Language[]>([]);
   const [search, setSearch] = useState("");
   const [campFilter, setCampFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
-  const [view, setView] = useState<"list" | "calendar">("list");
+  const [searchParams] = useSearchParams();
+  const [view, setView] = useState<"list" | "calendar">(searchParams.get("view") === "calendar" ? "calendar" : "list");
+  const [page, setPage] = useState(1);
+  const [sortKey, setSortKey] = useState<SortKey>("checkIn");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const PER_PAGE = 25;
 
   const load = () => {
     const params = new URLSearchParams();
     if (search) params.set("search", search);
     if (campFilter) params.set("campId", campFilter);
-    if (statusFilter) params.set("status", statusFilter);
-    api.get(`/reservations?${params}`).then((r) => setReservations(r.data)).catch(() => {});
+    // EXPIRED je virtuální stav — na server posílám PENDING, pak filtruji client-side
+    if (statusFilter && statusFilter !== "EXPIRED") params.set("status", statusFilter);
+    else if (statusFilter === "EXPIRED") params.set("status", "PENDING");
+    api.get(`/reservations?${params}`).then((r) => {
+      let data = r.data;
+      if (statusFilter === "PENDING") data = data.filter((x: Reservation) => effectiveStatus(x) === "PENDING");
+      if (statusFilter === "EXPIRED") data = data.filter((x: Reservation) => effectiveStatus(x) === "EXPIRED");
+      setReservations(data);
+    }).catch(() => {});
   };
 
   useEffect(() => {
     api.get("/camps").then((r) => setCamps(r.data)).catch(() => {});
+    api.get("/languages").then((r) => setLanguages(r.data)).catch(() => {});
   }, []);
 
-  useEffect(() => { load(); }, [search, campFilter, statusFilter]);
+  useEffect(() => { load(); setPage(1); }, [search, campFilter, statusFilter]);
+
+  const handleConfirm = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Opravdu chcete potvrdit tuto rezervaci?")) return;
+    await api.patch(`/reservations/${id}/status`, { status: "CONFIRMED" });
+    load();
+  };
 
   const handleExport = () => {
     const params = campFilter ? `?campId=${campFilter}` : "";
     window.open(`/api/reservations/export/csv${params}`, "_blank");
   };
 
-  // Calendar: group by month
+  const handleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("asc"); }
+    setPage(1);
+  };
+
+  const formatPrice = (r: Reservation & { camp: Camp }): string => {
+    const lang = languages.find((l) => l.code === r.languageCode);
+    const amount = r.totalPrice.toLocaleString("cs-CZ");
+    if (!lang) return `${amount} Kč`;
+    return lang.currencyPosition === "before"
+      ? `${lang.currencySymbol}${amount}`
+      : `${amount} ${lang.currencySymbol}`;
+  };
+
+  const sorted = [...reservations].sort((a, b) => {
+    const es_a = effectiveStatus(a);
+    const es_b = effectiveStatus(b);
+    let cmp = 0;
+    switch (sortKey) {
+      case "name": cmp = `${a.lastName}${a.firstName}`.localeCompare(`${b.lastName}${b.firstName}`, "cs"); break;
+      case "camp": cmp = (a.camp?.name ?? "").localeCompare(b.camp?.name ?? "", "cs"); break;
+      case "checkIn": cmp = new Date(a.checkIn).getTime() - new Date(b.checkIn).getTime(); break;
+      case "checkOut": cmp = new Date(a.checkOut).getTime() - new Date(b.checkOut).getTime(); break;
+      case "persons": cmp = (a.adults + a.children) - (b.adults + b.children); break;
+      case "price": cmp = a.totalPrice - b.totalPrice; break;
+      case "status": cmp = STATUS_SORT_ORDER[es_a] - STATUS_SORT_ORDER[es_b]; break;
+    }
+    // COMPLETED/CANCELLED vždy na konec při výchozím řazení (ne-status sloupce)
+    if (sortKey !== "status") {
+      const aLast = es_a === "COMPLETED" || es_a === "EXPIRED" || es_a === "CANCELLED";
+      const bLast = es_b === "COMPLETED" || es_b === "EXPIRED" || es_b === "CANCELLED";
+      if (aLast !== bLast) return aLast ? 1 : -1;
+    }
+    return sortDir === "asc" ? cmp : -cmp;
+  });
+
+  const SortIcon = ({ k }: { k: SortKey }) => (
+    <i className={`fa-regular ml-1 text-xs ${
+      sortKey === k ? (sortDir === "asc" ? "fa-arrow-up text-blue-500" : "fa-arrow-down text-blue-500") : "fa-arrow-up-arrow-down text-gray-300"
+    }`} />
+  );
+
+  const Th = ({ k, children, className = "" }: { k: SortKey; children: React.ReactNode; className?: string }) => (
+    <th
+      className={`px-4 py-3 font-medium cursor-pointer select-none hover:text-gray-800 transition-colors ${className}`}
+      onClick={() => handleSort(k)}
+    >
+      {children}<SortIcon k={k} />
+    </th>
+  );
+
+  // Calendar
   const today = new Date();
   const calDays: Date[] = [];
   const start = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -54,28 +186,30 @@ export default function ReservationsPage() {
 
   return (
     <div className="p-8">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Rezervace</h1>
-        <div className="flex gap-2">
-          <button className="btn-secondary" onClick={handleExport}>↓ Export CSV</button>
-          <div className="flex border border-gray-300 rounded-lg overflow-hidden">
-            <button onClick={() => setView("list")} className={`px-3 py-1.5 text-sm ${view === "list" ? "bg-blue-600 text-white" : "bg-white text-gray-600"}`}>Seznam</button>
-            <button onClick={() => setView("calendar")} className={`px-3 py-1.5 text-sm ${view === "calendar" ? "bg-blue-600 text-white" : "bg-white text-gray-600"}`}>Kalendář</button>
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Rezervace</h1>
+          <div className="flex gap-2 mt-2">
+            <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+              <button onClick={() => setView("list")} className={`px-3 py-1.5 text-sm ${view === "list" ? "bg-blue-600 text-white" : "bg-white text-gray-600"}`}><i className="fa-regular fa-list mr-1.5" />Seznam</button>
+              <button onClick={() => setView("calendar")} className={`px-3 py-1.5 text-sm ${view === "calendar" ? "bg-blue-600 text-white" : "bg-white text-gray-600"}`}><i className="fa-regular fa-calendar mr-1.5" />Kalendář</button>
+            </div>
+            {can("reservations_create") && <Link to="/reservations/new" className="inline-flex items-center px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"><i className="fa-regular fa-plus mr-1.5" />Nová rezervace</Link>}
           </div>
-          {can("reservations_create") && <Link to="/reservations/new" className="btn-primary">+ Nová</Link>}
         </div>
+        <button className="btn-secondary" onClick={handleExport}><i className="fa-regular fa-download mr-1.5" />Export CSV</button>
       </div>
 
-      {/* Filters */}
       <div className="flex gap-3 mb-5">
         <input className="input max-w-xs" placeholder="Hledat jméno, e-mail, telefon…" value={search} onChange={(e) => setSearch(e.target.value)} />
         <select className="input max-w-48" value={campFilter} onChange={(e) => setCampFilter(e.target.value)}>
-          <option value="">Všechny kempy</option>
+          <option value="">Všechny objekty</option>
           {camps.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <select className="input max-w-40" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="">Všechny statusy</option>
           <option value="PENDING">Čeká</option>
+          <option value="EXPIRED">Propadlá</option>
           <option value="CONFIRMED">Potvrzena</option>
           <option value="CANCELLED">Zrušena</option>
         </select>
@@ -86,39 +220,64 @@ export default function ReservationsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 text-left text-gray-500 bg-gray-50">
-                <th className="px-4 py-3 font-medium">Jméno</th>
-                <th className="px-4 py-3 font-medium">Kemp</th>
+                <Th k="name">Jméno a příjmení</Th>
+                <Th k="camp">Objekt</Th>
                 <th className="px-4 py-3 font-medium">Typ</th>
-                <th className="px-4 py-3 font-medium">Příjezd</th>
-                <th className="px-4 py-3 font-medium">Odjezd</th>
-                <th className="px-4 py-3 font-medium">Os.</th>
-                <th className="px-4 py-3 font-medium">Cena</th>
-                <th className="px-4 py-3 font-medium">Status</th>
+                <Th k="checkIn">Příjezd</Th>
+                <Th k="checkOut">Odjezd</Th>
+                <Th k="persons" className="text-right">Os.</Th>
+                <Th k="price" className="text-right">Cena</Th>
+                <Th k="status">Status</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {reservations.map((r) => (
-                <tr key={r.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3">
-                    <Link to={`/reservations/${r.id}`} className="font-medium text-blue-600 hover:underline">
-                      {r.firstName} {r.lastName}
-                    </Link>
-                    <p className="text-xs text-gray-400">{r.email}</p>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{r.camp?.name}</td>
-                  <td className="px-4 py-3">{TYPE_LABEL[r.accommodationType]}</td>
-                  <td className="px-4 py-3">{format(new Date(r.checkIn), "d. M. yyyy", { locale: cs })}</td>
-                  <td className="px-4 py-3">{format(new Date(r.checkOut), "d. M. yyyy", { locale: cs })}</td>
-                  <td className="px-4 py-3">{r.adults}+{r.children}</td>
-                  <td className="px-4 py-3 font-medium">{r.totalPrice} Kč</td>
-                  <td className="px-4 py-3"><span className={STATUS_CLASS[r.status]}>{STATUS_LABEL[r.status]}</span></td>
-                </tr>
-              ))}
+              {sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((r) => {
+                const es = effectiveStatus(r);
+                return (
+                  <tr
+                    key={r.id}
+                    className={`cursor-pointer ${isOngoing(r) ? "bg-green-50 hover:bg-green-100" : es === "COMPLETED" || es === "CANCELLED" || es === "EXPIRED" ? "opacity-60 hover:bg-gray-50" : "hover:bg-gray-50"}`}
+                    onClick={() => navigate(`/reservations/${r.id}`)}
+                  >
+                    <td className="px-4 py-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-medium text-gray-900">{langFlag(r.languageCode)} {r.firstName} {r.lastName}</p>
+                          <p className="text-xs text-gray-400">{r.email}</p>
+                        </div>
+                        {r.note && (
+                          <NotePopover note={r.note} />
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{r.camp?.name}</td>
+                    <td className="px-4 py-3">{(() => { const t = r.accommodationType; if (!t) return "—"; const tr = t.translations as Record<string, { name: string }>; return tr.cs?.name ?? tr[Object.keys(tr)[0]]?.name ?? "—"; })()}</td>
+                    <td className="px-4 py-3">{format(new Date(r.checkIn), "d. M. yyyy", { locale: cs })}</td>
+                    <td className="px-4 py-3">{format(new Date(r.checkOut), "d. M. yyyy", { locale: cs })}</td>
+                    <td className="px-4 py-3 text-right">{r.adults}+{r.children}</td>
+                    <td className="px-4 py-3 font-medium text-right">{formatPrice(r)}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <span className={STATUS_CLASS[es]}>{STATUS_LABEL[es]}</span>
+                        {r.status === "PENDING" && es !== "EXPIRED" && can("reservations_edit") && (
+                          <button
+                            className="px-2 py-0.5 rounded text-xs bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
+                            onClick={(e) => handleConfirm(e, r.id)}
+                          ><i className="fa-regular fa-check mr-1" />Potvrdit</button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
               {reservations.length === 0 && (
                 <tr><td colSpan={8} className="px-4 py-10 text-center text-gray-400">Žádné rezervace</td></tr>
               )}
             </tbody>
           </table>
+          <div className="px-4 pb-4">
+            <Pagination page={page} total={sorted.length} perPage={PER_PAGE} onChange={setPage} />
+          </div>
         </div>
       ) : (
         <div className="card p-6">
@@ -132,11 +291,11 @@ export default function ReservationsPage() {
               const dayRes = getReservationsForDay(day);
               const isToday = day.toDateString() === today.toDateString();
               return (
-                <div key={day.toISOString()} className={`min-h-16 p-1.5 rounded-lg border text-xs ${isToday ? "border-blue-400 bg-blue-50" : "border-gray-100"}`}>
-                  <span className={`font-medium ${isToday ? "text-blue-600" : "text-gray-700"}`}>{day.getDate()}</span>
+                <div key={day.toISOString()} className={`min-h-16 p-1.5 rounded-lg border text-xs ${isToday ? "border-2 border-gray-900" : "border-gray-100"}`}>
+                  <span className={`font-bold ${isToday ? "text-gray-900" : "text-gray-700"}`}>{day.getDate()}</span>
                   {dayRes.slice(0, 2).map((r) => (
                     <Link key={r.id} to={`/reservations/${r.id}`} className="block mt-0.5 truncate bg-blue-100 text-blue-700 rounded px-1">
-                      {r.firstName} {r.lastName[0]}.
+                      {langFlag(r.languageCode)} {r.firstName} {r.lastName[0]}.
                     </Link>
                   ))}
                   {dayRes.length > 2 && <span className="text-gray-400">+{dayRes.length - 2} více</span>}

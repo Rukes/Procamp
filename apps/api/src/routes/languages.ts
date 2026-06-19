@@ -7,9 +7,19 @@ export async function languageRoutes(app: FastifyInstance) {
   });
 
   app.post("/", { preHandler: requirePermission("settings_edit") }, async (request, reply) => {
-    const { code, name } = request.body as { code: string; name: string };
-    const lang = await app.prisma.language.create({ data: { code, name } });
+    const { code, name, currencyCode, currencySymbol, currencyPosition } = request.body as {
+      code: string; name: string; currencyCode?: string; currencySymbol?: string; currencyPosition?: string;
+    };
+    const lang = await app.prisma.language.create({
+      data: { code, name, ...(currencyCode && { currencyCode }), ...(currencySymbol && { currencySymbol }), ...(currencyPosition && { currencyPosition }) },
+    });
     return reply.status(201).send(lang);
+  });
+
+  app.put("/:id", { preHandler: requirePermission("settings_edit") }, async (request) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { name?: string; currencyCode?: string; currencySymbol?: string; currencyPosition?: string };
+    return app.prisma.language.update({ where: { id }, data: body });
   });
 
   app.delete("/:id", { preHandler: requirePermission("settings_edit") }, async (request, reply) => {

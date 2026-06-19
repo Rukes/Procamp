@@ -11,41 +11,66 @@ export async function publicFormRoutes(app: FastifyInstance) {
 
     const camp = await app.prisma.camp.findUnique({
       where: { slug },
-      include: { surcharges: true },
+      include: {
+        surcharges: { include: { prices: true } },
+        accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } },
+      },
     });
     if (!camp) return reply.status(404).send({ error: "Camp not found" });
 
     const languages = await app.prisma.language.findMany({ orderBy: { isDefault: "desc" } });
 
-    // Strip sensitive SMTP data from public response
     const { smtpPasswordEncrypted, smtpHost, smtpPort, smtpUser, smtpFrom, notificationEmail, ...publicCamp } = camp;
+
+    // Return accommodation types with translated name and lang-specific prices
+    const accommodationTypes = camp.accommodationTypes.map((t) => {
+      const translations = t.translations as Record<string, { name: string }>;
+      const name = translations[lang]?.name ?? translations["cs"]?.name ?? "";
+      const price = t.prices.find((p) => p.languageCode === lang) ?? t.prices[0];
+      return {
+        id: t.id,
+        name,
+        capacity: t.capacity,
+        sortOrder: t.sortOrder,
+        pricePerNight: price?.pricePerNight ?? 0,
+        adultPricePerNight: price?.adultPricePerNight ?? 0,
+        childPricePerNight: price?.childPricePerNight ?? 0,
+      };
+    });
 
     const surcharges = camp.surcharges.map((s) => {
       const translations = s.translations as Record<string, { name: string }>;
       const name = translations[lang]?.name ?? translations["cs"]?.name ?? "";
-      return { id: s.id, name, pricePerNight: s.pricePerNight, isOptional: s.isOptional };
+      const price = s.prices.find((p) => p.languageCode === lang) ?? s.prices[0];
+      return { id: s.id, name, pricePerNight: price?.pricePerNight ?? 0, isOptional: s.isOptional };
     });
 
-    return { camp: { ...publicCamp, surcharges }, languages, currentLang: lang };
+    return { camp: { ...publicCamp, accommodationTypes, surcharges }, languages, currentLang: lang };
   });
 
-  // Get occupied dates
+  // Get occupied dates for an accommodation type
   app.get("/camp/:slug/occupied", async (request, reply) => {
     const { slug } = request.params as { slug: string };
-    const { type } = request.query as { type: "CARAVAN" | "TENT" };
-    if (!type) return reply.status(400).send({ error: "type required" });
+    const { typeId } = request.query as { typeId?: string };
+    if (!typeId) return reply.status(400).send({ error: "typeId required" });
 
     const camp = await app.prisma.camp.findUnique({ where: { slug } });
     if (!camp) return reply.status(404).send({ error: "Camp not found" });
 
-    const dates = await getOccupiedDates(app.prisma, camp.id, type);
+    const dates = await getOccupiedDates(app.prisma, camp.id, typeId);
     return { occupied: dates };
   });
 
   // Submit reservation
   app.post("/camp/:slug/reserve", async (request, reply) => {
     const { slug } = request.params as { slug: string };
-    const camp = await app.prisma.camp.findUnique({ where: { slug }, include: { surcharges: true } });
+    const camp = await app.prisma.camp.findUnique({
+      where: { slug },
+      include: {
+        surcharges: { include: { prices: true } },
+        accommodationTypes: { include: { prices: true } },
+      },
+    });
     if (!camp) return reply.status(404).send({ error: "Camp not found" });
 
     const body = createReservationSchema.parse(request.body);
@@ -54,20 +79,30 @@ export async function publicFormRoutes(app: FastifyInstance) {
 
     if (checkOut <= checkIn) return reply.status(400).send({ error: "checkOut must be after checkIn" });
 
-    const { available } = await checkAvailability(app.prisma, camp.id, body.accommodationType, checkIn, checkOut);
+    const accommodationType = camp.accommodationTypes.find((t) => t.id === body.accommodationTypeId);
+    if (!accommodationType) return reply.status(400).send({ error: "Invalid accommodation type" });
+
+    const { available } = await checkAvailability(app.prisma, camp.id, body.accommodationTypeId, checkIn, checkOut);
     if (!available) return reply.status(409).send({ error: "no_availability" });
 
     const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
-    const basePrice = body.accommodationType === "CARAVAN" ? camp.caravanPricePerNight : camp.tentPricePerNight;
-    const personsPrice = body.adults * camp.adultPricePerNight + body.children * camp.childPricePerNight;
+    const langPrice = accommodationType.prices.find((p) => p.languageCode === body.languageCode) ?? accommodationType.prices[0];
+    const pricePerNight = langPrice?.pricePerNight ?? 0;
+    const adultPrice = langPrice?.adultPricePerNight ?? 0;
+    const childPrice = langPrice?.childPricePerNight ?? 0;
+    const personsPrice = body.adults * adultPrice + body.children * childPrice;
+
     const selectedSurcharges = camp.surcharges.filter((s) => body.selectedSurchargeIds.includes(s.id));
-    const surchargesPrice = selectedSurcharges.reduce((sum, s) => sum + s.pricePerNight, 0);
-    const totalPrice = (basePrice + personsPrice + surchargesPrice) * nights;
+    const surchargesPrice = selectedSurcharges.reduce((sum, s) => {
+      const p = s.prices.find((p) => p.languageCode === body.languageCode) ?? s.prices[0];
+      return sum + (p?.pricePerNight ?? 0);
+    }, 0);
+    const totalPrice = (pricePerNight + personsPrice + surchargesPrice) * nights;
 
     const reservation = await app.prisma.reservation.create({
       data: {
         campId: camp.id,
-        accommodationType: body.accommodationType,
+        accommodationTypeId: body.accommodationTypeId,
         checkIn, checkOut,
         adults: body.adults,
         children: body.children,
@@ -79,15 +114,18 @@ export async function publicFormRoutes(app: FastifyInstance) {
         expectedArrival: body.expectedArrival,
         note: body.note,
         totalPrice,
+        status: camp.requiresConfirmation ? "PENDING" : "CONFIRMED",
         languageCode: body.languageCode,
         surcharges: {
-          create: selectedSurcharges.map((s) => ({ surchargeId: s.id, priceSnapshot: s.pricePerNight })),
+          create: selectedSurcharges.map((s) => {
+            const p = s.prices.find((p) => p.languageCode === body.languageCode) ?? s.prices[0];
+            return { surchargeId: s.id, priceSnapshot: p?.pricePerNight ?? 0 };
+          }),
         },
       },
-      include: { camp: true, surcharges: { include: { surcharge: true } } },
+      include: { camp: true, accommodationType: true, surcharges: { include: { surcharge: true } } },
     });
 
-    // Send emails (non-blocking — don't fail reservation if email fails)
     sendReservationEmails(app.prisma, reservation as never, nights).catch((err) =>
       app.log.error({ err }, "Failed to send reservation emails"),
     );

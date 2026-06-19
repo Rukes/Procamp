@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { DayPicker, DateRange } from "react-day-picker";
 import { format, isBefore, startOfDay } from "date-fns";
-import { cs } from "date-fns/locale";
 import "react-day-picker/dist/style.css";
+import { Language } from "@procamp/shared";
+import { useT } from "../i18n";
+import { getDateLocale } from "../i18n/dateFnsLocale";
 
 interface Props {
   occupied: string[];
@@ -10,9 +12,13 @@ interface Props {
   onChange: (v: { checkIn: Date | null; checkOut: Date | null }) => void;
   onNext: () => void;
   onBack: () => void;
+  lang: Language;
 }
 
-export default function DateStep({ occupied, value, onChange, onNext, onBack }: Props) {
+export default function DateStep({ occupied, value, onChange, onNext, onBack, lang }: Props) {
+  const tr = useT(lang.code);
+  const locale = getDateLocale(lang.code);
+
   const [range, setRange] = useState<DateRange | undefined>(
     value.checkIn && value.checkOut ? { from: value.checkIn, to: value.checkOut } : undefined,
   );
@@ -35,8 +41,8 @@ export default function DateStep({ occupied, value, onChange, onNext, onBack }: 
 
   return (
     <div className="step-card">
-      <h2 className="text-lg font-semibold text-gray-900 mb-1">Termín pobytu</h2>
-      <p className="text-sm text-gray-500 mb-4">Vyberte datum příjezdu a odjezdu.</p>
+      <h2 className="text-lg font-semibold text-gray-900 mb-1">{tr.dateTitle}</h2>
+      <p className="text-sm text-gray-500 mb-4">{tr.dateSubtitle}</p>
 
       <div className="flex justify-center">
         <DayPicker
@@ -45,27 +51,27 @@ export default function DateStep({ occupied, value, onChange, onNext, onBack }: 
           onSelect={handleSelect}
           disabled={isDisabled}
           numberOfMonths={1}
-          locale={cs}
+          locale={locale}
           modifiersStyles={{
             selected: { backgroundColor: "#2563eb", color: "#fff", borderRadius: "0.5rem" },
             range_middle: { backgroundColor: "#dbeafe", color: "#1e40af", borderRadius: 0 },
-            today: { fontWeight: "bold", color: "#2563eb" },
+            today: { fontWeight: "bold" },
           }}
         />
       </div>
 
       {nights > 0 && (
         <div className="bg-blue-50 rounded-xl p-3 text-center text-sm text-blue-700 font-medium mb-4">
-          {nights} {nights === 1 ? "noc" : nights < 5 ? "noci" : "nocí"}
+          {tr.dateNight(nights)}
           {" · "}
-          {format(range!.from!, "d. M.", { locale: cs })} – {format(range!.to!, "d. M. yyyy", { locale: cs })}
+          {format(range!.from!, "d. M.", { locale })} – {format(range!.to!, "d. M. yyyy", { locale })}
         </div>
       )}
 
       <div className="flex gap-3 mt-2">
-        <button className="btn-secondary" onClick={onBack}>← Zpět</button>
+        <button className="btn-secondary" onClick={onBack}>{tr.back}</button>
         <button className="btn-primary" onClick={onNext} disabled={!range?.from || !range?.to}>
-          Pokračovat →
+          {tr.next}
         </button>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const createReservationSchema = z.object({
-  accommodationType: z.enum(["CARAVAN", "TENT"]),
+  accommodationTypeId: z.string(),
   checkIn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   checkOut: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   adults: z.number().int().min(1),
@@ -43,24 +43,17 @@ export const createUserSchema = z.object({
 });
 
 export const updateCampSchema = z.object({
-  name: z.string().min(1),
-  notificationEmail: z.string().email(),
-  smtpHost: z.string().min(1),
-  smtpPort: z.number().int().min(1),
-  smtpUser: z.string().min(1),
+  name: z.string().min(1).optional(),
+  notificationEmail: z.string().optional(),
+  smtpHost: z.string().optional(),
+  smtpPort: z.number().int().min(1).optional(),
+  smtpUser: z.string().optional(),
   smtpPassword: z.string().optional(),
-  smtpFrom: z.string().min(1),
-  caravanCapacity: z.number().int().min(0),
-  tentCapacity: z.number().int().min(0),
-  caravanPricePerNight: z.number().min(0),
-  tentPricePerNight: z.number().min(0),
-  adultPricePerNight: z.number().min(0),
-  childPricePerNight: z.number().min(0),
-  currency: z.string().default("CZK"),
+  smtpFrom: z.string().optional(),
+  requiresConfirmation: z.boolean().optional(),
 });
 
 export const createSurchargeSchema = z.object({
-  pricePerNight: z.number().min(0),
   isOptional: z.boolean().default(true),
   translations: z.record(z.object({ name: z.string().min(1) })),
 });
