@@ -10,6 +10,11 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 
 ## Co je nového (červen 2026)
 
+- **Multi-tenancy — Organizace** — systém podporuje více nezávislých organizací; každá má vlastní kempy, uživatele a jazyky; data jsou striktně oddělena
+- **Přepínač organizace** — super admin vidí v menu dropdown pro přepínání mezi organizacemi (globální pohled nebo pohled za konkrétní org)
+- **URL formuláře s org slugem** — `/form/{orgSlug}/{campSlug}` — dvě organizace mohou mít stejný slug kempu bez kolize
+- **GDPR & podmínky** — org může nastavit vlastní text podmínek přes WYSIWYG editor (TipTap); pokud je vyplněn, zákazník musí odsouhlasit checkbox před odesláním formuláře
+- **hCaptcha** — připravena pro formulář i admin login; aktivuje se nastavením `VITE_HCAPTCHA_SITE_KEY`
 - **Překlady formuláře** — rezervační formulář je plně přeložen do 11 jazyků (cs, en, de, pl, it, es, fr, ru, uk, sk, hu) včetně správného formátování dat a cen podle měny jazyka
 - **Nová rezervace** — výběr termínu přes kalendář (react-day-picker), automatický výběr objektu pokud existuje jen jeden, živá kalkulace ceny (příplatky, osoby, počet nocí) při ručním zadávání
 - **Seznam rezervací** — virtuální stavy „Proběhla" a „Propadlá", řazení kliknutím na hlavičku, zelené zvýraznění probíhajících pobytů, ikonka poznámky s hover/toggle popoverem, filtr podle stavu včetně „Propadlá"
@@ -379,22 +384,24 @@ Po instalaci otevřete v prohlížeči:
 2. **API health check:** `https://api.vas-domen.cz/api/health`
    - Mělo by vrátit: `{"status":"ok"}`
 
-3. **Formulář (demo):** `https://form.vas-domen.cz/form/nazev-kempu`
-   - Nahraďte `nazev-kempu` slugem kempu, který vytvoříte v adminu
+3. **Formulář (demo):** `https://form.vas-domen.cz/form/{org-slug}/{kemp-slug}`
+   - Nahraďte `{org-slug}` slugem organizace a `{kemp-slug}` slugem kempu
 
 ---
 
 ## První kroky v administraci
 
-1. Přihlaste se do admin panelu
-2. Změňte heslo (Přihlašovací menu → Změna hesla)
-3. Přejděte do **Kempy** → **+ Nový kemp**
-4. Nastavte název kempu a slug (URL identifikátor, např. `kemp-slunecni`)
-5. V detailu kempu nastavte:
+1. Přihlaste se jako super admin (`admin@procamp.cz` / `admin123456`)
+2. Přejděte do **Organizace** → **+ Nová organizace** — vytvořte organizaci pro prvního zákazníka
+3. V menu vyberte nově vytvořenou organizaci z přepínače
+4. Přejděte do **Jazyky** → přidejte alespoň jeden jazyk (např. `cs` — Čeština)
+5. Přejděte do **Uživatelé** → vytvořte admin účet pro zákazníka
+6. Přejděte do **Objekty** → **+ Nový objekt** — nastavte název a slug kempu
+7. V detailu objektu nastavte:
    - **Nastavení:** kapacity, ceny, SMTP pro e-maily
    - **Příplatky:** přidejte volitelné příplatky (elektřina apod.)
    - **E-mailové šablony:** upravte texty potvrzovacích e-mailů
-6. V záložce **Vložení na web** zkopírujte `<iframe>` kód a vložte ho na vaši stránku
+8. V záložce **Vložení na web** zkopírujte `<iframe>` kód a vložte ho na stránku zákazníka
 
 ---
 
@@ -404,7 +411,7 @@ Zkopírujte iframe kód z detailu kempu (záložka „Vložení na web"):
 
 ```html
 <iframe
-  src="https://form.vas-domen.cz/form/nazev-kempu"
+  src="https://form.vas-domen.cz/form/{org-slug}/{kemp-slug}"
   width="100%"
   height="700"
   frameborder="0"

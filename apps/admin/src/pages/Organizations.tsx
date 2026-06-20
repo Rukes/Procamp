@@ -73,55 +73,6 @@ export default function OrganizationsPage() {
   const toSlug = (s: string) =>
     s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
-  const OrgForm = () => (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="label">Název organizace *</label>
-        <input className="input" value={form.name} onChange={(e) => {
-          set("name", e.target.value);
-          if (creating) set("slug", toSlug(e.target.value));
-        }} required />
-      </div>
-      <div>
-        <label className="label">URL slug *</label>
-        <input className="input" value={form.slug} onChange={(e) => set("slug", e.target.value)} required pattern="[a-z0-9-]+" placeholder="nazev-organizace" />
-        <p className="text-xs text-gray-400 mt-1">Použije se v URL formuláře: /<strong>{form.slug || "slug"}</strong>/kemp-slug</p>
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">IČO</label>
-          <input className="input" value={form.ico} onChange={(e) => set("ico", e.target.value)} placeholder="12345678" />
-        </div>
-        <div>
-          <label className="label">DIČ</label>
-          <input className="input" value={form.dic} onChange={(e) => set("dic", e.target.value)} placeholder="CZ12345678" />
-        </div>
-      </div>
-      <div>
-        <label className="label">Adresa</label>
-        <input className="input" value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="Ulice 1, 110 00 Praha" />
-      </div>
-      <div>
-        <label className="label">Země</label>
-        <input className="input" value={form.country} onChange={(e) => set("country", e.target.value)} placeholder="Česká republika" />
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Kontaktní osoba</label>
-          <input className="input" value={form.contactPerson} onChange={(e) => set("contactPerson", e.target.value)} />
-        </div>
-        <div>
-          <label className="label">Fakturační e-mail</label>
-          <input className="input" type="email" value={form.billingEmail} onChange={(e) => set("billingEmail", e.target.value)} />
-        </div>
-      </div>
-      <div className="flex gap-2 pt-2">
-        <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</button>
-        <button className="btn-secondary" type="button" onClick={closeModal}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
-      </div>
-    </form>
-  );
-
   return (
     <div className="p-8">
       {(creating || modalOrg) && (
@@ -131,7 +82,54 @@ export default function OrganizationsPage() {
               <h3 className="font-semibold">{creating ? "Nová organizace" : `Upravit: ${modalOrg!.name}`}</h3>
               <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
             </div>
-            <div className="px-6 py-5"><OrgForm /></div>
+            <div className="px-6 py-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label className="label">Název organizace *</label>
+                  <input className="input" value={form.name} onChange={(e) => {
+                    set("name", e.target.value);
+                    if (creating) set("slug", toSlug(e.target.value));
+                  }} required />
+                </div>
+                <div>
+                  <label className="label">URL slug *</label>
+                  <input className="input" value={form.slug} onChange={(e) => set("slug", e.target.value)} required pattern="[a-z0-9-]+" placeholder="nazev-organizace" />
+                  <p className="text-xs text-gray-400 mt-1">Použije se v URL formuláře: /<strong>{form.slug || "slug"}</strong>/kemp-slug</p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">IČO</label>
+                    <input className="input" value={form.ico} onChange={(e) => set("ico", e.target.value)} placeholder="12345678" />
+                  </div>
+                  <div>
+                    <label className="label">DIČ</label>
+                    <input className="input" value={form.dic} onChange={(e) => set("dic", e.target.value)} placeholder="CZ12345678" />
+                  </div>
+                </div>
+                <div>
+                  <label className="label">Adresa</label>
+                  <input className="input" value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="Ulice 1, 110 00 Praha" />
+                </div>
+                <div>
+                  <label className="label">Země</label>
+                  <input className="input" value={form.country} onChange={(e) => set("country", e.target.value)} placeholder="Česká republika" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">Kontaktní osoba</label>
+                    <input className="input" value={form.contactPerson} onChange={(e) => set("contactPerson", e.target.value)} />
+                  </div>
+                  <div>
+                    <label className="label">Fakturační e-mail</label>
+                    <input className="input" type="email" value={form.billingEmail} onChange={(e) => set("billingEmail", e.target.value)} />
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-2">
+                  <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</button>
+                  <button className="btn-secondary" type="button" onClick={closeModal}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       )}
