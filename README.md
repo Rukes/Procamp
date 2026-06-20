@@ -108,6 +108,7 @@ Vyplňte `.env`:
 DB_PASSWORD=silne-heslo-sem
 JWT_SECRET=sem-vlozit-nahodny-retezec-node-e-console.log-crypto.randomBytes-64-toString-hex
 VITE_API_URL=https://api.mujkemp.cz
+VITE_FORM_BASE_URL=https://form.mujkemp.cz
 ```
 
 ```bash

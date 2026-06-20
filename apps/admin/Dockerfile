@@ -11,6 +11,8 @@ RUN pnpm install --no-frozen-lockfile
 FROM deps AS builder
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_FORM_BASE_URL
+ENV VITE_FORM_BASE_URL=$VITE_FORM_BASE_URL
 COPY packages/shared ./packages/shared
 RUN node_modules/.bin/tsc -p packages/shared/tsconfig.json
 COPY apps/admin ./apps/admin
