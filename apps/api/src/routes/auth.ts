@@ -18,15 +18,16 @@ export async function authRoutes(app: FastifyInstance) {
       email: user.email,
       isSuperAdmin: user.isSuperAdmin,
       permissions: user.permissions,
+      organizationId: user.organizationId ?? null,
     });
 
-    return { token, user: { id: user.id, name: user.name, email: user.email, isSuperAdmin: user.isSuperAdmin, permissions: user.permissions } };
+    return { token, user: { id: user.id, name: user.name, email: user.email, isSuperAdmin: user.isSuperAdmin, permissions: user.permissions, organizationId: user.organizationId ?? null } };
   });
 
   app.get("/me", { preHandler: requireAuth }, async (request) => {
     const { sub } = request.user;
     const user = await app.prisma.user.findUniqueOrThrow({ where: { id: sub } });
-    return { id: user.id, name: user.name, email: user.email, isSuperAdmin: user.isSuperAdmin, permissions: user.permissions, reservationsDefaultView: user.reservationsDefaultView };
+    return { id: user.id, name: user.name, email: user.email, isSuperAdmin: user.isSuperAdmin, permissions: user.permissions, reservationsDefaultView: user.reservationsDefaultView, organizationId: user.organizationId ?? null };
   });
 
   app.post("/change-password", { preHandler: requireAuth }, async (request, reply) => {

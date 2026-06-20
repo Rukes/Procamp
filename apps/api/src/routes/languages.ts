@@ -1,17 +1,29 @@
 import { FastifyInstance } from "fastify";
-import { requirePermission } from "../plugins/auth";
+import { requirePermission, requireAuth, orgFilter } from "../plugins/auth";
 
 export async function languageRoutes(app: FastifyInstance) {
-  app.get("/", async () => {
-    return app.prisma.language.findMany({ orderBy: { isDefault: "desc" } });
+  app.get("/", { preHandler: requireAuth }, async (request) => {
+    const orgId = orgFilter(request);
+    return app.prisma.language.findMany({
+      where: orgId ? { organizationId: orgId } : {},
+      orderBy: { isDefault: "desc" },
+    });
   });
 
   app.post("/", { preHandler: requirePermission("settings_edit") }, async (request, reply) => {
     const { code, name, currencyCode, currencySymbol, currencyPosition } = request.body as {
       code: string; name: string; currencyCode?: string; currencySymbol?: string; currencyPosition?: string;
     };
+    const orgId = orgFilter(request);
+    if (!orgId) return reply.status(400).send({ error: "Nejprve vyberte organizaci." });
     const lang = await app.prisma.language.create({
-      data: { code, name, ...(currencyCode && { currencyCode }), ...(currencySymbol && { currencySymbol }), ...(currencyPosition && { currencyPosition }) },
+      data: {
+        code, name,
+        ...(currencyCode && { currencyCode }),
+        ...(currencySymbol && { currencySymbol }),
+        ...(currencyPosition && { currencyPosition }),
+        ...(orgId ? { organizationId: orgId } : {}),
+      },
     });
     return reply.status(201).send(lang);
   });

@@ -7,16 +7,39 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Organization {
+  id                  String   @id @default(cuid())
+  name                String
+  slug                String   @unique
+  country             String   @default("")
+  ico                 String   @default("")
+  dic                 String   @default("")
+  address             String   @default("")
+  contactPerson       String   @default("")
+  billingEmail        String   @default("")
+  termsText           String   @default("") @db.Text
+  defaultLanguageCode String   @default("cs")
+  thousandsSeparator  String   @default(" ")
+  decimalSeparator    String   @default(",")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  users               User[]
+  camps               Camp[]
+  languages           Language[]
+}
+
 model User {
-  id                      String   @id @default(cuid())
+  id                      String        @id @default(cuid())
   name                    String
-  email                   String   @unique
+  email                   String        @unique
   passwordHash            String
-  isSuperAdmin            Boolean  @default(false)
-  permissions             Json     @default("{}")
-  reservationsDefaultView String   @default("list")
-  createdAt               DateTime @default(now())
-  updatedAt               DateTime @updatedAt
+  isSuperAdmin            Boolean       @default(false)
+  permissions             Json          @default("{}")
+  reservationsDefaultView String        @default("list")
+  organizationId          String?
+  organization            Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
 }
 
 model SystemSettings {
@@ -28,20 +51,26 @@ model SystemSettings {
 }
 
 model Language {
-  id               String   @id @default(cuid())
-  code             String   @unique
+  id               String        @id @default(cuid())
+  code             String
   name             String
-  isDefault        Boolean  @default(false)
-  currencyCode     String   @default("CZK")
-  currencySymbol   String   @default("Kč")
-  currencyPosition String   @default("after")
-  createdAt        DateTime @default(now())
+  isDefault        Boolean       @default(false)
+  currencyCode     String        @default("CZK")
+  currencySymbol   String        @default("Kč")
+  currencyPosition String        @default("after")
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  createdAt        DateTime      @default(now())
+
+  @@unique([organizationId, code])
 }
 
 model Camp {
   id                    String              @id @default(cuid())
   name                  String
-  slug                  String              @unique
+  slug                  String
+  organizationId        String?
+  organization          Organization?       @relation(fields: [organizationId], references: [id], onDelete: SetNull)
   notificationEmail     String
   smtpHost              String              @default("")
   smtpPort              Int                 @default(587)
@@ -55,6 +84,8 @@ model Camp {
   surcharges            Surcharge[]
   reservations          Reservation[]
   emailTemplates        EmailTemplate[]
+
+  @@unique([organizationId, slug])
 }
 
 model AccommodationType {

@@ -310,6 +310,7 @@ export default function CampDetailPage() {
   const { can } = useAuth();
   const toast = useToast();
   const [camp, setCamp] = useState<Camp | null>(null);
+  const [orgSlug, setOrgSlug] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("settings");
   const [saving, setSaving] = useState(false);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -333,6 +334,9 @@ export default function CampDetailPage() {
     setCamp(campRes.data);
     setLanguages(langRes.data);
     setTemplates(tplRes.data);
+    if (campRes.data.organizationId) {
+      api.get(`/organizations/${campRes.data.organizationId}`).then((r) => setOrgSlug(r.data.slug)).catch(() => {});
+    }
   };
 
   useEffect(() => { load(); }, [id]);
@@ -421,7 +425,9 @@ export default function CampDetailPage() {
 
   if (!camp) return <div className="p-8 text-gray-500">Načítám…</div>;
 
-  const embedUrl = `${import.meta.env.VITE_FORM_BASE_URL}/form/${camp.slug}`;
+  const embedUrl = orgSlug
+    ? `${import.meta.env.VITE_FORM_BASE_URL}/form/${orgSlug}/${camp.slug}`
+    : `${import.meta.env.VITE_FORM_BASE_URL}/form/${camp.slug}`;
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "settings", label: "Nastavení" },

@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { requirePermission } from "../plugins/auth";
+import { requirePermission, orgFilter } from "../plugins/auth";
 import { checkAvailability } from "../services/availability";
 
 const INCLUDE = {
@@ -11,7 +11,9 @@ const INCLUDE = {
 export async function reservationRoutes(app: FastifyInstance) {
   app.get("/", { preHandler: requirePermission("reservations_view") }, async (request) => {
     const { campId, status, search, from, to } = request.query as Record<string, string>;
+    const orgId = orgFilter(request);
     const where: Record<string, unknown> = {};
+    if (orgId) where.camp = { organizationId: orgId };
     if (campId) where.campId = campId;
     if (status) where.status = status;
     if (from || to) {
@@ -122,6 +124,62 @@ export async function reservationRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     await app.prisma.reservation.delete({ where: { id } });
     return { success: true };
+  });
+
+  // Export Excel
+  app.get("/export/xlsx", { preHandler: requirePermission("reservations_view") }, async (request, reply) => {
+    const { campId } = request.query as { campId?: string };
+    const reservations = await app.prisma.reservation.findMany({
+      where: campId ? { campId } : {},
+      include: { camp: true, accommodationType: true },
+      orderBy: { checkIn: "asc" },
+    });
+
+    const ExcelJS = await import("exceljs");
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Rezervace");
+
+    ws.columns = [
+      { header: "ID", key: "id", width: 28 },
+      { header: "Objekt", key: "camp", width: 20 },
+      { header: "Typ ubytování", key: "type", width: 22 },
+      { header: "Příjezd", key: "checkIn", width: 12 },
+      { header: "Odjezd", key: "checkOut", width: 12 },
+      { header: "Dospělí", key: "adults", width: 10 },
+      { header: "Děti", key: "children", width: 8 },
+      { header: "Jméno", key: "firstName", width: 14 },
+      { header: "Příjmení", key: "lastName", width: 16 },
+      { header: "E-mail", key: "email", width: 26 },
+      { header: "Telefon", key: "phone", width: 16 },
+      { header: "SPZ", key: "licensePlate", width: 12 },
+      { header: "Cena", key: "totalPrice", width: 12 },
+      { header: "Status", key: "status", width: 12 },
+      { header: "Vytvořeno", key: "createdAt", width: 20 },
+    ];
+
+    ws.getRow(1).font = { bold: true };
+    ws.getRow(1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFE2E8F0" } };
+
+    reservations.forEach((r) => {
+      const t = r.accommodationType.translations as Record<string, { name: string }>;
+      const typeName = t.cs?.name ?? t[Object.keys(t)[0]]?.name ?? r.accommodationTypeId;
+      ws.addRow({
+        id: r.id, camp: r.camp.name, type: typeName,
+        checkIn: r.checkIn.toISOString().slice(0, 10),
+        checkOut: r.checkOut.toISOString().slice(0, 10),
+        adults: r.adults, children: r.children,
+        firstName: r.firstName, lastName: r.lastName,
+        email: r.email, phone: r.phone,
+        licensePlate: r.licensePlate ?? "",
+        totalPrice: r.totalPrice, status: r.status,
+        createdAt: r.createdAt.toISOString().slice(0, 16).replace("T", " "),
+      });
+    });
+
+    const buffer = await wb.xlsx.writeBuffer();
+    reply.header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    reply.header("Content-Disposition", "attachment; filename=rezervace.xlsx");
+    return reply.send(buffer);
   });
 
   // Export CSV

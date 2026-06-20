@@ -1,10 +1,12 @@
 import { FastifyInstance } from "fastify";
 import { updateCampSchema, createSurchargeSchema } from "@procamp/shared";
-import { requirePermission, requireAuth } from "../plugins/auth";
+import { requirePermission, requireAuth, orgFilter } from "../plugins/auth";
 
 export async function campRoutes(app: FastifyInstance) {
-  app.get("/", { preHandler: requirePermission("camps_view") }, async () => {
+  app.get("/", { preHandler: requirePermission("camps_view") }, async (request) => {
+    const orgId = orgFilter(request);
     return app.prisma.camp.findMany({
+      where: orgId ? { organizationId: orgId } : {},
       include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } } },
       orderBy: { createdAt: "asc" },
     });
@@ -12,16 +14,19 @@ export async function campRoutes(app: FastifyInstance) {
 
   app.get("/:id", { preHandler: requirePermission("camps_view") }, async (request) => {
     const { id } = request.params as { id: string };
-    return app.prisma.camp.findUniqueOrThrow({
-      where: { id },
+    const orgId = orgFilter(request);
+    return app.prisma.camp.findFirstOrThrow({
+      where: { id, ...(orgId ? { organizationId: orgId } : {}) },
       include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } } },
     });
   });
 
   app.post("/", { preHandler: requirePermission("camps_create") }, async (request, reply) => {
     const { name, slug } = request.body as { name: string; slug: string };
+    const orgId = orgFilter(request);
+    if (!orgId) return reply.status(400).send({ error: "Nejprve vyberte organizaci." });
     const camp = await app.prisma.camp.create({
-      data: { name, slug, notificationEmail: "" },
+      data: { name, slug, notificationEmail: "", ...(orgId ? { organizationId: orgId } : {}) },
       include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true } } },
     });
 

@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { Reservation, Camp, Language } from "@procamp/shared";
@@ -113,10 +113,32 @@ export default function ReservationsPage() {
     load();
   };
 
-  const handleExport = () => {
+  const [exportOpen, setExportOpen] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!exportOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (exportRef.current && !exportRef.current.contains(e.target as Node)) setExportOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [exportOpen]);
+
+  const handleExport = useCallback(async (format: "xlsx" | "csv") => {
+    setExportOpen(false);
     const params = campFilter ? `?campId=${campFilter}` : "";
-    window.open(`/api/reservations/export/csv${params}`, "_blank");
-  };
+    const mime = format === "xlsx"
+      ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      : "text/csv;charset=utf-8;";
+    const res = await api.get(`/reservations/export/${format}${params}`, { responseType: "blob" });
+    const url = URL.createObjectURL(new Blob([res.data], { type: mime }));
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `rezervace.${format}`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [campFilter]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => d === "asc" ? "desc" : "asc");
@@ -197,7 +219,21 @@ export default function ReservationsPage() {
             {can("reservations_create") && <Link to="/reservations/new" className="inline-flex items-center px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"><i className="fa-regular fa-plus mr-1.5" />Nová rezervace</Link>}
           </div>
         </div>
-        <button className="btn-secondary" onClick={handleExport}><i className="fa-regular fa-download mr-1.5" />Export CSV</button>
+        <div ref={exportRef} className="relative">
+          <button className="btn-secondary text-sm py-1.5 px-3" onClick={() => setExportOpen((v) => !v)}>
+            <i className="fa-regular fa-download mr-1.5" />Export <i className="fa-regular fa-chevron-down ml-1.5 text-xs" />
+          </button>
+          {exportOpen && (
+            <div className="absolute right-0 top-full mt-1 w-44 bg-white rounded-xl shadow-lg border border-gray-100 py-1 z-20">
+              <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2" onClick={() => handleExport("xlsx")}>
+                <i className="fa-regular fa-file-excel text-green-600 w-4" />Export do Excelu
+              </button>
+              <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2" onClick={() => handleExport("csv")}>
+                <i className="fa-regular fa-file-csv text-blue-500 w-4" />Export do CSV
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="flex gap-3 mb-5">

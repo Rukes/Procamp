@@ -1,0 +1,182 @@
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { api } from "../api/client";
+import { useToast } from "../contexts/ToastContext";
+
+interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  country: string;
+  ico: string;
+  dic: string;
+  address: string;
+  contactPerson: string;
+  billingEmail: string;
+  createdAt: string;
+  _count: { camps: number; users: number };
+}
+
+const EMPTY: Omit<Organization, "id" | "createdAt" | "_count"> = {
+  name: "", slug: "", country: "", ico: "", dic: "", address: "", contactPerson: "", billingEmail: "",
+};
+
+export default function OrganizationsPage() {
+  const toast = useToast();
+  const [orgs, setOrgs] = useState<Organization[]>([]);
+  const [modalOrg, setModalOrg] = useState<Organization | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({ ...EMPTY });
+
+  const load = () => api.get("/organizations").then((r) => setOrgs(r.data)).catch(() => {});
+  useEffect(() => { load(); }, []);
+
+  const closeModal = () => { setCreating(false); setModalOrg(null); setForm({ ...EMPTY }); };
+
+  const openCreate = () => { setForm({ ...EMPTY }); setCreating(true); setModalOrg(null); };
+  const openEdit = (org: Organization) => {
+    setForm({ name: org.name, slug: org.slug, country: org.country, ico: org.ico, dic: org.dic, address: org.address, contactPerson: org.contactPerson, billingEmail: org.billingEmail });
+    setModalOrg(org);
+    setCreating(false);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      if (creating) {
+        await api.post("/organizations", form);
+        toast.success("Organizace byla vytvořena.");
+      } else {
+        await api.put(`/organizations/${modalOrg!.id}`, form);
+        toast.success("Organizace byla uložena.");
+      }
+      closeModal();
+      load();
+    } catch {
+      toast.error("Nepodařilo se uložit organizaci.");
+    }
+  };
+
+  const handleDelete = async (org: Organization) => {
+    if (!confirm(`Smazat organizaci „${org.name}"? Tato akce odebere vazby na kempy a uživatele.`)) return;
+    try {
+      await api.delete(`/organizations/${org.id}`);
+      toast.success("Organizace smazána.");
+      load();
+    } catch {
+      toast.error("Nepodařilo se smazat organizaci.");
+    }
+  };
+
+  const set = (k: keyof typeof EMPTY, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const toSlug = (s: string) =>
+    s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
+
+  const OrgForm = () => (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div>
+        <label className="label">Název organizace *</label>
+        <input className="input" value={form.name} onChange={(e) => {
+          set("name", e.target.value);
+          if (creating) set("slug", toSlug(e.target.value));
+        }} required />
+      </div>
+      <div>
+        <label className="label">URL slug *</label>
+        <input className="input" value={form.slug} onChange={(e) => set("slug", e.target.value)} required pattern="[a-z0-9-]+" placeholder="nazev-organizace" />
+        <p className="text-xs text-gray-400 mt-1">Použije se v URL formuláře: /<strong>{form.slug || "slug"}</strong>/kemp-slug</p>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label">IČO</label>
+          <input className="input" value={form.ico} onChange={(e) => set("ico", e.target.value)} placeholder="12345678" />
+        </div>
+        <div>
+          <label className="label">DIČ</label>
+          <input className="input" value={form.dic} onChange={(e) => set("dic", e.target.value)} placeholder="CZ12345678" />
+        </div>
+      </div>
+      <div>
+        <label className="label">Adresa</label>
+        <input className="input" value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="Ulice 1, 110 00 Praha" />
+      </div>
+      <div>
+        <label className="label">Země</label>
+        <input className="input" value={form.country} onChange={(e) => set("country", e.target.value)} placeholder="Česká republika" />
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="label">Kontaktní osoba</label>
+          <input className="input" value={form.contactPerson} onChange={(e) => set("contactPerson", e.target.value)} />
+        </div>
+        <div>
+          <label className="label">Fakturační e-mail</label>
+          <input className="input" type="email" value={form.billingEmail} onChange={(e) => set("billingEmail", e.target.value)} />
+        </div>
+      </div>
+      <div className="flex gap-2 pt-2">
+        <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</button>
+        <button className="btn-secondary" type="button" onClick={closeModal}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
+      </div>
+    </form>
+  );
+
+  return (
+    <div className="p-8">
+      {(creating || modalOrg) && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 pt-12" onClick={closeModal}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h3 className="font-semibold">{creating ? "Nová organizace" : `Upravit: ${modalOrg!.name}`}</h3>
+              <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
+            </div>
+            <div className="px-6 py-5"><OrgForm /></div>
+          </div>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Organizace</h1>
+          <p className="text-sm text-gray-500 mt-1">Každá organizace má vlastní kempy, uživatele a jazyky.</p>
+        </div>
+        <button className="btn-primary" onClick={openCreate}><i className="fa-regular fa-plus mr-1.5" />Nová organizace</button>
+      </div>
+
+      <div className="space-y-3 max-w-3xl">
+        {orgs.map((org) => (
+          <div key={org.id} className="card p-5">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="font-semibold text-gray-900">{org.name}</h2>
+                  <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{org.slug}</code>
+                  <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
+                    {org._count.camps} {org._count.camps === 1 ? "kemp" : org._count.camps < 5 ? "kempy" : "kempů"} · {org._count.users} {org._count.users === 1 ? "uživatel" : org._count.users < 5 ? "uživatelé" : "uživatelů"}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-500 mt-1 space-y-0.5">
+                  {org.ico && <p><span className="text-gray-400">IČO:</span> {org.ico}{org.dic && <span className="ml-3"><span className="text-gray-400">DIČ:</span> {org.dic}</span>}</p>}
+                  {org.address && <p>{org.address}{org.country && `, ${org.country}`}</p>}
+                  {org.contactPerson && <p><i className="fa-regular fa-user mr-1 text-gray-400" />{org.contactPerson}{org.billingEmail && <span className="ml-2 text-blue-600">{org.billingEmail}</span>}</p>}
+                </div>
+              </div>
+              <div className="flex gap-2 flex-shrink-0">
+                <Link to={`/organizations/${org.id}`} className="btn-secondary text-sm py-1.5"><i className="fa-regular fa-gear mr-1.5" />Nastavení</Link>
+                <button className="btn-secondary text-sm py-1.5" onClick={() => openEdit(org)}><i className="fa-regular fa-pen mr-1.5" />Upravit</button>
+                <button className="btn-danger text-sm py-1.5" onClick={() => handleDelete(org)}><i className="fa-regular fa-trash mr-1.5" />Smazat</button>
+              </div>
+            </div>
+          </div>
+        ))}
+        {orgs.length === 0 && (
+          <div className="card p-12 text-center text-gray-400">
+            <i className="fa-regular fa-building text-3xl mb-3 block" />
+            <p>Žádné organizace. Vytvořte první kliknutím na „+ Nová organizace".</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

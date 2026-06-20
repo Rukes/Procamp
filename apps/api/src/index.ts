@@ -10,6 +10,7 @@ import { userRoutes } from "./routes/users";
 import { languageRoutes } from "./routes/languages";
 import { emailTemplateRoutes } from "./routes/email-templates";
 import { systemSettingsRoutes } from "./routes/system-settings";
+import { organizationRoutes } from "./routes/organizations";
 import { publicFormRoutes } from "./routes/public/form";
 
 const app = Fastify({ logger: true });
@@ -38,6 +39,7 @@ const start = async () => {
   await app.register(languageRoutes, { prefix: "/api/languages" });
   await app.register(emailTemplateRoutes, { prefix: "/api/email-templates" });
   await app.register(systemSettingsRoutes, { prefix: "/api/system-settings" });
+  await app.register(organizationRoutes, { prefix: "/api/organizations" });
 
   app.get("/api/health", async () => ({ status: "ok" }));
 

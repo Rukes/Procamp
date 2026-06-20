@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
+import HCaptcha from "../components/HCaptcha";
+
+const hasCaptcha = !!import.meta.env.VITE_HCAPTCHA_SITE_KEY;
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -9,9 +12,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (hasCaptcha && !captchaToken) return;
     setError("");
     setLoading(true);
     try {
@@ -38,8 +43,9 @@ export default function LoginPage() {
             <label className="label">Heslo</label>
             <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
           </div>
+          <HCaptcha onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
           {error && <p className="text-sm text-red-600">{error}</p>}
-          <button className="btn-primary w-full justify-center" type="submit" disabled={loading}>
+          <button className="btn-primary w-full justify-center" type="submit" disabled={loading || (hasCaptcha && !captchaToken)}>
             {loading ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Přihlašuji…</> : <><i className="fa-regular fa-arrow-right-to-bracket mr-1.5" />Přihlásit se</>}
           </button>
         </form>

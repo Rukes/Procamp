@@ -3,22 +3,8 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-const DEFAULT_LANGUAGES = [
-  { code: "cs", name: "Čeština", isDefault: true, currencyCode: "CZK", currencySymbol: "Kč", currencyPosition: "after" as const },
-];
-
 async function main() {
-  // Default languages
-  for (const lang of DEFAULT_LANGUAGES) {
-    await prisma.language.upsert({
-      where: { code: lang.code },
-      update: {},
-      create: lang,
-    });
-  }
-  console.log("✅ Languages seeded: cs, en, de");
-
-  // Super admin
+  // Super admin (bez organizace)
   const existing = await prisma.user.findUnique({ where: { email: "admin@procamp.cz" } });
   if (!existing) {
     const hash = await bcrypt.hash("admin123456", 12);

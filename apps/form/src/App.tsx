@@ -15,11 +15,11 @@ import ContactStep, { ContactData } from "./steps/ContactStep";
 import ConfirmationStep from "./steps/ConfirmationStep";
 
 function FormApp() {
-  const { slug } = useParams<{ slug: string }>();
+  const { orgSlug, campSlug } = useParams<{ orgSlug: string; campSlug: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [lang, setLang] = useState(searchParams.get("lang") ?? "cs");
 
-  const { data, error } = useCamp(slug!, lang);
+  const { data, error } = useCamp(orgSlug!, campSlug!, lang);
 
   const [step, setStep] = useState(0);
   const [type, setType] = useState<PublicAccommodationType | null>(null);
@@ -33,7 +33,7 @@ function FormApp() {
   const [serverError, setServerError] = useState("");
   const [contactData, setContactData] = useState<ContactData | null>(null);
 
-  const occupied = useOccupied(slug!, type?.id ?? null);
+  const occupied = useOccupied(orgSlug!, campSlug!, type?.id ?? null);
   const t = useT(lang);
 
   const handleLangChange = (code: string) => {
@@ -60,7 +60,7 @@ function FormApp() {
     );
   }
 
-  const { camp, languages } = data;
+  const { camp, languages, termsText } = data;
   const langObj = languages.find((l) => l.code === lang) ?? languages[0];
   const nights = checkIn && checkOut ? Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000) : 0;
 
@@ -74,7 +74,7 @@ function FormApp() {
     setSubmitting(true);
     setServerError("");
     try {
-      const res = await api.post(`/camp/${slug}/reserve`, {
+      const res = await api.post(`/camp/${orgSlug}/${campSlug}/reserve`, {
         accommodationTypeId: type?.id,
         checkIn: checkIn!.toISOString().slice(0, 10),
         checkOut: checkOut!.toISOString().slice(0, 10),
@@ -151,6 +151,7 @@ function FormApp() {
           <ContactStep
             breakdown={breakdown}
             lang={langObj}
+            termsText={termsText}
             onSubmit={handleSubmit}
             onBack={() => setStep(2)}
             submitting={submitting}
@@ -174,8 +175,8 @@ function FormApp() {
 export default function App() {
   return (
     <Routes>
-      <Route path="/form/:slug" element={<FormApp />} />
-      <Route path="*" element={<Navigate to="/form/demo" replace />} />
+      <Route path="/form/:orgSlug/:campSlug" element={<FormApp />} />
+      <Route path="*" element={<Navigate to="/form/demo/demo" replace />} />
     </Routes>
   );
 }

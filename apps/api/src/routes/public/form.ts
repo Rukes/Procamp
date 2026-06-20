@@ -4,23 +4,31 @@ import { checkAvailability, getOccupiedDates } from "../../services/availability
 import { sendReservationEmails } from "../../services/email";
 
 export async function publicFormRoutes(app: FastifyInstance) {
-  // Get camp public data (for form)
-  app.get("/camp/:slug", async (request, reply) => {
-    const { slug } = request.params as { slug: string };
+  // Get camp public data (for form) — /:orgSlug/:campSlug
+  app.get("/camp/:orgSlug/:campSlug", async (request, reply) => {
+    const { orgSlug, campSlug } = request.params as { orgSlug: string; campSlug: string };
     const { lang = "cs" } = request.query as { lang?: string };
 
+    const org = await app.prisma.organization.findUnique({ where: { slug: orgSlug } });
+    if (!org) return reply.status(404).send({ error: "Organization not found" });
+
     const camp = await app.prisma.camp.findUnique({
-      where: { slug },
+      where: { organizationId_slug: { organizationId: org.id, slug: campSlug } },
       include: {
         surcharges: { include: { prices: true } },
         accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } },
+        organization: { select: { termsText: true } },
       },
     });
     if (!camp) return reply.status(404).send({ error: "Camp not found" });
 
-    const languages = await app.prisma.language.findMany({ orderBy: { isDefault: "desc" } });
+    const languages = await app.prisma.language.findMany({
+      where: camp.organizationId ? { organizationId: camp.organizationId } : {},
+      orderBy: { isDefault: "desc" },
+    });
 
-    const { smtpPasswordEncrypted, smtpHost, smtpPort, smtpUser, smtpFrom, notificationEmail, ...publicCamp } = camp;
+    const { smtpPasswordEncrypted, smtpHost, smtpPort, smtpUser, smtpFrom, notificationEmail, organization, ...publicCamp } = camp;
+    const termsText = organization?.termsText ?? "";
 
     // Return accommodation types with translated name and lang-specific prices
     const accommodationTypes = camp.accommodationTypes.map((t) => {
@@ -45,16 +53,19 @@ export async function publicFormRoutes(app: FastifyInstance) {
       return { id: s.id, name, pricePerNight: price?.pricePerNight ?? 0, isOptional: s.isOptional };
     });
 
-    return { camp: { ...publicCamp, accommodationTypes, surcharges }, languages, currentLang: lang };
+    return { camp: { ...publicCamp, accommodationTypes, surcharges }, languages, currentLang: lang, termsText };
   });
 
   // Get occupied dates for an accommodation type
-  app.get("/camp/:slug/occupied", async (request, reply) => {
-    const { slug } = request.params as { slug: string };
+  app.get("/camp/:orgSlug/:campSlug/occupied", async (request, reply) => {
+    const { orgSlug, campSlug } = request.params as { orgSlug: string; campSlug: string };
     const { typeId } = request.query as { typeId?: string };
     if (!typeId) return reply.status(400).send({ error: "typeId required" });
 
-    const camp = await app.prisma.camp.findUnique({ where: { slug } });
+    const org = await app.prisma.organization.findUnique({ where: { slug: orgSlug } });
+    if (!org) return reply.status(404).send({ error: "Organization not found" });
+
+    const camp = await app.prisma.camp.findUnique({ where: { organizationId_slug: { organizationId: org.id, slug: campSlug } } });
     if (!camp) return reply.status(404).send({ error: "Camp not found" });
 
     const dates = await getOccupiedDates(app.prisma, camp.id, typeId);
@@ -62,10 +73,14 @@ export async function publicFormRoutes(app: FastifyInstance) {
   });
 
   // Submit reservation
-  app.post("/camp/:slug/reserve", async (request, reply) => {
-    const { slug } = request.params as { slug: string };
+  app.post("/camp/:orgSlug/:campSlug/reserve", async (request, reply) => {
+    const { orgSlug, campSlug } = request.params as { orgSlug: string; campSlug: string };
+
+    const org = await app.prisma.organization.findUnique({ where: { slug: orgSlug } });
+    if (!org) return reply.status(404).send({ error: "Organization not found" });
+
     const camp = await app.prisma.camp.findUnique({
-      where: { slug },
+      where: { organizationId_slug: { organizationId: org.id, slug: campSlug } },
       include: {
         surcharges: { include: { prices: true } },
         accommodationTypes: { include: { prices: true } },

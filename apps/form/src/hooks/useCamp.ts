@@ -27,17 +27,18 @@ interface CampData {
   camp: CampPublic;
   languages: Language[];
   currentLang: string;
+  termsText: string;
 }
 
-export function useCamp(slug: string, lang: string) {
+export function useCamp(orgSlug: string, campSlug: string, lang: string) {
   const [data, setData] = useState<CampData | null>(null);
   const [error, setError] = useState(false);
 
   useEffect(() => {
-    api.get(`/camp/${slug}?lang=${lang}`)
+    api.get(`/camp/${orgSlug}/${campSlug}?lang=${lang}`)
       .then((r) => setData(r.data))
       .catch(() => setError(true));
-  }, [slug, lang]);
+  }, [orgSlug, campSlug, lang]);
 
   return { data, error };
 }
