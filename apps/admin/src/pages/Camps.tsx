@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
@@ -7,6 +8,7 @@ import { useToast } from "../contexts/ToastContext";
 import Pagination from "../components/Pagination";
 
 export default function CampsPage() {
+  useTitle("Objekty");
   const { can } = useAuth();
   const toast = useToast();
   const [camps, setCamps] = useState<Camp[]>([]);

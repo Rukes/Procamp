@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useToast } from "../contexts/ToastContext";
@@ -40,6 +41,7 @@ const formatPreview = (t: string, d: string) => `1${t}234${d}56`;
 type Tab = "billing" | "settings" | "terms";
 
 export default function MyOrganizationPage() {
+  useTitle("Moje organizace");
   const toast = useToast();
   const [org, setOrg] = useState<Organization | null>(null);
   const [languages, setLanguages] = useState<Language[]>([]);

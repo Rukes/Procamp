@@ -5,13 +5,13 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Super admin (bez organizace)
-  const existing = await prisma.user.findUnique({ where: { email: "admin@procamp.cz" } });
+  const existing = await prisma.user.findUnique({ where: { email: "admin@mujkemp.cz" } });
   if (!existing) {
     const hash = await bcrypt.hash("admin123456", 12);
     await prisma.user.create({
       data: {
         name: "Super Admin",
-        email: "admin@procamp.cz",
+        email: "admin@mujkemp.cz",
         passwordHash: hash,
         isSuperAdmin: true,
         permissions: {
@@ -21,7 +21,7 @@ async function main() {
         },
       },
     });
-    console.log("✅ Super admin created: admin@procamp.cz / admin123456");
+    console.log("✅ Super admin created: admin@mujkemp.cz / admin123456");
     console.log("⚠️  Change the password after first login!");
   } else {
     console.log("ℹ️  Super admin already exists, skipping.");

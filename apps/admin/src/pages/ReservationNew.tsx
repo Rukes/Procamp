@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
@@ -10,6 +11,7 @@ import { cs } from "date-fns/locale";
 import "react-day-picker/dist/style.css";
 
 export default function ReservationNewPage() {
+  useTitle("Nová rezervace");
   const navigate = useNavigate();
   const toast = useToast();
   const [camps, setCamps] = useState<Camp[]>([]);

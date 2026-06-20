@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState, useMemo, Fragment } from "react";
 import { api } from "../api/client";
 
@@ -144,6 +145,7 @@ function DiffModal({ log, onClose }: { log: LogEntry; onClose: () => void }) {
 }
 
 export default function LogsPage() {
+  useTitle("Logy aktivit");
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);

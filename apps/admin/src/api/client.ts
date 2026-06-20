@@ -6,7 +6,7 @@ api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) config.headers.Authorization = `Bearer ${token}`;
 
-  const orgId = localStorage.getItem("procamp_selected_org");
+  const orgId = localStorage.getItem("mujkemp_selected_org");
   if (orgId) config.headers["X-Org-Id"] = orgId;
 
   return config;

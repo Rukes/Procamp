@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
@@ -6,6 +7,7 @@ import HCaptcha from "../components/HCaptcha";
 const hasCaptcha = !!import.meta.env.VITE_HCAPTCHA_SITE_KEY;
 
 export default function LoginPage() {
+  useTitle("Přihlášení");
   const { login } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
@@ -32,7 +34,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="card p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">ProCamp</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-1">MůjKemp.cz</h1>
         <p className="text-sm text-gray-500 mb-6">Přihlaste se do administrace</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>

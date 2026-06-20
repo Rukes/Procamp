@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { Reservation, Camp } from "@procamp/shared";
@@ -86,6 +87,7 @@ function MiniCalendar({ reservations }: { reservations: (Reservation & { camp: C
 }
 
 export default function DashboardPage() {
+  useTitle("Dashboard");
   const navigate = useNavigate();
   const [reservations, setReservations] = useState<(Reservation & { camp: Camp })[]>([]);
   const [camps, setCamps] = useState<Camp[]>([]);

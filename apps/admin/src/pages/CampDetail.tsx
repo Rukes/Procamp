@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
@@ -305,6 +306,7 @@ function AccommodationTypeEditor({ type, languages, campId, onSave, onClose }: T
 
 // --- Hlavní stránka ---
 export default function CampDetailPage() {
+  useTitle("Detail objektu");
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { can } = useAuth();

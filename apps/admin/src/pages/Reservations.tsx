@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
@@ -69,6 +70,7 @@ function isOngoing(r: Reservation): boolean {
 const STATUS_SORT_ORDER: Record<string, number> = { PENDING: 0, CONFIRMED: 1, COMPLETED: 2, EXPIRED: 3, CANCELLED: 4 };
 
 export default function ReservationsPage() {
+  useTitle("Rezervace");
   const { can } = useAuth();
   const navigate = useNavigate();
   const [reservations, setReservations] = useState<(Reservation & { camp: Camp })[]>([]);

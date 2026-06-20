@@ -1,4 +1,4 @@
-# ProCamp — Rezervační systém pro kempingy
+# MůjKemp.cz — Rezervační systém pro kempingy
 
 Webová aplikace pro správu rezervací kempů. Obsahuje:
 
@@ -34,6 +34,10 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 - **Správná měna v detailu rezervace** — cena se zobrazuje v měně odpovídající jazyku rezervace
 - **Smazání rezervace** — tlačítko v detailu rezervace (pro uživatele s oprávněním `reservations_delete`)
 - **Oprava URL formuláře v seznamu objektů** — odkaz nyní obsahuje org slug (`/form/{orgSlug}/{campSlug}`)
+- **Nápověda** — in-app nápověda s vlastním layoutem a 8 tématy (MD soubory renderované přes `marked`)
+- **Stránka O autorovi** — statická stránka s informacemi o projektu a autorovi
+- **Přejmenování na MůjKemp.cz** — celý systém přejmenován včetně domén (`app.mujkemp.cz`, `api.mujkemp.cz`, `form.mujkemp.cz`)
+- **Dynamický title** — každá stránka nastavuje `<title>` ve formátu `Stránka | MůjKemp.cz`
 
 ---
 
@@ -90,7 +94,7 @@ curl -fsSL https://get.docker.com | sh
 
 ```bash
 # 1. Nakopírujte projekt na server a přejděte do složky
-cd /var/www/procamp
+cd /var/www/mujkemp
 
 # 2. Vytvořte soubor s proměnnými
 cp .env.example .env
@@ -102,7 +106,7 @@ Vyplňte `.env`:
 ```env
 DB_PASSWORD=silne-heslo-sem
 JWT_SECRET=sem-vlozit-nahodny-retezec-node-e-console.log-crypto.randomBytes-64-toString-hex
-VITE_API_URL=https://api.vas-domen.cz
+VITE_API_URL=https://api.mujkemp.cz
 ```
 
 ```bash
@@ -130,17 +134,17 @@ API health check: `http://IP-SERVERU:3001/api/health`
 Nainstalujte Nginx a Certbot, pak nasměrujte domény na lokální porty:
 
 ```nginx
-# /etc/nginx/sites-available/procamp
+# /etc/nginx/sites-available/mujkemp
 server {
-    server_name api.vas-domen.cz;
+    server_name api.mujkemp.cz;
     location / { proxy_pass http://127.0.0.1:3001; proxy_set_header Host $host; }
 }
 server {
-    server_name admin.vas-domen.cz;
+    server_name app.mujkemp.cz;
     location / { proxy_pass http://127.0.0.1:3000; }
 }
 server {
-    server_name form.vas-domen.cz;
+    server_name form.mujkemp.cz;
     add_header X-Frame-Options "";
     add_header Content-Security-Policy "frame-ancestors *";
     location / { proxy_pass http://127.0.0.1:3002; }
@@ -148,9 +152,9 @@ server {
 ```
 
 ```bash
-ln -s /etc/nginx/sites-available/procamp /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/mujkemp /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
-certbot --nginx -d api.vas-domen.cz -d admin.vas-domen.cz -d form.vas-domen.cz
+certbot --nginx -d api.mujkemp.cz -d app.mujkemp.cz -d form.mujkemp.cz
 ```
 
 ### Aktualizace
@@ -163,7 +167,7 @@ docker compose up -d --build
 ### Záloha databáze
 
 ```bash
-docker compose exec db pg_dump -U procamp procamp > zaloha-$(date +%Y%m%d).sql
+docker compose exec db pg_dump -U mujkemp mujkemp > zaloha-$(date +%Y%m%d).sql
 ```
 
 ---
@@ -220,9 +224,9 @@ apt install -y certbot python3-certbot-nginx
 sudo -u postgres psql
 
 # Vytvořte databázi a uživatele (heslo změňte na vlastní bezpečné heslo)
-CREATE DATABASE procamp;
-CREATE USER procamp WITH ENCRYPTED PASSWORD 'silne-heslo-sem';
-GRANT ALL PRIVILEGES ON DATABASE procamp TO procamp;
+CREATE DATABASE mujkemp;
+CREATE USER mujkemp WITH ENCRYPTED PASSWORD 'silne-heslo-sem';
+GRANT ALL PRIVILEGES ON DATABASE mujkemp TO mujkemp;
 \q
 ```
 
@@ -230,21 +234,21 @@ GRANT ALL PRIVILEGES ON DATABASE procamp TO procamp;
 
 ```bash
 # Vytvořte složku pro aplikaci
-mkdir -p /var/www/procamp
-cd /var/www/procamp
+mkdir -p /var/www/mujkemp
+cd /var/www/mujkemp
 
 # Zkopírujte celý obsah složky procamp/ na server
 # Můžete použít scp z vašeho počítače:
-# scp -r /cesta/k/procamp/* root@IP-SERVERU:/var/www/procamp/
+# scp -r /cesta/k/procamp/* root@IP-SERVERU:/var/www/mujkemp/
 
 # Nebo použijte git, pokud máte repozitář:
-# git clone https://github.com/vas-ucet/procamp.git .
+# git clone <URL>.git .
 ```
 
 ### 4. Nainstalujte závislosti a sestavte aplikaci
 
 ```bash
-cd /var/www/procamp
+cd /var/www/mujkemp
 
 # Nainstalujte všechny závislosti
 pnpm install
@@ -256,7 +260,7 @@ pnpm --filter=@procamp/shared build 2>/dev/null || true
 ### 5. Nastavte proměnné prostředí pro API
 
 ```bash
-cd /var/www/procamp/apps/api
+cd /var/www/mujkemp/apps/api
 
 # Zkopírujte vzorový soubor
 cp .env.example .env
@@ -269,7 +273,7 @@ Do souboru `.env` vyplňte:
 
 ```env
 # Připojení k databázi (heslo musí souhlasit s tím, co jste zadali v kroku 2)
-DATABASE_URL="postgresql://procamp:silne-heslo-sem@localhost:5432/procamp"
+DATABASE_URL="postgresql://mujkemp:silne-heslo-sem@localhost:5432/mujkemp"
 
 # JWT tajný klíč — vygenerujte náhodný řetězec:
 # node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
@@ -281,7 +285,7 @@ PORT=3001
 ### 6. Inicializujte databázi
 
 ```bash
-cd /var/www/procamp
+cd /var/www/mujkemp
 
 # Vygenerujte Prisma klienta
 pnpm db:generate
@@ -295,7 +299,7 @@ pnpm db:seed
 
 Po spuštění seedu uvidíte:
 ```
-✅ Super admin created: admin@procamp.cz / admin123456
+✅ Super admin created: admin@mujkemp.cz / admin123456
 ⚠️  Change the password after first login!
 ```
 
@@ -304,14 +308,14 @@ Po spuštění seedu uvidíte:
 ### 7. Sestavte API
 
 ```bash
-cd /var/www/procamp/apps/api
+cd /var/www/mujkemp/apps/api
 pnpm build
 ```
 
 ### 8. Sestavte frontend aplikace
 
 ```bash
-cd /var/www/procamp
+cd /var/www/mujkemp
 
 # Admin panel
 pnpm --filter=admin build
@@ -324,18 +328,18 @@ pnpm --filter=form build
 
 ```bash
 # Vytvořte složky
-mkdir -p /var/www/procamp/admin
-mkdir -p /var/www/procamp/form
+mkdir -p /var/www/mujkemp/admin
+mkdir -p /var/www/mujkemp/form
 
 # Nakopírujte sestavené soubory
-cp -r /var/www/procamp/apps/admin/dist/* /var/www/procamp/admin/
-cp -r /var/www/procamp/apps/form/dist/* /var/www/procamp/form/
+cp -r /var/www/mujkemp/apps/admin/dist/* /var/www/mujkemp/admin/
+cp -r /var/www/mujkemp/apps/form/dist/* /var/www/mujkemp/form/
 ```
 
 ### 10. Spusťte API pomocí PM2
 
 ```bash
-cd /var/www/procamp
+cd /var/www/mujkemp
 
 # Spusťte API
 pm2 start ecosystem.config.js
@@ -348,24 +352,24 @@ pm2 save
 Ověřte, že API běží:
 ```bash
 pm2 status
-# Měli byste vidět: procamp-api | online
+# Měli byste vidět: mujkemp-api | online
 ```
 
 ### 11. Nastavte Nginx
 
 ```bash
 # Zkopírujte vzorový config
-cp /var/www/procamp/nginx.conf.example /etc/nginx/sites-available/procamp
+cp /var/www/mujkemp/nginx.conf.example /etc/nginx/sites-available/mujkemp
 
 # Upravte config — změňte domény
-nano /etc/nginx/sites-available/procamp
+nano /etc/nginx/sites-available/mujkemp
 ```
 
 Nahraďte v souboru všechny výskyty `vas-domen.cz` vaší skutečnou doménou.
 
 ```bash
 # Aktivujte konfiguraci
-ln -s /etc/nginx/sites-available/procamp /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/mujkemp /etc/nginx/sites-enabled/
 
 # Zkontrolujte správnost konfigurace
 nginx -t
@@ -378,7 +382,7 @@ systemctl restart nginx
 
 ```bash
 # Získejte SSL certifikáty pro všechny tři subdomény
-certbot --nginx -d api.vas-domen.cz -d admin.vas-domen.cz -d form.vas-domen.cz
+certbot --nginx -d api.mujkemp.cz -d app.mujkemp.cz -d form.mujkemp.cz
 ```
 
 Certbot automaticky upraví Nginx konfiguraci pro HTTPS a nastaví automatické obnovování certifikátů.
@@ -389,21 +393,21 @@ Certbot automaticky upraví Nginx konfiguraci pro HTTPS a nastaví automatické 
 
 Po instalaci otevřete v prohlížeči:
 
-1. **Admin:** `https://admin.vas-domen.cz`
-   - Přihlaste se: `admin@procamp.cz` / `admin123456`
+1. **Admin:** `https://app.mujkemp.cz`
+   - Přihlaste se: `admin@mujkemp.cz` / `admin123456`
    - Ihned změňte heslo
 
-2. **API health check:** `https://api.vas-domen.cz/api/health`
+2. **API health check:** `https://api.mujkemp.cz/api/health`
    - Mělo by vrátit: `{"status":"ok"}`
 
-3. **Formulář (demo):** `https://form.vas-domen.cz/form/{org-slug}/{kemp-slug}`
+3. **Formulář (demo):** `https://form.mujkemp.cz/form/{org-slug}/{kemp-slug}`
    - Nahraďte `{org-slug}` slugem organizace a `{kemp-slug}` slugem kempu
 
 ---
 
 ## První kroky v administraci
 
-1. Přihlaste se jako super admin (`admin@procamp.cz` / `admin123456`)
+1. Přihlaste se jako super admin (`admin@mujkemp.cz` / `admin123456`)
 2. Přejděte do **Organizace** → **+ Nová organizace** — vytvořte organizaci pro prvního zákazníka
 3. V menu vyberte nově vytvořenou organizaci z přepínače
 4. Přejděte do **Jazyky** → přidejte alespoň jeden jazyk (např. `cs` — Čeština)
@@ -423,7 +427,7 @@ Zkopírujte iframe kód z detailu kempu (záložka „Vložení na web"):
 
 ```html
 <iframe
-  src="https://form.vas-domen.cz/form/{org-slug}/{kemp-slug}"
+  src="https://form.mujkemp.cz/form/{org-slug}/{kemp-slug}"
   width="100%"
   height="700"
   frameborder="0"
@@ -455,7 +459,7 @@ V detailu kempu → záložka **Nastavení** vyplňte SMTP údaje:
 Když dostanete novou verzi kódu:
 
 ```bash
-cd /var/www/procamp
+cd /var/www/mujkemp
 
 # Nahrajte nový kód (nebo git pull)
 pnpm install
@@ -471,7 +475,7 @@ cp -r apps/admin/dist/* admin/
 cp -r apps/form/dist/* form/
 
 # Restartujte API
-pm2 restart procamp-api
+pm2 restart mujkemp-api
 ```
 
 ---
@@ -483,13 +487,13 @@ pm2 restart procamp-api
 pm2 status
 
 # Zobrazit logy API (chyby, přístupy)
-pm2 logs procamp-api
+pm2 logs mujkemp-api
 
 # Restart API
-pm2 restart procamp-api
+pm2 restart mujkemp-api
 
 # Záloha databáze
-pg_dump -U procamp procamp > zaloha-$(date +%Y%m%d).sql
+pg_dump -U mujkemp mujkemp > zaloha-$(date +%Y%m%d).sql
 ```
 
 ---
@@ -498,16 +502,16 @@ pg_dump -U procamp procamp > zaloha-$(date +%Y%m%d).sql
 
 **API nereaguje:**
 ```bash
-pm2 logs procamp-api --lines 50
+pm2 logs mujkemp-api --lines 50
 ```
 
 **Chyba databázového připojení:**
-- Zkontrolujte `DATABASE_URL` v souboru `/var/www/procamp/apps/api/.env`
+- Zkontrolujte `DATABASE_URL` v souboru `/var/www/mujkemp/apps/api/.env`
 - Ověřte, že PostgreSQL běží: `systemctl status postgresql`
 
 **Formulář nelze vložit do iframe:**
-- Zkontrolujte, že Nginx config pro `form.vas-domen.cz` obsahuje `add_header X-Frame-Options "";`
+- Zkontrolujte, že Nginx config pro `form.mujkemp.cz` obsahuje `add_header X-Frame-Options "";`
 
 **E-maily se neodesílají:**
 - Zkontrolujte SMTP nastavení v detailu kempu
-- Prohlédněte logy: `pm2 logs procamp-api | grep -i email`
+- Prohlédněte logy: `pm2 logs mujkemp-api | grep -i email`

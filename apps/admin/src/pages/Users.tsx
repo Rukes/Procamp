@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { User, Permission } from "@procamp/shared";
@@ -48,6 +49,7 @@ const PermissionGrid = ({ perms, onChange }: { perms: Permission; onChange: (k: 
 };
 
 export default function UsersPage() {
+  useTitle("Uživatelé");
   const { can, user: me } = useAuth();
   const toast = useToast();
   const [users, setUsers] = useState<User[]>([]);

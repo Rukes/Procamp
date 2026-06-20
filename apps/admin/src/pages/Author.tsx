@@ -1,6 +1,8 @@
+import { useTitle } from "../hooks/useTitle";
 import { useNavigate } from "react-router-dom";
 
 export default function AuthorPage() {
+  useTitle("O autorovi");
   const navigate = useNavigate();
 
   return (
@@ -13,8 +15,19 @@ export default function AuthorPage() {
           jednoduchý systém pouze za provozní poplatek. Vývoj obdobného systému stojí desetitisíce
           až statisíce korun a je následně náročný na údržbu. Rozhodl jsem se na popud známého
           takový systém vytvořit jako open source, protože je celý naprogramovaný pomocí Anthropic Claude.
-          Za pomoc se správou VPS bych chtěl poděkovat Michalovi Řeznikovi.
         </p>
+        <div>
+          <p className="mb-2">Poděkování:</p>
+          <ul className="list-disc list-inside space-y-1">
+            <li>
+              za tvorbu grafických podkladů a loga{" "}
+              <a href="https://grafikasevcik.cz" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                Štěpánu Ševčíkovi
+              </a>
+            </li>
+            <li>za pomoc se správou VPS Michalovi Řeznikovi</li>
+          </ul>
+        </div>
         <p>
           Cena systému je stanovena pouze za provoz, nikoli za vývoj. Není mým účelem vydělat —
           pokud mi zbyde pár korun na kafe, tak je to samozřejmě bonus. Za to díky!

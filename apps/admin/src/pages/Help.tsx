@@ -46,7 +46,7 @@ export default function HelpPage() {
       {/* Sidebar */}
       <aside className="w-60 bg-gray-900 text-white flex flex-col fixed top-0 left-0 h-screen z-10">
         <div className="px-4 py-4 border-b border-gray-700">
-          <span className="text-lg font-bold text-blue-400">ProCamp</span>
+          <span className="text-lg font-bold text-blue-400">MůjKemp.cz</span>
           <p className="text-xs text-gray-400 mt-0.5">Nápověda</p>
         </div>
 

@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../api/client";
@@ -12,6 +13,7 @@ import { ARRIVAL_TIMES } from "../utils/arrivalTimes";
 const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká na potvrzení", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
 const STATUS_CLASS: Record<string, string> = { PENDING: "badge-pending", CONFIRMED: "badge-confirmed", CANCELLED: "badge-cancelled" };
 export default function ReservationDetailPage() {
+  useTitle("Detail rezervace");
   const { id } = useParams<{ id: string }>();
   const { can } = useAuth();
   const toast = useToast();

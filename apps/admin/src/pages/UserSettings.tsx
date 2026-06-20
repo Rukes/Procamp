@@ -1,9 +1,11 @@
+import { useTitle } from "../hooks/useTitle";
 import { useState } from "react";
 import { api } from "../api/client";
 import { useToast } from "../contexts/ToastContext";
 import { useAuth } from "../contexts/AuthContext";
 
 export default function UserSettingsPage() {
+  useTitle("Nastavení účtu");
   const { user, setUser } = useAuth();
   const toast = useToast();
   const [emailForm, setEmailForm] = useState({ email: user?.email ?? "" });

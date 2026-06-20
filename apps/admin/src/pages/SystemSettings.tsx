@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useAuth } from "../contexts/AuthContext";
@@ -27,6 +28,7 @@ const formatPreview = (thousands: string, decimal: string) =>
   `1${thousands}234${decimal}56`;
 
 export default function SystemSettingsPage() {
+  useTitle("Nastavení systému");
   const { user } = useAuth();
   const toast = useToast();
   const [settings, setSettings] = useState<Settings>({ defaultLanguageCode: "cs", thousandsSeparator: " ", decimalSeparator: "," });

@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
@@ -25,6 +26,7 @@ const EMPTY: Omit<Organization, "id" | "createdAt" | "_count"> = {
 };
 
 export default function OrganizationsPage() {
+  useTitle("Organizace");
   const toast = useToast();
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [modalOrg, setModalOrg] = useState<Organization | null>(null);

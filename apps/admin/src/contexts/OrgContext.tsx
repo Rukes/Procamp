@@ -15,7 +15,7 @@ const OrgContext = createContext<OrgContextValue>({
   setSelectedOrgId: () => {}, setOrgs: () => {},
 });
 
-const STORAGE_KEY = "procamp_selected_org";
+const STORAGE_KEY = "mujkemp_selected_org";
 
 export function OrgProvider({ children }: { children: ReactNode }) {
   const [selectedOrgId, setSelectedOrgIdState] = useState<string | null>(

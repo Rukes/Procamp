@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
@@ -42,6 +43,7 @@ const formatPreview = (t: string, d: string) => `1${t}234${d}56`;
 type Tab = "billing" | "settings" | "terms";
 
 export default function OrganizationDetailPage() {
+  useTitle("Detail organizace");
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const toast = useToast();

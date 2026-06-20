@@ -1,3 +1,4 @@
+import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { Language } from "@procamp/shared";
@@ -25,6 +26,7 @@ const previewPrice = (sym: string, pos: "before" | "after") =>
 const EMPTY_FORM = { code: "", currencyCode: "", currencySymbol: "", currencyPosition: "after" as "before" | "after" };
 
 export default function LanguagesPage() {
+  useTitle("Jazyky");
   const { can } = useAuth();
   const toast = useToast();
   const [languages, setLanguages] = useState<Language[]>([]);
