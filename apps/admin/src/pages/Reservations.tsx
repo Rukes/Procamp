@@ -102,7 +102,7 @@ export default function ReservationsPage() {
   };
 
   useEffect(() => {
-    api.get("/camps").then((r) => setCamps(r.data)).catch(() => {});
+    api.get("/camps/for-filter").then((r) => setCamps(r.data)).catch(() => {});
     api.get("/languages").then((r) => setLanguages(r.data)).catch(() => {});
   }, []);
 

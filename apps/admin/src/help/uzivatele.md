@@ -24,6 +24,14 @@ Každému uživateli lze nastavit přesně ta oprávnění která potřebuje. Op
 - **Správa uživatelů** — může přidávat a upravovat ostatní uživatele
 - **Nastavení organizace** — přístup k nastavení organizace, fakturačním údajům a jazykům
 
+## Přístup k objektům
+
+V modalu uživatele lze zaškrtnout konkrétní objekty ke kterým má mít přístup. Uživatel pak vidí pouze rezervace a objekty z tohoto výběru.
+
+Pokud není zaškrtnut žádný objekt, uživatel má přístup ke všem objektům organizace.
+
+Uživatel s oprávněním **Nastavení organizace** vždy vidí vše bez ohledu na výběr objektů.
+
 ## Nastavení vlastního účtu
 
 Každý uživatel může v sekci **Nastavení** (odkaz dole v levém menu) změnit svůj přihlašovací e-mail a heslo.

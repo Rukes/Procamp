@@ -4,6 +4,20 @@ import { requirePermission, requireAuth, orgFilter, campFilter } from "../plugin
 import { logActivity, diffObjects } from "../services/activityLog";
 
 export async function campRoutes(app: FastifyInstance) {
+  // Lightweight endpoint — jen id+name, pro filtry v rezervacích (nevyžaduje camps_view)
+  app.get("/for-filter", { preHandler: requirePermission("reservations_view") }, async (request) => {
+    const orgId = orgFilter(request);
+    const allowedCampIds = campFilter(request);
+    return app.prisma.camp.findMany({
+      where: {
+        ...(orgId ? { organizationId: orgId } : {}),
+        ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
+      },
+      select: { id: true, name: true },
+      orderBy: { createdAt: "asc" },
+    });
+  });
+
   app.get("/", { preHandler: requirePermission("camps_view") }, async (request) => {
     const orgId = orgFilter(request);
     const allowedCampIds = campFilter(request);
