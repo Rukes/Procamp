@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { createReservationSchema } from "@procamp/shared";
+import { verifyCaptcha } from "../../plugins/auth";
 import { checkAvailability, getOccupiedDates } from "../../services/availability";
 import { sendReservationEmails } from "../../services/email";
 import { logActivity } from "../../services/activityLog";
@@ -89,6 +90,9 @@ export async function publicFormRoutes(app: FastifyInstance) {
       },
     });
     if (!camp) return reply.status(404).send({ error: "Camp not found" });
+
+    const captchaOk = await verifyCaptcha((request.body as { captchaToken?: string }).captchaToken);
+    if (!captchaOk) return reply.status(400).send({ error: "Captcha verification failed" });
 
     const body = createReservationSchema.parse(request.body);
     const checkIn = new Date(body.checkIn);

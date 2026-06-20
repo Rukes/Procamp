@@ -26,6 +26,7 @@ services:
       DATABASE_URL: postgresql://procamp:${DB_PASSWORD}@db:5432/procamp
       JWT_SECRET: ${JWT_SECRET}
       PORT: 3001
+      HCAPTCHA_SECRET: ${HCAPTCHA_SECRET}
     ports:
       - "3001:3001"
 
@@ -36,6 +37,7 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL}
         VITE_FORM_BASE_URL: ${VITE_FORM_BASE_URL}
+        VITE_HCAPTCHA_SITE_KEY: ${VITE_HCAPTCHA_SITE_KEY}
     restart: unless-stopped
     ports:
       - "3000:80"
@@ -46,6 +48,7 @@ services:
       dockerfile: apps/form/Dockerfile
       args:
         VITE_API_URL: ${VITE_API_URL}
+        VITE_HCAPTCHA_SITE_KEY: ${VITE_HCAPTCHA_SITE_KEY}
     restart: unless-stopped
     ports:
       - "3002:80"

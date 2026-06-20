@@ -22,7 +22,7 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email, password, captchaToken);
       navigate("/dashboard");
     } catch {
       setError("Nesprávný e-mail nebo heslo.");

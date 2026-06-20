@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 import { loginSchema } from "@procamp/shared";
-import { requireAuth } from "../plugins/auth";
+import { requireAuth, verifyCaptcha } from "../plugins/auth";
 import { logActivity } from "../services/activityLog";
 
 export async function authRoutes(app: FastifyInstance) {
@@ -15,6 +15,9 @@ export async function authRoutes(app: FastifyInstance) {
     },
   }, async (request, reply) => {
     const body = loginSchema.parse(request.body);
+
+    const captchaOk = await verifyCaptcha((request.body as { captchaToken?: string }).captchaToken);
+    if (!captchaOk) return reply.status(400).send({ error: "Captcha verification failed" });
 
     const user = await app.prisma.user.findUnique({ where: { email: body.email } });
     if (!user) return reply.status(401).send({ error: "Invalid credentials" });

@@ -23,7 +23,7 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 - **Přepínač organizace** — super admin vidí v menu dropdown pro přepínání mezi organizacemi (globální pohled nebo pohled za konkrétní org)
 - **URL formuláře s org slugem** — `/form/{orgSlug}/{campSlug}` — dvě organizace mohou mít stejný slug kempu bez kolize
 - **GDPR & podmínky** — org může nastavit vlastní text podmínek přes WYSIWYG editor (TipTap); pokud je vyplněn, zákazník musí odsouhlasit checkbox před odesláním formuláře
-- **hCaptcha** — připravena pro formulář i admin login; aktivuje se nastavením `VITE_HCAPTCHA_SITE_KEY`
+- **hCaptcha** — ochrana přihlášení i rezervačního formuláře; aktivuje se nastavením `VITE_HCAPTCHA_SITE_KEY` (admin + form) a `HCAPTCHA_SECRET` (API); bez klíčů je captcha transparentně vypnuta
 - **Překlady formuláře** — rezervační formulář je plně přeložen do 11 jazyků (cs, en, de, pl, it, es, fr, ru, uk, sk, hu) včetně správného formátování dat a cen podle měny jazyka
 - **Nová rezervace** — výběr termínu přes kalendář (react-day-picker), automatický výběr objektu pokud existuje jen jeden, živá kalkulace ceny (příplatky, osoby, počet nocí) při ručním zadávání
 - **Seznam rezervací** — virtuální stavy „Proběhla" a „Propadlá", řazení kliknutím na hlavičku, zelené zvýraznění probíhajících pobytů, ikonka poznámky s hover/toggle popoverem, filtr podle stavu včetně „Propadlá"

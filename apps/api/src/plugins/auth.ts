@@ -1,6 +1,19 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { Permission } from "@procamp/shared";
 
+export async function verifyCaptcha(token: string | undefined): Promise<boolean> {
+  const secret = process.env.HCAPTCHA_SECRET;
+  if (!secret) return true; // captcha není nakonfigurována — propustit
+  if (!token) return false;
+  const res = await fetch("https://api.hcaptcha.com/siteverify", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: `secret=${encodeURIComponent(secret)}&response=${encodeURIComponent(token)}`,
+  });
+  const data = await res.json() as { success: boolean };
+  return data.success === true;
+}
+
 async function verifyTokenVersion(request: FastifyRequest, reply: FastifyReply) {
   const { sub, tokenVersion } = request.user;
   const user = await (request.server as any).prisma.user.findUnique({ where: { id: sub }, select: { tokenVersion: true } });

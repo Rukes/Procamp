@@ -15,6 +15,7 @@ export type ContactData = {
   licensePlate?: string;
   expectedArrival?: string;
   note?: string;
+  captchaToken?: string | null;
 };
 
 interface Props {
@@ -53,7 +54,7 @@ export default function ContactStep({ breakdown, lang, termsText, requireTermsAc
   const handleFormSubmit = (data: ContactData) => {
     if (needsAcceptance && !termsAccepted) return;
     if (hasCaptcha && !captchaToken) return;
-    onSubmit(data);
+    onSubmit({ ...data, captchaToken });
   };
 
   return (
