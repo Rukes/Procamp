@@ -30,6 +30,7 @@ COPY apps/api/package.json ./apps/api/
 RUN pnpm install --no-frozen-lockfile --prod
 
 COPY --from=builder /app/apps/api/dist ./apps/api/dist
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
 COPY apps/api/prisma ./apps/api/prisma
 
