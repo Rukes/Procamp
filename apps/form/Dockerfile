@@ -12,6 +12,7 @@ FROM deps AS builder
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 COPY packages/shared ./packages/shared
+RUN node_modules/.bin/tsc -p packages/shared/tsconfig.json
 COPY apps/form ./apps/form
 RUN pnpm --filter=form build
 

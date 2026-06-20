@@ -12,6 +12,7 @@ RUN pnpm install --frozen-lockfile
 # Build
 FROM deps AS builder
 COPY packages/shared ./packages/shared
+RUN node_modules/.bin/tsc -p packages/shared/tsconfig.json
 COPY apps/api ./apps/api
 RUN pnpm --filter=api db:generate
 RUN pnpm --filter=api build
