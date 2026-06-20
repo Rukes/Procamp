@@ -137,10 +137,10 @@ export default function UsersPage() {
   const closeModal = () => { setCreating(false); setEditUser(null); setFormError(""); };
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Uživatelé</h1>
-        <button className="btn-primary" onClick={() => { setCreating(true); setEditUser(null); }}><i className="fa-regular fa-plus mr-1.5" />Nový uživatel</button>
+        <button className="btn-primary text-sm" onClick={() => { setCreating(true); setEditUser(null); }}><i className="fa-regular fa-plus mr-1.5" /><span className="hidden sm:inline">Nový uživatel</span><span className="sm:hidden">Nový</span></button>
       </div>
 
       {(creating || editUser) && (
@@ -152,7 +152,7 @@ export default function UsersPage() {
             </div>
             <div className="px-6 py-5">
               <form onSubmit={creating ? handleCreate : handleUpdate} className="space-y-4">
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="label">Jméno</label>
                     <input className="input" value={creating ? form.name : editUser?.name ?? ""}
@@ -253,9 +253,9 @@ export default function UsersPage() {
               <p className="text-sm text-gray-500">{u.email}</p>
             </div>
             <div className="flex gap-2">
-              <button className="btn-secondary text-sm" onClick={() => startEdit(u)}><i className="fa-regular fa-pen mr-1.5" />Upravit</button>
+              <button className="btn-secondary text-sm" onClick={() => startEdit(u)}><i className="fa-regular fa-pen sm:mr-1.5" /><span className="hidden sm:inline">Upravit</span></button>
               {(!me || u.id !== me.id) && (
-                <button className="btn-danger text-sm" onClick={() => handleDelete(u.id)}><i className="fa-regular fa-trash mr-1.5" />Smazat</button>
+                <button className="btn-danger text-sm" onClick={() => handleDelete(u.id)}><i className="fa-regular fa-trash sm:mr-1.5" /><span className="hidden sm:inline">Smazat</span></button>
               )}
             </div>
           </div>

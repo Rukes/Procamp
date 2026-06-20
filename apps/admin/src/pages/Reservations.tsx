@@ -11,35 +11,44 @@ import Pagination from "../components/Pagination";
 
 function NotePopover({ note }: { note: string }) {
   const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e: TouchEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (btnRef.current && !btnRef.current.closest("[data-note-popover]")?.contains(e.target as Node)) setOpen(false);
     };
+    document.addEventListener("mousedown", handler);
     document.addEventListener("touchstart", handler);
-    return () => document.removeEventListener("touchstart", handler);
+    return () => { document.removeEventListener("mousedown", handler); document.removeEventListener("touchstart", handler); };
   }, [open]);
 
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      const popW = 256;
+      const margin = 8;
+      let left = rect.left + rect.width / 2 - popW / 2;
+      if (left < margin) left = margin;
+      if (left + popW > window.innerWidth - margin) left = window.innerWidth - popW - margin;
+      setPos({ top: rect.bottom + 6, left });
+    }
+    setOpen((v) => !v);
+  };
+
   return (
-    <div
-      ref={ref}
-      className="relative flex-shrink-0 mt-0.5"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
-    >
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); setOpen((v) => !v); }}
-        className="text-amber-500 hover:text-amber-600 transition-colors"
-      >
+    <div data-note-popover className="relative flex-shrink-0 mt-0.5" onMouseEnter={(e) => { if (window.matchMedia("(hover: hover)").matches) handleOpen(e as unknown as React.MouseEvent); }} onMouseLeave={() => { if (window.matchMedia("(hover: hover)").matches) setOpen(false); }}>
+      <button ref={btnRef} type="button" onClick={handleOpen} className="text-amber-500 hover:text-amber-600 transition-colors">
         <i className="fa-regular fa-message-lines" />
       </button>
       {open && (
-        <div className="absolute right-0 top-7 z-20 w-64 bg-gray-900 text-white text-xs rounded-xl px-3 py-2.5 shadow-xl">
+        <div
+          className="fixed z-50 w-64 bg-gray-900 text-white text-xs rounded-xl px-3 py-2.5 shadow-xl"
+          style={{ top: pos.top, left: pos.left }}
+        >
           {note}
-          <div className="absolute -top-1.5 right-1.5 w-3 h-3 bg-gray-900 rotate-45" />
         </div>
       )}
     </div>
@@ -209,19 +218,19 @@ export default function ReservationsPage() {
     });
 
   return (
-    <div className="p-8">
-      <div className="flex items-start justify-between mb-6">
+    <div className="p-4 md:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Rezervace</h1>
-          <div className="flex gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-2">
             <div className="flex border border-gray-300 rounded-lg overflow-hidden">
               <button onClick={() => setView("list")} className={`px-3 py-1.5 text-sm ${view === "list" ? "bg-blue-600 text-white" : "bg-white text-gray-600"}`}><i className="fa-regular fa-list mr-1.5" />Seznam</button>
               <button onClick={() => setView("calendar")} className={`px-3 py-1.5 text-sm ${view === "calendar" ? "bg-blue-600 text-white" : "bg-white text-gray-600"}`}><i className="fa-regular fa-calendar mr-1.5" />Kalendář</button>
             </div>
-            {can("reservations_create") && <Link to="/reservations/new" className="inline-flex items-center px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"><i className="fa-regular fa-plus mr-1.5" />Nová rezervace</Link>}
+            {can("reservations_create") && <Link to="/reservations/new" className="inline-flex items-center px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"><i className="fa-regular fa-plus mr-1.5" /><span className="hidden sm:inline">Nová rezervace</span><span className="sm:hidden">Nová</span></Link>}
           </div>
         </div>
-        <div ref={exportRef} className="relative">
+        <div ref={exportRef} className="relative self-start hidden sm:block">
           <button className="btn-secondary text-sm py-1.5 px-3" onClick={() => setExportOpen((v) => !v)}>
             <i className="fa-regular fa-download mr-1.5" />Export <i className="fa-regular fa-chevron-down ml-1.5 text-xs" />
           </button>
@@ -238,24 +247,27 @@ export default function ReservationsPage() {
         </div>
       </div>
 
-      <div className="flex gap-3 mb-5">
-        <input className="input max-w-xs" placeholder="Hledat jméno, e-mail, telefon…" value={search} onChange={(e) => setSearch(e.target.value)} />
-        <select className="input max-w-48" value={campFilter} onChange={(e) => setCampFilter(e.target.value)}>
-          <option value="">Všechny objekty</option>
-          {camps.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
-        <select className="input max-w-40" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-          <option value="">Všechny statusy</option>
-          <option value="PENDING">Čeká</option>
-          <option value="EXPIRED">Propadlá</option>
-          <option value="CONFIRMED">Potvrzena</option>
-          <option value="CANCELLED">Zrušena</option>
-        </select>
+      <div className="flex flex-col gap-2 mb-5">
+        <input className="input w-full" placeholder="Hledat jméno, e-mail, telefon…" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <div className="flex gap-2">
+          <select className="input flex-1" value={campFilter} onChange={(e) => setCampFilter(e.target.value)}>
+            <option value="">Všechny objekty</option>
+            {camps.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+          <select className="input flex-1" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+            <option value="">Všechny statusy</option>
+            <option value="PENDING">Čeká</option>
+            <option value="EXPIRED">Propadlá</option>
+            <option value="CONFIRMED">Potvrzena</option>
+            <option value="CANCELLED">Zrušena</option>
+          </select>
+        </div>
       </div>
 
       {view === "list" ? (
         <div className="card overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[700px]">
             <thead>
               <tr className="border-b border-gray-100 text-left text-gray-500 bg-gray-50">
                 <Th k="name">Jméno a příjmení</Th>
@@ -313,6 +325,7 @@ export default function ReservationsPage() {
               )}
             </tbody>
           </table>
+          </div>
           <div className="px-4 pb-4">
             <Pagination page={page} total={sorted.length} perPage={PER_PAGE} onChange={setPage} />
           </div>

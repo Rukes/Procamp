@@ -59,7 +59,7 @@ export default function CampsPage() {
   const formBase = import.meta.env.VITE_FORM_BASE_URL;
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Objekty</h1>
         {can("camps_create") && (
@@ -123,7 +123,7 @@ export default function CampsPage() {
                 </p>
               </div>
               <div className="flex gap-2">
-                <Link to={`/camps/${camp.id}`} className="btn-secondary"><i className="fa-regular fa-gear mr-1.5" />Spravovat</Link>
+                <Link to={`/camps/${camp.id}`} className="btn-secondary"><i className="fa-regular fa-gear sm:mr-1.5" /><span className="hidden sm:inline">Spravovat</span></Link>
               </div>
             </div>
           );

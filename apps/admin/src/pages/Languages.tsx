@@ -102,8 +102,8 @@ export default function LanguagesPage() {
     <div className="p-8 max-w-2xl">
       {/* Modal — přidat jazyk */}
       {addOpen && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 pt-12" onClick={() => setAddOpen(false)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-2 pt-4 sm:p-4 sm:pt-12" onClick={() => setAddOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-semibold">Přidat jazyk</h3>
               <button onClick={() => setAddOpen(false)} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
@@ -116,7 +116,7 @@ export default function LanguagesPage() {
                   {available.map((p) => <option key={p.code} value={p.code}>{p.name}</option>)}
                 </select>
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
                   <label className="label">Kód měny</label>
                   <input className="input" value={addForm.currencyCode} onChange={(e) => setAddForm({ ...addForm, currencyCode: e.target.value.toUpperCase() })} placeholder="CZK" maxLength={5} required />
@@ -151,8 +151,8 @@ export default function LanguagesPage() {
           <p className="text-sm text-gray-500 mt-1">Každý jazyk má vlastní měnu — zákazník vidí ceny v měně svého jazyka.</p>
         </div>
         {can("org_admin") && available.length > 0 && (
-          <button className="btn bg-green-600 hover:bg-green-700 text-white" onClick={() => { setAddForm(EMPTY_FORM); setAddOpen(true); }}>
-            <i className="fa-regular fa-plus mr-1.5" />Přidat jazyk
+          <button className="btn bg-green-600 hover:bg-green-700 text-white text-sm" onClick={() => { setAddForm(EMPTY_FORM); setAddOpen(true); }}>
+            <i className="fa-regular fa-plus mr-1.5" /><span className="hidden sm:inline">Přidat jazyk</span><span className="sm:hidden">Přidat</span>
           </button>
         )}
       </div>
@@ -169,7 +169,7 @@ export default function LanguagesPage() {
             {editId === lang.id ? (
               <div className="space-y-3">
                 <p className="font-medium">{lang.name} <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded ml-1">{lang.code}</span></p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="label">Kód měny</label>
                     <input className="input" value={editForm.currencyCode} onChange={(e) => setEditForm({ ...editForm, currencyCode: e.target.value.toUpperCase() })} placeholder="CZK" maxLength={5} />
@@ -208,10 +208,10 @@ export default function LanguagesPage() {
                 </div>
                 <div className="flex gap-2">
                   {can("org_admin") && (
-                    <button className="btn-secondary text-sm py-1.5" onClick={() => startEdit(lang)}><i className="fa-regular fa-pen mr-1.5" />Upravit měnu</button>
+                    <button className="btn-secondary text-sm py-1.5" onClick={() => startEdit(lang)}><i className="fa-regular fa-pen sm:mr-1.5" /><span className="hidden sm:inline">Upravit měnu</span></button>
                   )}
                   {!lang.isDefault && can("org_admin") && (
-                    <button className="btn-danger text-sm py-1.5" onClick={() => handleDelete(lang.id)}><i className="fa-regular fa-trash mr-1.5" />Smazat</button>
+                    <button className="btn-danger text-sm py-1.5" onClick={() => handleDelete(lang.id)}><i className="fa-regular fa-trash sm:mr-1.5" /><span className="hidden sm:inline">Smazat</span></button>
                   )}
                 </div>
               </div>

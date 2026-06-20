@@ -126,7 +126,7 @@ function SurchargeEditor({ surcharge, languages, campId, onSave, onClose }: Surc
   const sym = lang?.currencySymbol ?? "";
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-2 pt-4 sm:p-4 sm:pt-12 overflow-y-auto" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-semibold">{surcharge ? "Upravit příplatek" : "Nový příplatek"}</h3>
@@ -146,7 +146,7 @@ function SurchargeEditor({ surcharge, languages, campId, onSave, onClose }: Surc
                 );
               })}
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="label">Název</label>
                 <input className="input" value={names[activeLang] ?? ""} onChange={(e) => setNames({ ...names, [activeLang]: e.target.value })} placeholder="Např. Turistická daň, Pes…" />
@@ -242,7 +242,7 @@ function AccommodationTypeEditor({ type, languages, campId, onSave, onClose }: T
   const p = getPrice(activeLang);
 
   return (
-    <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 pt-12 overflow-y-auto" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-2 pt-4 sm:p-4 sm:pt-12 overflow-y-auto" onClick={onClose}>
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-semibold">{type ? "Upravit typ ubytování" : "Nový typ ubytování"}</h3>
@@ -444,7 +444,7 @@ export default function CampDetailPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">{camp.name}</h1>
         <a href={embedUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary">
@@ -463,7 +463,7 @@ export default function CampDetailPage() {
       {/* Settings */}
       {tab === "settings" && (
         <form onSubmit={handleSaveSettings} className="card p-6 space-y-6 max-w-2xl">
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2">
               <label className="label">Název objektu</label>
               <input className="input" name="name" defaultValue={camp.name} required />
@@ -552,7 +552,7 @@ export default function CampDetailPage() {
       {tab === "smtp" && (
         <form onSubmit={handleSaveSMTP} className="card p-6 space-y-4 max-w-2xl">
           <p className="text-sm text-gray-500">Nastavte SMTP pro odesílání e-mailů z tohoto objektu.</p>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div><label className="label">SMTP Host</label><input className="input" name="smtpHost" defaultValue={(camp as unknown as Record<string,string>).smtpHost ?? ""} /></div>
             <div><label className="label">SMTP Port</label><input className="input" name="smtpPort" type="number" defaultValue={(camp as unknown as Record<string,number>).smtpPort ?? 587} /></div>
             <div><label className="label">SMTP Uživatel</label><input className="input" name="smtpUser" defaultValue={(camp as unknown as Record<string,string>).smtpUser ?? ""} /></div>

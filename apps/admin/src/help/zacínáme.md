@@ -31,9 +31,9 @@ V záložce **Vložení na web** zkopírujte připravený kód a vložte ho na s
 | Sekce | K čemu slouží |
 |-------|---------------|
 | **Dashboard** | Přehled rezervací, obsazenost, mini-kalendář |
-| **Objekty** | Správa kempů — ceny, kapacity, e-maily, formulář |
 | **Rezervace** | Přehled a správa všech rezervací |
+| **Objekty** | Správa kempů — ceny, kapacity, e-maily, formulář |
 | **Uživatelé** | Přidání kolegů a nastavení jejich přístupu |
 | **Jazyky** | Jazyky formuláře a měny |
 | **Moje organizace** | Fakturační údaje, podmínky, GDPR |
-| **Nastavení** | Změna vašeho e-mailu a hesla |
+| **Nastavení** | Změna hesla a přihlašovacího e-mailu |

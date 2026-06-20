@@ -6,7 +6,7 @@ export default function AuthorPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">O autorovi</h1>
 
       <div className="max-w-2xl bg-white rounded-xl border border-gray-200 p-8 space-y-6 text-gray-700 leading-relaxed">

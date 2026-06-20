@@ -8,6 +8,15 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 
 ---
 
+## Co je nového (červen 2026 — aktualizace)
+
+- **Responzivní design** — admin panel plně použitelný na mobilních zařízeních; hamburger menu, scrollovatelné tabulky, přizpůsobené filtry a tlačítka
+- **Bezpečnost — invalidace session** — při změně hesla, oprávnění nebo přiřazených objektů uživatele (administrátorem) dojde k okamžitému odhlášení upraveného uživatele (`tokenVersion` mechanismus); smazaný uživatel je odhlášen automaticky
+- **Nová rezervace v menu** — zelené tlačítko `+` vedle položky Rezervace v levém menu pro rychlé vytvoření
+- **Smazání organizace přesunuto** — tlačítko Smazat je nyní pouze v nastavení organizace, nikoli v přehledovém seznamu
+- **Nápověda** — syntax highlighting kódu (`highlight.js`, téma github-dark-dimmed), tlačítko kopírování, responzivní mobilní menu
+- **Přesměrování při změně organizace** — SA je po přepnutí organizace přesměrován na dashboard pro obnovení dat
+
 ## Co je nového (červen 2026)
 
 - **Multi-tenancy — Organizace** — systém podporuje více nezávislých organizací; každá má vlastní kempy, uživatele a jazyky; data jsou striktně oddělena

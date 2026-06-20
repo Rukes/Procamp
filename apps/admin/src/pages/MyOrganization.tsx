@@ -127,7 +127,7 @@ export default function MyOrganizationPage() {
               <label className="label">Odběratel</label>
               <input className="input" value={form.billingName ?? ""} onChange={(e) => set("billingName", e.target.value)} placeholder="Fakturační název firmy" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">IČO</label>
                 <div className="flex gap-2">
@@ -152,7 +152,7 @@ export default function MyOrganizationPage() {
               <label className="label">Země</label>
               <CountrySelect value={form.country ?? ""} onChange={(v) => set("country", v)} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Kontaktní osoba</label>
                 <input className="input" value={form.contactPerson ?? ""} onChange={(e) => set("contactPerson", e.target.value)} />
@@ -176,7 +176,7 @@ export default function MyOrganizationPage() {
             </div>
             <hr />
             <p className="text-sm font-medium text-gray-700">Formátování čísel</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Oddělovač tisíců</label>
                 <select className="input" value={form.thousandsSeparator ?? " "} onChange={(e) => set("thousandsSeparator", e.target.value)}>

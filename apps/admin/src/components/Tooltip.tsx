@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 
 interface TooltipProps {
   text: string;
-  position?: "top" | "left";
+  position?: "top" | "left" | "right";
   children: React.ReactElement;
 }
 
@@ -18,12 +18,14 @@ export default function Tooltip({ text, position = "top", children }: TooltipPro
     hideTimer.current = setTimeout(() => setVisible(false), 100);
   };
 
-  const bubble = position === "left"
-    ? "absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap z-50 pointer-events-none"
+  const bubble =
+    position === "left"  ? "absolute right-full top-1/2 -translate-y-1/2 mr-2 px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap z-50 pointer-events-none"
+    : position === "right" ? "absolute left-full top-1/2 -translate-y-1/2 ml-2 px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap z-50 pointer-events-none"
     : "absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded whitespace-nowrap z-50 pointer-events-none";
 
-  const arrow = position === "left"
-    ? "absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-gray-800"
+  const arrow =
+    position === "left"  ? "absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-gray-800"
+    : position === "right" ? "absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-800"
     : "absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800";
 
   return (

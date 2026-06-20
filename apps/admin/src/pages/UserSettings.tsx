@@ -48,24 +48,10 @@ export default function UserSettingsPage() {
   };
 
   return (
-    <div className="p-8 max-w-lg space-y-6">
+    <div className="p-4 md:p-8 max-w-lg space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-gray-900">Nastavení účtu</h1>
         <p className="text-sm text-gray-400 mt-0.5">{user?.name}</p>
-      </div>
-
-      <div className="card p-6">
-        <h2 className="font-semibold text-gray-800 mb-4"><i className="fa-regular fa-envelope mr-2 text-gray-400" />Změna e-mailu</h2>
-        <form onSubmit={handleEmailSubmit} className="space-y-4">
-          <div>
-            <label className="label">E-mail</label>
-            <input className="input" type="email" value={emailForm.email}
-              onChange={(e) => setEmailForm({ email: e.target.value })} required />
-          </div>
-          <button className="btn-primary px-8" type="submit" disabled={savingEmail || emailForm.email === user?.email}>
-            <i className="fa-regular fa-floppy-disk mr-1.5" />{savingEmail ? "Ukládám…" : "Uložit e-mail"}
-          </button>
-        </form>
       </div>
 
       <div className="card p-6">
@@ -88,6 +74,20 @@ export default function UserSettingsPage() {
           </div>
           <button className="btn-primary px-8" type="submit" disabled={savingPw}>
             <i className="fa-regular fa-floppy-disk mr-1.5" />{savingPw ? "Ukládám…" : "Uložit heslo"}
+          </button>
+        </form>
+      </div>
+
+      <div className="card p-6">
+        <h2 className="font-semibold text-gray-800 mb-4"><i className="fa-regular fa-envelope mr-2 text-gray-400" />Změna e-mailu</h2>
+        <form onSubmit={handleEmailSubmit} className="space-y-4">
+          <div>
+            <label className="label">E-mail</label>
+            <input className="input" type="email" value={emailForm.email}
+              onChange={(e) => setEmailForm({ email: e.target.value })} required />
+          </div>
+          <button className="btn-primary px-8" type="submit" disabled={savingEmail || emailForm.email === user?.email}>
+            <i className="fa-regular fa-floppy-disk mr-1.5" />{savingEmail ? "Ukládám…" : "Uložit e-mail"}
           </button>
         </form>
       </div>

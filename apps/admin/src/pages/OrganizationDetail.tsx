@@ -88,6 +88,17 @@ export default function OrganizationDetailPage() {
 
   const set = (k: keyof Organization, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
+  const handleDelete = async () => {
+    if (!confirm(`Smazat organizaci „${org.name}"? Tato akce odebere vazby na kempy a uživatele.`)) return;
+    try {
+      await api.delete(`/organizations/${id}`);
+      toast.success("Organizace smazána.");
+      navigate("/organizations");
+    } catch {
+      toast.error("Nepodařilo se smazat organizaci.");
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
@@ -148,7 +159,7 @@ export default function OrganizationDetailPage() {
               <label className="label">Odběratel</label>
               <input className="input" value={form.billingName ?? ""} onChange={(e) => set("billingName", e.target.value)} placeholder="Fakturační název firmy" />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">IČO</label>
                 <div className="flex gap-2">
@@ -173,7 +184,7 @@ export default function OrganizationDetailPage() {
               <label className="label">Země</label>
               <CountrySelect value={form.country ?? ""} onChange={(v) => set("country", v)} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Kontaktní osoba</label>
                 <input className="input" value={form.contactPerson ?? ""} onChange={(e) => set("contactPerson", e.target.value)} />
@@ -197,7 +208,7 @@ export default function OrganizationDetailPage() {
             </div>
             <hr />
             <p className="text-sm font-medium text-gray-700">Formátování čísel</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">Oddělovač tisíců</label>
                 <select className="input" value={form.thousandsSeparator ?? " "} onChange={(e) => set("thousandsSeparator", e.target.value)}>
@@ -256,9 +267,12 @@ export default function OrganizationDetailPage() {
           </div>
         )}
 
-        <div className="pt-2">
+        <div className="pt-2 flex items-center justify-between">
           <button className="btn-primary" type="submit" disabled={saving}>
             {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</>}
+          </button>
+          <button type="button" className="btn-danger text-sm" onClick={handleDelete}>
+            <i className="fa-regular fa-trash mr-1.5" />Smazat organizaci
           </button>
         </div>
       </form>

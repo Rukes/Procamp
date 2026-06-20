@@ -5,6 +5,7 @@ import { Reservation, Camp } from "@procamp/shared";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
 import { cs } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
+import { useOrg } from "../contexts/OrgContext";
 import { langFlag } from "../utils/langFlag";
 
 const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
@@ -89,6 +90,7 @@ function MiniCalendar({ reservations }: { reservations: (Reservation & { camp: C
 export default function DashboardPage() {
   useTitle("Dashboard");
   const navigate = useNavigate();
+  const { selectedOrgId } = useOrg();
   const [reservations, setReservations] = useState<(Reservation & { camp: Camp })[]>([]);
   const [camps, setCamps] = useState<Camp[]>([]);
 
@@ -96,7 +98,7 @@ export default function DashboardPage() {
     api.get("/reservations").then((r) => setReservations(r.data)).catch(() => {});
     api.get("/camps").then((r) => setCamps(r.data)).catch(() => {});
   };
-  useEffect(() => { load(); }, []);
+  useEffect(() => { load(); }, [selectedOrgId]);
 
   const getCampOccupancy = (camp: Camp) => {
     const total = (camp.accommodationTypes ?? []).reduce((s, t) => s + t.capacity, 0);
@@ -124,19 +126,19 @@ export default function DashboardPage() {
   const recent = [...reservations].slice(0, 10);
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
 
-      <div className="flex gap-3 mb-8">
-        <div className="w-40 rounded-xl px-5 py-4 bg-blue-100 border border-blue-200">
-          <p className="text-xs text-blue-600">Celkem rezervací</p>
+      <div className="grid grid-cols-3 gap-3 mb-8">
+        <div className="rounded-xl px-4 py-4 bg-blue-100 border border-blue-200">
+          <p className="text-xs text-blue-600"><span className="hidden sm:inline">Celkem rezervací</span><span className="sm:hidden">Celkem</span></p>
           <p className="text-2xl font-bold mt-0.5 text-blue-800">{reservations.length}</p>
         </div>
-        <div className="w-40 rounded-xl px-5 py-4 bg-yellow-100 border border-yellow-200">
+        <div className="rounded-xl px-4 py-4 bg-yellow-100 border border-yellow-200">
           <p className="text-xs text-yellow-700">Čekajících</p>
           <p className="text-2xl font-bold mt-0.5 text-yellow-800">{pending}</p>
         </div>
-        <div className="w-40 rounded-xl px-5 py-4 bg-green-100 border border-green-200">
+        <div className="rounded-xl px-4 py-4 bg-green-100 border border-green-200">
           <p className="text-xs text-green-700">Potvrzených</p>
           <p className="text-2xl font-bold mt-0.5 text-green-800">{confirmed}</p>
         </div>

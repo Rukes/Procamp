@@ -1,0 +1,37 @@
+/* Force hljs styles to win over Tailwind prose */
+article {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+article pre {
+  max-width: calc(100vw - 2rem);
+  overflow-x: auto !important;
+  box-sizing: border-box;
+}
+
+article pre code.hljs {
+  display: block;
+  padding: 1.2em;
+  background: #22272e !important;
+  color: #adbac7 !important;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+article pre code .hljs-tag,
+article pre code .hljs-keyword,
+article pre code .hljs-selector-tag { color: #8ddb8c !important; }
+
+article pre code .hljs-name { color: #8ddb8c !important; }
+
+article pre code .hljs-attr { color: #6cb6ff !important; }
+
+article pre code .hljs-string,
+article pre code .hljs-addition { color: #96d0ff !important; }
+
+article pre code .hljs-comment { color: #768390 !important; font-style: italic; }
+
+article pre code .hljs-number,
+article pre code .hljs-literal { color: #6cb6ff !important; }

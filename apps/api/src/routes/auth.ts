@@ -30,6 +30,7 @@ export async function authRoutes(app: FastifyInstance) {
       isSuperAdmin: user.isSuperAdmin,
       permissions: user.permissions as unknown as Record<string, boolean>,
       organizationId: user.organizationId ?? null,
+      tokenVersion: user.tokenVersion,
     });
 
     return { token, user: { id: user.id, name: user.name, email: user.email, isSuperAdmin: user.isSuperAdmin, permissions: user.permissions, organizationId: user.organizationId ?? null } };

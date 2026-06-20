@@ -107,10 +107,10 @@ export default function OrganizationsPage() {
     s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, "");
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {(creating || modalOrg) && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 pt-12" onClick={closeModal}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-2 pt-4 sm:p-4 sm:pt-12" onClick={closeModal}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-semibold">{creating ? "Nová organizace" : `Upravit: ${modalOrg!.name}`}</h3>
               <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
@@ -133,7 +133,7 @@ export default function OrganizationsPage() {
                   <label className="label">Odběratel</label>
                   <input className="input" value={form.billingName} onChange={(e) => set("billingName", e.target.value)} placeholder="Fakturační název firmy" />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="label">IČO</label>
                     <div className="flex gap-2">
@@ -158,7 +158,7 @@ export default function OrganizationsPage() {
                   <label className="label">Země</label>
                   <CountrySelect value={form.country} onChange={(v) => set("country", v)} />
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="label">Kontaktní osoba</label>
                     <input className="input" value={form.contactPerson} onChange={(e) => set("contactPerson", e.target.value)} />
@@ -183,13 +183,13 @@ export default function OrganizationsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Organizace</h1>
           <p className="text-sm text-gray-500 mt-1">Každá organizace má vlastní objekty, uživatele a jazyky.</p>
         </div>
-        <button className="btn-primary" onClick={openCreate}><i className="fa-regular fa-plus mr-1.5" />Nová organizace</button>
+        <button className="btn-primary text-sm" onClick={openCreate}><i className="fa-regular fa-plus mr-1.5" /><span className="hidden sm:inline">Nová organizace</span><span className="sm:hidden">Nová</span></button>
       </div>
 
       <div className="space-y-3">
         {orgs.map((org) => (
           <div key={org.id} className="card p-5">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="font-semibold text-gray-900 text-base">{org.name}</h2>
@@ -232,9 +232,8 @@ export default function OrganizationsPage() {
                   {org.contactPerson && <p><i className="fa-regular fa-user mr-1 text-gray-400" />{org.contactPerson}{org.billingEmail && <span className="ml-2 text-blue-600">{org.billingEmail}</span>}</p>}
                 </div>
               </div>
-              <div className="flex gap-2 flex-shrink-0">
-                <Link to={`/organizations/${org.id}`} className="btn-secondary text-sm py-1.5"><i className="fa-regular fa-gear mr-1.5" />Nastavení</Link>
-                <button className="btn-danger text-sm py-1.5" onClick={() => handleDelete(org)}><i className="fa-regular fa-trash mr-1.5" />Smazat</button>
+              <div className="flex gap-2 flex-shrink-0 self-end sm:self-start">
+                <Link to={`/organizations/${org.id}`} className="btn-secondary text-sm py-1.5"><i className="fa-regular fa-gear sm:mr-1.5" /><span className="hidden sm:inline">Nastavení</span></Link>
               </div>
             </div>
           </div>

@@ -149,7 +149,12 @@ export default function ReservationNewPage() {
 
   return (
     <div className="p-8 max-w-4xl">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Nová rezervace</h1>
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => navigate("/reservations")} className="text-gray-400 hover:text-gray-600 transition-colors">
+          <i className="fa-regular fa-arrow-left text-lg" />
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900">Nová rezervace</h1>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Objekt + typ */}
@@ -173,13 +178,13 @@ export default function ReservationNewPage() {
           )}
           <div>
             <label className="label">Termín pobytu</label>
-            <div className="flex justify-center border border-gray-200 rounded-xl p-2">
+            <div className="flex justify-center border border-gray-200 rounded-xl p-2 overflow-x-auto">
               <DayPicker
                 mode="range"
                 selected={range}
                 onSelect={handleRangeSelect}
                 disabled={(d) => isBefore(d, startOfDay(new Date()))}
-                numberOfMonths={2}
+                numberOfMonths={window.innerWidth < 640 ? 1 : 2}
                 locale={cs}
                 modifiersStyles={{
                   selected: { backgroundColor: "#2563eb", color: "#fff", borderRadius: "0.5rem" },
@@ -194,7 +199,7 @@ export default function ReservationNewPage() {
               </p>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label">Dospělí</label>
               <input className="input" type="number" min="1" value={form.adults} onChange={(e) => set("adults", Number(e.target.value))} required />
@@ -283,7 +288,7 @@ export default function ReservationNewPage() {
         {/* Kontakt */}
         <div className="card p-6 space-y-4">
           <h2 className="font-semibold text-gray-700">Kontaktní údaje</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label">Jméno</label>
               <input className="input" value={form.firstName} onChange={(e) => set("firstName", e.target.value)} required />

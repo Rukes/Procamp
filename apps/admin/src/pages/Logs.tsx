@@ -185,7 +185,7 @@ export default function LogsPage() {
   }, [logs, sortKey, sortDir]);
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {activeLog && <DiffModal log={activeLog} onClose={() => setActiveLog(null)} />}
 
       <div className="mb-6">
@@ -193,14 +193,14 @@ export default function LogsPage() {
         <p className="text-sm text-gray-500 mt-1">Přihlášení, vytvoření, úpravy a smazání záznamů.</p>
       </div>
 
-      <div className="flex gap-3 mb-4">
-        <select className="input w-44" value={filterAction} onChange={(e) => setFilterAction(e.target.value)}>
+      <div className="flex flex-wrap gap-2 mb-4">
+        <select className="input flex-1 min-w-[140px]" value={filterAction} onChange={(e) => setFilterAction(e.target.value)}>
           <option value="">Všechny akce</option>
           {Object.entries(ACTION_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v.label}</option>
           ))}
         </select>
-        <select className="input w-44" value={filterEntity} onChange={(e) => setFilterEntity(e.target.value)}>
+        <select className="input flex-1 min-w-[140px]" value={filterEntity} onChange={(e) => setFilterEntity(e.target.value)}>
           <option value="">Všechny entity</option>
           {Object.entries(ENTITY_LABELS).map(([k, v]) => (
             <option key={k} value={k}>{v}</option>
@@ -210,7 +210,8 @@ export default function LogsPage() {
       </div>
 
       <div className="card overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full text-sm min-w-[640px]">
           <thead className="bg-gray-50 border-b border-gray-100">
             <tr>
               {([ ["createdAt", "Čas", "w-44"], ["userEmail", "Uživatel", ""], ["action", "Akce", "w-28"], ["entity", "Entita", "w-32"] ] as [SortKey, string, string][]).map(([col, label, w]) => (
@@ -260,6 +261,7 @@ export default function LogsPage() {
             })}
           </tbody>
         </table>
+        </div>
       </div>
 
       {totalPages > 1 && (

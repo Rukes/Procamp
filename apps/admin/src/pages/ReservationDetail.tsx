@@ -133,17 +133,17 @@ export default function ReservationDetailPage() {
   const isDeparture = (d: Date) => isSameDay(d, checkOut);
 
   return (
-    <div className="p-8">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="p-4 md:p-8">
+      <div className="flex flex-wrap items-center gap-2 mb-6">
         <Link to="/reservations" className="flex items-center gap-1.5 text-gray-400 hover:text-gray-600"><i className="fa-regular fa-arrow-left" /> Rezervace</Link>
         <span className="text-gray-300">/</span>
         <span className="text-gray-900 font-medium">{langFlag(reservation.languageCode)} {reservation.firstName} {reservation.lastName}</span>
         <span className={STATUS_CLASS[reservation.status]}>{STATUS_LABEL[reservation.status]}</span>
-        <span className="text-xs text-gray-400 ml-auto">Vytvořeno {format(new Date(reservation.createdAt), "d. M. yyyy HH:mm", { locale: cs })}</span>
+        <span className="text-xs text-gray-400 sm:ml-auto">Vytvořeno {format(new Date(reservation.createdAt), "d. M. yyyy HH:mm", { locale: cs })}</span>
       </div>
 
       {can("reservations_edit") && (
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4">
           {reservation.status !== "CONFIRMED" && (
             <button className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors" onClick={() => setStatus("CONFIRMED")}><i className="fa-regular fa-check mr-1.5" />Potvrdit</button>
           )}
@@ -159,7 +159,7 @@ export default function ReservationDetailPage() {
 
       {/* Edit modal */}
       {editing && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 pt-12" onClick={() => setEditing(false)}>
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-2 pt-4 sm:p-4 sm:pt-12" onClick={() => setEditing(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h2 className="font-semibold text-gray-900">Upravit rezervaci</h2>
@@ -168,7 +168,7 @@ export default function ReservationDetailPage() {
             <form onSubmit={handleSaveEdit} className="p-6 space-y-5">
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Kontakt</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div><label className="label">Jméno</label><input className="input" value={editForm.firstName} onChange={(e) => setEditForm({ ...editForm, firstName: e.target.value })} required /></div>
                   <div><label className="label">Příjmení</label><input className="input" value={editForm.lastName} onChange={(e) => setEditForm({ ...editForm, lastName: e.target.value })} required /></div>
                   <div><label className="label">E-mail</label><input className="input" type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} required /></div>
@@ -179,7 +179,7 @@ export default function ReservationDetailPage() {
               <hr />
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Ubytování</p>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="label">Typ ubytování</label>
                     <select className="input" value={editForm.accommodationTypeId} onChange={(e) => setEditForm({ ...editForm, accommodationTypeId: e.target.value })}>
@@ -295,7 +295,7 @@ export default function ReservationDetailPage() {
 
           <div className="card p-6">
             <h2 className="font-semibold mb-4">Ubytování</h2>
-            <dl className="grid grid-cols-2 gap-3 text-sm">
+            <dl className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
               <div><dt className="text-gray-500">Objekt</dt><dd className="font-medium">{reservation.camp?.name}</dd></div>
               <div><dt className="text-gray-500">Typ</dt><dd className="font-medium">{(() => { const t = reservation.accommodationType; if (!t) return "—"; const tr = t.translations as Record<string, { name: string }>; return tr.cs?.name ?? tr[Object.keys(tr)[0]]?.name ?? "—"; })()}</dd></div>
               <div><dt className="text-gray-500">Příjezd</dt><dd className="font-medium">{format(checkIn, "d. MMMM yyyy", { locale: cs })}</dd></div>

@@ -51,10 +51,14 @@ export async function userRoutes(app: FastifyInstance) {
     const data: Record<string, unknown> = {};
     if (body.name) data.name = body.name;
     if (body.email) data.email = body.email;
+    if (body.reservationsDefaultView) data.reservationsDefaultView = body.reservationsDefaultView;
+
+    // Citlivé změny — invalidovat session upraveného uživatele
+    const sensitive = body.password || body.permissions || body.isSuperAdmin !== undefined;
     if (body.password) data.passwordHash = await bcrypt.hash(body.password, 12);
     if (body.isSuperAdmin !== undefined) data.isSuperAdmin = body.isSuperAdmin;
     if (body.permissions) data.permissions = body.permissions;
-    if (body.reservationsDefaultView) data.reservationsDefaultView = body.reservationsDefaultView;
+    if (sensitive) data.tokenVersion = { increment: 1 };
 
     const user = await app.prisma.user.update({ where: { id }, data, select: USER_SELECT });
     if (before) {

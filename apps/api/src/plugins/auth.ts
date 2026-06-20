@@ -1,12 +1,21 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { Permission } from "@procamp/shared";
 
+async function verifyTokenVersion(request: FastifyRequest, reply: FastifyReply) {
+  const { sub, tokenVersion } = request.user;
+  const user = await (request.server as any).prisma.user.findUnique({ where: { id: sub }, select: { tokenVersion: true } });
+  if (!user || user.tokenVersion !== tokenVersion) {
+    reply.status(401).send({ error: "Session expired" });
+  }
+}
+
 export async function requireAuth(request: FastifyRequest, reply: FastifyReply) {
   try {
     await request.jwtVerify();
   } catch {
-    reply.status(401).send({ error: "Unauthorized" });
+    return reply.status(401).send({ error: "Unauthorized" });
   }
+  await verifyTokenVersion(request, reply);
 }
 
 export function requireSuperAdmin() {
@@ -16,6 +25,7 @@ export function requireSuperAdmin() {
     } catch {
       return reply.status(401).send({ error: "Unauthorized" });
     }
+    await verifyTokenVersion(request, reply);
     if (!request.user.isSuperAdmin) {
       return reply.status(403).send({ error: "Forbidden" });
     }
@@ -29,7 +39,7 @@ export function requirePermission(key: keyof Permission) {
     } catch {
       return reply.status(401).send({ error: "Unauthorized" });
     }
-
+    await verifyTokenVersion(request, reply);
     const user = request.user;
     if (!user.isSuperAdmin && !user.permissions?.[key]) {
       return reply.status(403).send({ error: "Forbidden" });
@@ -63,6 +73,7 @@ declare module "@fastify/jwt" {
       isSuperAdmin: boolean;
       permissions: Permission;
       organizationId: string | null;
+      tokenVersion: number;
     };
     user: {
       sub: string;
@@ -70,6 +81,7 @@ declare module "@fastify/jwt" {
       isSuperAdmin: boolean;
       permissions: Permission;
       organizationId: string | null;
+      tokenVersion: number;
     };
   }
 }
