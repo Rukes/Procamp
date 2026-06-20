@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 import { createUserSchema } from "@procamp/shared";
 import { requirePermission, requireAuth, orgFilter } from "../plugins/auth";
+import { logActivity, diffObjects } from "../services/activityLog";
 
 const USER_SELECT = { id: true, name: true, email: true, isSuperAdmin: true, permissions: true, reservationsDefaultView: true, organizationId: true, createdAt: true };
 
@@ -33,6 +34,7 @@ export async function userRoutes(app: FastifyInstance) {
       },
       select: USER_SELECT,
     });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "CREATE", entity: "user", entityId: user.id, payload: user });
     return reply.status(201).send(user);
   });
 
@@ -45,6 +47,7 @@ export async function userRoutes(app: FastifyInstance) {
       if (existing) return reply.status(409).send({ error: "Email already in use" });
     }
 
+    const before = await app.prisma.user.findUnique({ where: { id }, select: USER_SELECT });
     const data: Record<string, unknown> = {};
     if (body.name) data.name = body.name;
     if (body.email) data.email = body.email;
@@ -53,7 +56,12 @@ export async function userRoutes(app: FastifyInstance) {
     if (body.permissions) data.permissions = body.permissions;
     if (body.reservationsDefaultView) data.reservationsDefaultView = body.reservationsDefaultView;
 
-    return app.prisma.user.update({ where: { id }, data, select: USER_SELECT });
+    const user = await app.prisma.user.update({ where: { id }, data, select: USER_SELECT });
+    if (before) {
+      const diff = diffObjects(before as Record<string, unknown>, user as Record<string, unknown>);
+      await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "user", entityId: id, payload: diff });
+    }
+    return user;
   });
 
   app.patch("/me/preferences", { preHandler: requireAuth }, async (request) => {
@@ -65,7 +73,9 @@ export async function userRoutes(app: FastifyInstance) {
   app.delete("/:id", { preHandler: guard }, async (request, reply) => {
     const { id } = request.params as { id: string };
     if (id === request.user.sub) return reply.status(400).send({ error: "Cannot delete yourself" });
+    const user = await app.prisma.user.findUnique({ where: { id }, select: USER_SELECT });
     await app.prisma.user.delete({ where: { id } });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "DELETE", entity: "user", entityId: id, payload: user });
     return { success: true };
   });
 }

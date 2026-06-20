@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { createReservationSchema } from "@procamp/shared";
 import { checkAvailability, getOccupiedDates } from "../../services/availability";
 import { sendReservationEmails } from "../../services/email";
+import { logActivity } from "../../services/activityLog";
 
 export async function publicFormRoutes(app: FastifyInstance) {
   // Get camp public data (for form) — /:orgSlug/:campSlug
@@ -145,6 +146,15 @@ export async function publicFormRoutes(app: FastifyInstance) {
     sendReservationEmails(app.prisma, reservation as never, nights).catch((err) =>
       app.log.error({ err }, "Failed to send reservation emails"),
     );
+
+    await logActivity(app.prisma, {
+      userEmail: `${body.firstName} ${body.lastName} <${body.email}>`,
+      ip: request.ip,
+      action: "CREATE",
+      entity: "reservation",
+      entityId: reservation.id,
+      payload: { firstName: body.firstName, lastName: body.lastName, email: body.email, phone: body.phone, checkIn: body.checkIn, checkOut: body.checkOut, totalPrice, source: "form" },
+    });
 
     return reply.status(201).send({
       id: reservation.id,

@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { requirePermission, orgFilter } from "../plugins/auth";
 import { checkAvailability } from "../services/availability";
+import { logActivity, diffObjects } from "../services/activityLog";
 
 const INCLUDE = {
   camp: true,
@@ -54,7 +55,7 @@ export async function reservationRoutes(app: FastifyInstance) {
     const { available } = await checkAvailability(app.prisma, body.campId, body.accommodationTypeId, checkIn, checkOut);
     if (!available) return reply.status(409).send({ error: "No availability for selected dates" });
 
-    const camp = await app.prisma.camp.findUniqueOrThrow({ where: { id: body.campId }, include: { surcharges: { include: { prices: true } } } });
+    const camp = await app.prisma.camp.findUniqueOrThrow({ where: { id: body.campId }, include: { surcharges: { include: { prices: true } }, organization: { select: { languages: true } } } });
     const accType = await app.prisma.accommodationType.findUniqueOrThrow({
       where: { id: body.accommodationTypeId },
       include: { prices: true },
@@ -87,6 +88,7 @@ export async function reservationRoutes(app: FastifyInstance) {
         note: body.note,
         totalPrice,
         languageCode: lang,
+        status: camp.requiresConfirmation ? "PENDING" : "CONFIRMED",
         surcharges: {
           create: selectedSurcharges.map((s) => {
             const p = s.prices.find((p) => p.languageCode === lang) ?? s.prices[0];
@@ -97,6 +99,7 @@ export async function reservationRoutes(app: FastifyInstance) {
       include: INCLUDE,
     });
 
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "CREATE", entity: "reservation", entityId: reservation.id, payload: reservation });
     return reply.status(201).send(reservation);
   });
 
@@ -108,21 +111,33 @@ export async function reservationRoutes(app: FastifyInstance) {
       adults?: number; children?: number;
       licensePlate?: string; expectedArrival?: string; note?: string;
     };
+    const before = await app.prisma.reservation.findUnique({ where: { id } });
     const data: Record<string, unknown> = { ...body };
     if (body.checkIn) data.checkIn = new Date(body.checkIn);
     if (body.checkOut) data.checkOut = new Date(body.checkOut);
-    return app.prisma.reservation.update({ where: { id }, data, include: INCLUDE });
+    const updated = await app.prisma.reservation.update({ where: { id }, data, include: INCLUDE });
+    if (before) {
+      const { camp: _c, accommodationType: _at, surcharges: _s, ...updatedFlat } = updated as Record<string, unknown>;
+      const diff = diffObjects(before as Record<string, unknown>, updatedFlat);
+      await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "reservation", entityId: id, payload: diff });
+    }
+    return updated;
   });
 
   app.patch("/:id/status", { preHandler: requirePermission("reservations_edit") }, async (request) => {
     const { id } = request.params as { id: string };
     const { status } = request.body as { status: string };
-    return app.prisma.reservation.update({ where: { id }, data: { status }, include: INCLUDE });
+    const before = await app.prisma.reservation.findUnique({ where: { id }, select: { status: true } });
+    const updated = await app.prisma.reservation.update({ where: { id }, data: { status }, include: INCLUDE });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "reservation", entityId: id, payload: { status: { before: before?.status, after: status } } });
+    return updated;
   });
 
   app.delete("/:id", { preHandler: requirePermission("reservations_delete") }, async (request) => {
     const { id } = request.params as { id: string };
+    const reservation = await app.prisma.reservation.findUnique({ where: { id }, include: INCLUDE });
     await app.prisma.reservation.delete({ where: { id } });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "DELETE", entity: "reservation", entityId: id, payload: reservation });
     return { success: true };
   });
 

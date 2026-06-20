@@ -14,6 +14,7 @@ const nav = [
 
 const superAdminNav = [
   { to: "/organizations", label: "Organizace", icon: "fa-building" },
+  { to: "/logs", label: "Logy", icon: "fa-list-check" },
 ];
 
 export default function Layout() {

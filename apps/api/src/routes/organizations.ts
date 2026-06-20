@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { requireSuperAdmin, requireAuth } from "../plugins/auth";
+import { logActivity, diffObjects } from "../services/activityLog";
 
 export async function organizationRoutes(app: FastifyInstance) {
   // Vlastní organizace přihlášeného uživatele (pro org_admin)
@@ -18,7 +19,13 @@ export async function organizationRoutes(app: FastifyInstance) {
       address?: string; contactPerson?: string; billingEmail?: string;
       termsText?: string; defaultLanguageCode?: string; thousandsSeparator?: string; decimalSeparator?: string;
     };
-    return app.prisma.organization.update({ where: { id: organizationId }, data: body });
+    const before = await app.prisma.organization.findUnique({ where: { id: organizationId } });
+    const org = await app.prisma.organization.update({ where: { id: organizationId }, data: body });
+    if (before) {
+      const diff = diffObjects(before as Record<string, unknown>, org as Record<string, unknown>);
+      await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "organization", entityId: organizationId, payload: diff });
+    }
+    return org;
   });
 
   app.get("/", { preHandler: requireSuperAdmin() }, async () => {
@@ -58,7 +65,6 @@ export async function organizationRoutes(app: FastifyInstance) {
         billingEmail: body.billingEmail ?? "",
       },
     });
-    // Automaticky vytvoř výchozí jazyk (čeština) pro novou organizaci
     await app.prisma.language.create({
       data: {
         code: "cs",
@@ -70,6 +76,7 @@ export async function organizationRoutes(app: FastifyInstance) {
         organizationId: org.id,
       },
     });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "CREATE", entity: "organization", entityId: org.id, payload: { name: org.name, slug: org.slug } });
     return reply.status(201).send(org);
   });
 
@@ -80,12 +87,20 @@ export async function organizationRoutes(app: FastifyInstance) {
       address?: string; contactPerson?: string; billingEmail?: string;
       termsText?: string; requireTermsAcceptance?: boolean; defaultLanguageCode?: string; thousandsSeparator?: string; decimalSeparator?: string;
     };
-    return app.prisma.organization.update({ where: { id }, data: body });
+    const before = await app.prisma.organization.findUnique({ where: { id } });
+    const org = await app.prisma.organization.update({ where: { id }, data: body });
+    if (before) {
+      const diff = diffObjects(before as Record<string, unknown>, org as Record<string, unknown>);
+      await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "organization", entityId: id, payload: diff });
+    }
+    return org;
   });
 
   app.delete("/:id", { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const { id } = request.params as { id: string };
+    const org = await app.prisma.organization.findUnique({ where: { id } });
     await app.prisma.organization.delete({ where: { id } });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "DELETE", entity: "organization", entityId: id, payload: org });
     return reply.status(204).send();
   });
 }

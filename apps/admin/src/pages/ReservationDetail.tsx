@@ -17,6 +17,7 @@ export default function ReservationDetailPage() {
   const toast = useToast();
   const [reservation, setReservation] = useState<(Reservation & { camp: Camp }) | null>(null);
   const [campTypes, setCampTypes] = useState<AccommodationType[]>([]);
+  const [languages, setLanguages] = useState<{ code: string; currencySymbol: string; currencyPosition: string }[]>([]);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<Record<string, string>>({});
 
@@ -35,8 +36,16 @@ export default function ReservationDetailPage() {
     if (campId) {
       api.get(`/camps/${campId}/accommodation-types`).then((r) => setCampTypes(r.data)).catch(() => {});
     }
+    api.get("/languages").then((r) => setLanguages(r.data)).catch(() => {});
   };
   useEffect(() => { load(); }, [id]);
+
+  const formatPrice = (amount: number, langCode: string) => {
+    const lang = languages.find((l) => l.code === langCode);
+    const formatted = amount.toLocaleString("cs-CZ");
+    if (!lang) return `${formatted} Kč`;
+    return lang.currencyPosition === "before" ? `${lang.currencySymbol}${formatted}` : `${formatted} ${lang.currencySymbol}`;
+  };
 
   const STATUS_TOAST: Record<string, string> = {
     CONFIRMED: "Rezervace byla potvrzena.",
@@ -76,6 +85,17 @@ export default function ReservationDetailPage() {
       load();
     } catch {
       toast.error("Nepodařilo se uložit změny.");
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm(`Opravdu smazat rezervaci ${reservation?.firstName} ${reservation?.lastName}? Tato akce je nevratná.`)) return;
+    try {
+      await api.delete(`/reservations/${id}`);
+      toast.success("Rezervace byla smazána.");
+      window.history.back();
+    } catch {
+      toast.error("Nepodařilo se smazat rezervaci.");
     }
   };
 
@@ -204,7 +224,7 @@ export default function ReservationDetailPage() {
         <div className="card p-6 flex flex-col gap-4">
           <div>
             <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-0.5">Celková cena</p>
-            <p className="text-3xl font-bold text-gray-900">{new Intl.NumberFormat(reservation.languageCode, { minimumFractionDigits: 0, maximumFractionDigits: 2 }).format(reservation.totalPrice)} Kč</p>
+            <p className="text-3xl font-bold text-gray-900">{formatPrice(reservation.totalPrice, reservation.languageCode)}</p>
             <p className="text-sm text-gray-400">Platba na místě</p>
           </div>
           <hr />
@@ -291,7 +311,14 @@ export default function ReservationDetailPage() {
 
       </div>
 
-      <p className="text-xs text-gray-400 mt-4">ID: {reservation.id}</p>
+      <div className="flex items-center justify-between mt-4">
+        <p className="text-xs text-gray-400">ID: {reservation.id}</p>
+        {can("reservations_delete") && (
+          <button onClick={handleDelete} className="text-xs text-red-400 hover:text-red-600 transition-colors">
+            <i className="fa-regular fa-trash mr-1" />Smazat rezervaci
+          </button>
+        )}
+      </div>
     </div>
   );
 }

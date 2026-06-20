@@ -17,6 +17,7 @@ import OrganizationsPage from "./pages/Organizations";
 import OrganizationDetailPage from "./pages/OrganizationDetail";
 import MyOrganizationPage from "./pages/MyOrganization";
 import UserSettingsPage from "./pages/UserSettings";
+import LogsPage from "./pages/Logs";
 
 function Guard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="organizations/:id" element={<OrganizationDetailPage />} />
           <Route path="my-organization" element={<MyOrganizationPage />} />
           <Route path="settings" element={<UserSettingsPage />} />
+          <Route path="logs" element={<LogsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

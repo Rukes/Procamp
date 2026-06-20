@@ -177,6 +177,22 @@ model ReservationSurcharge {
   @@unique([reservationId, surchargeId])
 }
 
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  userEmail String
+  ip        String?
+  action    String
+  entity    String
+  entityId  String?
+  payload   Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([entity])
+  @@index([userId])
+}
+
 model EmailTemplate {
   id           String   @id @default(cuid())
   campId       String

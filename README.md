@@ -29,6 +29,11 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 - **Rate limiting** — login endpoint je omezen na 10 pokusů za 5 minut (ochrana proti brute-force)
 - **Export Excel** — opravený export rezervací do .xlsx
 - **Prostředí** — URL formuláře přesunuta do `VITE_FORM_BASE_URL` env proměnné
+- **Logy aktivit** — SA stránka s přehledem všech akcí (přihlášení, vytvoření, úpravy, smazání); diff zobrazení změn pole po poli (před/po); loguje se i IP adresa a rezervace z veřejného formuláře; filtrování a řazení dle sloupců
+- **Auto-potvrzení rezervace** — pokud objekt nemá zapnuté `Vyžadovat potvrzení`, rezervace se vytvoří rovnou jako `CONFIRMED`
+- **Správná měna v detailu rezervace** — cena se zobrazuje v měně odpovídající jazyku rezervace
+- **Smazání rezervace** — tlačítko v detailu rezervace (pro uživatele s oprávněním `reservations_delete`)
+- **Oprava URL formuláře v seznamu objektů** — odkaz nyní obsahuje org slug (`/form/{orgSlug}/{campSlug}`)
 
 ---
 

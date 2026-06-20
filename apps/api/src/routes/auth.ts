@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
 import { loginSchema } from "@procamp/shared";
 import { requireAuth } from "../plugins/auth";
+import { logActivity } from "../services/activityLog";
 
 export async function authRoutes(app: FastifyInstance) {
   app.post("/login", {
@@ -20,6 +21,8 @@ export async function authRoutes(app: FastifyInstance) {
 
     const valid = await bcrypt.compare(body.password, user.passwordHash);
     if (!valid) return reply.status(401).send({ error: "Invalid credentials" });
+
+    await logActivity(app.prisma, { userId: user.id, userEmail: user.email, ip: request.ip, action: "LOGIN", entity: "user", entityId: user.id });
 
     const token = app.jwt.sign({
       sub: user.id,

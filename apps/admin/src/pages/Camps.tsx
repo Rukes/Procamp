@@ -85,7 +85,7 @@ export default function CampsPage() {
             <div>
               <label className="label">URL slug (identifikátor)</label>
               <input className="input" value={slug} onChange={(e) => setSlug(e.target.value)} required pattern="[a-z0-9-]+" />
-              <p className="text-xs text-gray-500 mt-1">Použije se v URL formuláře: /form/<strong>{slug || "nazev-objektu"}</strong></p>
+              <p className="text-xs text-gray-500 mt-1">Použije se v URL formuláře: /form/{"{org-slug}"}/<strong>{slug || "nazev-objektu"}</strong></p>
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
             <div className="flex gap-2">
@@ -106,7 +106,7 @@ export default function CampsPage() {
                 <div className="flex items-center gap-2 mt-0.5">
                   <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{camp.slug}</code>
                   <a
-                    href={`${formBase}/form/${camp.slug}`}
+                    href={`${formBase}/form/${(camp as any).organization?.slug}/${camp.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-blue-500 hover:text-blue-700 transition-colors"
