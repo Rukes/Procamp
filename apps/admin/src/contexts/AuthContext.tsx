@@ -8,6 +8,7 @@ interface AuthCtx {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   can: (perm: keyof User["permissions"]) => boolean;
+  setUser: (user: User) => void;
 }
 
 const Ctx = createContext<AuthCtx>(null!);
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const can = (perm: keyof User["permissions"]) =>
     !!user && (user.isSuperAdmin || !!user.permissions[perm]);
 
-  return <Ctx.Provider value={{ user, loading, login, logout, can }}>{children}</Ctx.Provider>;
+  return <Ctx.Provider value={{ user, loading, login, logout, can, setUser }}>{children}</Ctx.Provider>;
 }
 
 export const useAuth = () => useContext(Ctx);

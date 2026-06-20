@@ -28,6 +28,7 @@ interface CampData {
   languages: Language[];
   currentLang: string;
   termsText: string;
+  requireTermsAcceptance: boolean;
 }
 
 export function useCamp(orgSlug: string, campSlug: string, lang: string) {

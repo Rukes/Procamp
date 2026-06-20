@@ -39,6 +39,7 @@ export const createUserSchema = z.object({
     users_manage: z.boolean().default(false),
     templates_edit: z.boolean().default(false),
     settings_edit: z.boolean().default(false),
+    org_admin: z.boolean().default(false),
   }),
 });
 

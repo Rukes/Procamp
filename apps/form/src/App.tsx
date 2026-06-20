@@ -60,7 +60,7 @@ function FormApp() {
     );
   }
 
-  const { camp, languages, termsText } = data;
+  const { camp, languages, termsText, requireTermsAcceptance } = data;
   const langObj = languages.find((l) => l.code === lang) ?? languages[0];
   const nights = checkIn && checkOut ? Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000) : 0;
 
@@ -152,6 +152,7 @@ function FormApp() {
             breakdown={breakdown}
             lang={langObj}
             termsText={termsText}
+            requireTermsAcceptance={requireTermsAcceptance}
             onSubmit={handleSubmit}
             onBack={() => setStep(2)}
             submitting={submitting}

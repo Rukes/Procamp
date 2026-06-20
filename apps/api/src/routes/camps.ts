@@ -17,7 +17,7 @@ export async function campRoutes(app: FastifyInstance) {
     const orgId = orgFilter(request);
     return app.prisma.camp.findFirstOrThrow({
       where: { id, ...(orgId ? { organizationId: orgId } : {}) },
-      include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } } },
+      include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
     });
   });
 

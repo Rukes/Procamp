@@ -136,7 +136,8 @@ export async function reservationRoutes(app: FastifyInstance) {
     });
 
     const ExcelJS = await import("exceljs");
-    const wb = new ExcelJS.Workbook();
+    const WorkbookClass = (ExcelJS as any).default ?? ExcelJS;
+    const wb = new WorkbookClass.Workbook();
     const ws = wb.addWorksheet("Rezervace");
 
     ws.columns = [

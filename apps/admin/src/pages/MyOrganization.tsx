@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useToast } from "../contexts/ToastContext";
 import RichTextEditor from "../components/RichTextEditor";
@@ -22,7 +21,6 @@ interface Organization {
   defaultLanguageCode: string;
   thousandsSeparator: string;
   decimalSeparator: string;
-  _count: { camps: number; users: number };
 }
 
 interface Language { id: string; code: string; name: string; }
@@ -41,9 +39,7 @@ const formatPreview = (t: string, d: string) => `1${t}234${d}56`;
 
 type Tab = "billing" | "settings" | "terms";
 
-export default function OrganizationDetailPage() {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
+export default function MyOrganizationPage() {
   const toast = useToast();
   const [org, setOrg] = useState<Organization | null>(null);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -51,6 +47,15 @@ export default function OrganizationDetailPage() {
   const [form, setForm] = useState<Partial<Organization>>({});
   const [saving, setSaving] = useState(false);
   const [aresLoading, setAresLoading] = useState(false);
+
+  useEffect(() => {
+    api.get("/organizations/mine").then((r) => { setOrg(r.data); setForm(r.data); }).catch(() => {});
+    api.get("/languages").then((r) => setLanguages(r.data)).catch(() => {});
+  }, []);
+
+  if (!org) return <div className="p-8 text-gray-400">Načítám…</div>;
+
+  const set = (k: keyof Organization, v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const loadAres = async () => {
     if (!form.ico || form.ico.length < 6) return;
@@ -74,20 +79,11 @@ export default function OrganizationDetailPage() {
     }
   };
 
-  useEffect(() => {
-    api.get(`/organizations/${id}`).then((r) => { setOrg(r.data); setForm(r.data); }).catch(() => navigate("/organizations"));
-    api.get("/languages").then((r) => setLanguages(r.data)).catch(() => {});
-  }, [id]);
-
-  if (!org) return <div className="p-8 text-gray-400">Načítám…</div>;
-
-  const set = (k: keyof Organization, v: string) => setForm((f) => ({ ...f, [k]: v }));
-
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await api.put(`/organizations/${id}`, form);
+      await api.put("/organizations/mine", form);
       toast.success("Uloženo.");
       setOrg({ ...org, ...form } as Organization);
     } catch {
@@ -105,14 +101,9 @@ export default function OrganizationDetailPage() {
 
   return (
     <div className="p-8 max-w-3xl">
-      <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate("/organizations")} className="text-gray-400 hover:text-gray-600 transition-colors">
-          <i className="fa-regular fa-arrow-left" />
-        </button>
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">{org.name}</h1>
-          <p className="text-sm text-gray-400 mt-0.5">{org._count.camps} kempů · {org._count.users} uživatelů</p>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-gray-900">{org.name}</h1>
+        <p className="text-sm text-gray-400 mt-0.5">Nastavení vaší organizace</p>
       </div>
 
       <div className="flex border-b border-gray-200 mb-6 gap-1">
@@ -130,15 +121,6 @@ export default function OrganizationDetailPage() {
       <form onSubmit={handleSave} className="space-y-5">
         {tab === "billing" && (
           <>
-            <div>
-              <label className="label">Název organizace *</label>
-              <input className="input" value={form.name ?? ""} onChange={(e) => set("name", e.target.value)} required />
-            </div>
-            <div>
-              <label className="label">URL slug *</label>
-              <input className="input" value={form.slug ?? ""} onChange={(e) => set("slug", e.target.value)} required pattern="[a-z0-9-]+" />
-              <p className="text-xs text-gray-400 mt-1">URL formuláře: /<strong>{form.slug || "slug"}</strong>/kemp-slug</p>
-            </div>
             <div>
               <label className="label">Odběratel</label>
               <input className="input" value={form.billingName ?? ""} onChange={(e) => set("billingName", e.target.value)} placeholder="Fakturační název firmy" />
@@ -206,21 +188,15 @@ export default function OrganizationDetailPage() {
                 </select>
               </div>
             </div>
-            <div className="bg-gray-50 rounded-lg px-4 py-3">
-              <p className="text-xs text-gray-500 mb-1">Náhled</p>
-              <p className="text-lg font-semibold text-gray-900">{formatPreview(form.thousandsSeparator ?? " ", form.decimalSeparator ?? ",")}</p>
-            </div>
+            <p className="text-sm text-gray-500">Náhled: <strong>{formatPreview(form.thousandsSeparator ?? " ", form.decimalSeparator ?? ",")}</strong></p>
           </>
         )}
 
         {tab === "terms" && (
           <>
             <div>
-              <label className="label mb-2">Text podmínek & GDPR</label>
-              <RichTextEditor
-                value={form.termsText ?? ""}
-                onChange={(html) => set("termsText", html)}
-              />
+              <label className="label">Text podmínek a GDPR</label>
+              <RichTextEditor value={form.termsText ?? ""} onChange={(v) => set("termsText", v)} />
             </div>
             <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
               <input
@@ -241,7 +217,7 @@ export default function OrganizationDetailPage() {
 
         <div className="pt-2">
           <button className="btn-primary" type="submit" disabled={saving}>
-            {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</>}
+            <i className="fa-regular fa-floppy-disk mr-1.5" />{saving ? "Ukládám…" : "Uložit"}
           </button>
         </div>
       </form>

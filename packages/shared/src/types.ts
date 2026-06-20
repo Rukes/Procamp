@@ -12,6 +12,7 @@ export interface Permission {
   users_manage: boolean;
   templates_edit: boolean;
   settings_edit: boolean;
+  org_admin: boolean;
 }
 
 export interface User {

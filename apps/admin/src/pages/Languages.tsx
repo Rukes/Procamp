@@ -148,7 +148,7 @@ export default function LanguagesPage() {
           <h1 className="text-2xl font-bold text-gray-900">Jazyky formuláře</h1>
           <p className="text-sm text-gray-500 mt-1">Každý jazyk má vlastní měnu — zákazník vidí ceny v měně svého jazyka.</p>
         </div>
-        {can("settings_edit") && available.length > 0 && (
+        {can("org_admin") && available.length > 0 && (
           <button className="btn bg-green-600 hover:bg-green-700 text-white" onClick={() => { setAddForm(EMPTY_FORM); setAddOpen(true); }}>
             <i className="fa-regular fa-plus mr-1.5" />Přidat jazyk
           </button>
@@ -199,10 +199,10 @@ export default function LanguagesPage() {
                   </p>
                 </div>
                 <div className="flex gap-2">
-                  {can("settings_edit") && (
+                  {can("org_admin") && (
                     <button className="btn-secondary text-sm py-1.5" onClick={() => startEdit(lang)}><i className="fa-regular fa-pen mr-1.5" />Upravit měnu</button>
                   )}
-                  {!lang.isDefault && can("settings_edit") && (
+                  {!lang.isDefault && can("org_admin") && (
                     <button className="btn-danger text-sm py-1.5" onClick={() => handleDelete(lang.id)}><i className="fa-regular fa-trash mr-1.5" />Smazat</button>
                   )}
                 </div>

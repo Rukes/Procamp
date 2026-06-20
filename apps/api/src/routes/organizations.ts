@@ -1,10 +1,29 @@
 import { FastifyInstance } from "fastify";
-import { requireSuperAdmin } from "../plugins/auth";
+import { requireSuperAdmin, requireAuth } from "../plugins/auth";
 
 export async function organizationRoutes(app: FastifyInstance) {
+  // Vlastní organizace přihlášeného uživatele (pro org_admin)
+  app.get("/mine", { preHandler: requireAuth }, async (request, reply) => {
+    const { organizationId } = request.user;
+    if (!organizationId) return reply.status(404).send({ error: "Nemáte přiřazenou organizaci." });
+    return app.prisma.organization.findUniqueOrThrow({ where: { id: organizationId } });
+  });
+
+  app.put("/mine", { preHandler: requireAuth }, async (request, reply) => {
+    const { organizationId, permissions } = request.user;
+    if (!organizationId) return reply.status(404).send({ error: "Nemáte přiřazenou organizaci." });
+    if (!permissions?.org_admin) return reply.status(403).send({ error: "Forbidden" });
+    const body = request.body as {
+      name?: string; billingName?: string; country?: string; ico?: string; dic?: string;
+      address?: string; contactPerson?: string; billingEmail?: string;
+      termsText?: string; defaultLanguageCode?: string; thousandsSeparator?: string; decimalSeparator?: string;
+    };
+    return app.prisma.organization.update({ where: { id: organizationId }, data: body });
+  });
+
   app.get("/", { preHandler: requireSuperAdmin() }, async () => {
     return app.prisma.organization.findMany({
-      include: { _count: { select: { camps: true, users: true } } },
+      include: { _count: { select: { camps: true, users: true, languages: true } } },
       orderBy: { createdAt: "asc" },
     });
   });
@@ -23,13 +42,14 @@ export async function organizationRoutes(app: FastifyInstance) {
 
   app.post("/", { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const body = request.body as {
-      name: string; slug: string; country?: string; ico?: string; dic?: string;
+      name: string; slug: string; billingName?: string; country?: string; ico?: string; dic?: string;
       address?: string; contactPerson?: string; billingEmail?: string;
     };
     const org = await app.prisma.organization.create({
       data: {
         name: body.name,
         slug: body.slug,
+        billingName: body.billingName ?? "",
         country: body.country ?? "",
         ico: body.ico ?? "",
         dic: body.dic ?? "",
@@ -56,9 +76,9 @@ export async function organizationRoutes(app: FastifyInstance) {
   app.put("/:id", { preHandler: requireSuperAdmin() }, async (request) => {
     const { id } = request.params as { id: string };
     const body = request.body as {
-      name?: string; slug?: string; country?: string; ico?: string; dic?: string;
+      name?: string; slug?: string; billingName?: string; country?: string; ico?: string; dic?: string;
       address?: string; contactPerson?: string; billingEmail?: string;
-      termsText?: string; defaultLanguageCode?: string; thousandsSeparator?: string; decimalSeparator?: string;
+      termsText?: string; requireTermsAcceptance?: boolean; defaultLanguageCode?: string; thousandsSeparator?: string; decimalSeparator?: string;
     };
     return app.prisma.organization.update({ where: { id }, data: body });
   });

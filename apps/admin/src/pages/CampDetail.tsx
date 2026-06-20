@@ -334,9 +334,7 @@ export default function CampDetailPage() {
     setCamp(campRes.data);
     setLanguages(langRes.data);
     setTemplates(tplRes.data);
-    if (campRes.data.organizationId) {
-      api.get(`/organizations/${campRes.data.organizationId}`).then((r) => setOrgSlug(r.data.slug)).catch(() => {});
-    }
+    setOrgSlug(campRes.data.organization?.slug ?? null);
   };
 
   useEffect(() => { load(); }, [id]);
@@ -595,7 +593,7 @@ export default function CampDetailPage() {
                 <div>
                   <p className="font-semibold text-gray-900">{t.cs?.name ?? t[Object.keys(t)[0]]?.name ?? "—"}</p>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {csPrice ? `${csPrice.pricePerNight} Kč / noc · ` : ""}{s.isOptional ? "volitelný" : "povinný"}
+                    {csPrice ? `${csPrice.pricePerNight} Kč / noc` : ""}
                   </p>
                 </div>
                 {can("camps_edit") && (

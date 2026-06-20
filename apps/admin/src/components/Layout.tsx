@@ -37,7 +37,8 @@ export default function Layout() {
           {user?.isSuperAdmin ? (
             <div className="mt-2">
               <select
-                className="w-full text-xs bg-gray-800 text-gray-200 border border-gray-600 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500"
+                className="w-full rounded-lg border border-gray-600 bg-gray-800 px-3 py-2 text-sm text-gray-200 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 appearance-none bg-no-repeat"
+                style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%239ca3af' d='M6 8L1 3h10z'/%3E%3C/svg%3E\")", backgroundPosition: "right 0.75rem center", paddingRight: "2.25rem" }}
                 value={selectedOrgId ?? ""}
                 onChange={(e) => setSelectedOrgId(e.target.value || null)}
               >
@@ -46,14 +47,6 @@ export default function Layout() {
                   <option key={o.id} value={o.id}>{o.name}</option>
                 ))}
               </select>
-              {selectedOrg && (
-                <p className="text-xs text-blue-400 mt-1 truncate">
-                  <i className="fa-regular fa-building mr-1" />{selectedOrg.name}
-                </p>
-              )}
-              {!selectedOrg && (
-                <p className="text-xs text-gray-500 mt-1">Globální pohled</p>
-              )}
             </div>
           ) : (
             <p className="text-xs text-gray-400 mt-0.5">Administrace</p>
@@ -61,7 +54,7 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-          {nav.map((item) => (
+          {(!user?.isSuperAdmin || selectedOrgId) && [...nav, ...(user?.permissions?.org_admin && !user?.isSuperAdmin ? [{ to: "/my-organization", label: "Moje organizace", icon: "fa-building" }] : [])].map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
@@ -100,11 +93,9 @@ export default function Layout() {
 
         <div className="px-4 py-4 border-t border-gray-700 space-y-2">
           <p className="text-xs text-gray-400 truncate"><i className="fa-regular fa-user mr-1.5" />{user?.name}</p>
-          {user?.isSuperAdmin && (
-            <Link to="/system-settings" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
-              <i className="fa-regular fa-gear" /> Nastavení systému
-            </Link>
-          )}
+          <Link to="/settings" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
+            <i className="fa-regular fa-gear" /> Nastavení
+          </Link>
           <button onClick={handleLogout} className="flex items-center gap-2 w-full text-left text-xs text-gray-400 hover:text-white transition-colors">
             <i className="fa-regular fa-arrow-right-from-bracket" /> Odhlásit se
           </button>

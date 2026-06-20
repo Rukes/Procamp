@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { useToast } from "../contexts/ToastContext";
+import Tooltip from "../components/Tooltip";
+import CountrySelect from "../components/CountrySelect";
 
 interface Organization {
   id: string;
   name: string;
   slug: string;
+  billingName: string;
   country: string;
   ico: string;
   dic: string;
@@ -14,11 +17,11 @@ interface Organization {
   contactPerson: string;
   billingEmail: string;
   createdAt: string;
-  _count: { camps: number; users: number };
+  _count: { camps: number; users: number; languages: number };
 }
 
 const EMPTY: Omit<Organization, "id" | "createdAt" | "_count"> = {
-  name: "", slug: "", country: "", ico: "", dic: "", address: "", contactPerson: "", billingEmail: "",
+  name: "", slug: "", billingName: "", country: "", ico: "", dic: "", address: "", contactPerson: "", billingEmail: "",
 };
 
 export default function OrganizationsPage() {
@@ -27,6 +30,29 @@ export default function OrganizationsPage() {
   const [modalOrg, setModalOrg] = useState<Organization | null>(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ ...EMPTY });
+  const [aresLoading, setAresLoading] = useState(false);
+
+  const loadAres = async () => {
+    if (!form.ico || form.ico.length < 6) return;
+    setAresLoading(true);
+    try {
+      const r = await fetch(`https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/${form.ico}`);
+      if (!r.ok) { toast.error("IČO nenalezeno v ARES."); return; }
+      const d = await r.json();
+      setForm((f) => ({
+        ...f,
+        billingName: d.obchodniJmeno ?? f.billingName,
+        dic: d.dic ?? f.dic,
+        address: d.sidlo?.textovaAdresa ?? f.address,
+        country: d.sidlo?.nazevStatu ?? f.country,
+      }));
+      toast.success("Údaje načteny z ARES.");
+    } catch {
+      toast.error("Chyba při načítání z ARES.");
+    } finally {
+      setAresLoading(false);
+    }
+  };
 
   const load = () => api.get("/organizations").then((r) => setOrgs(r.data)).catch(() => {});
   useEffect(() => { load(); }, []);
@@ -35,7 +61,7 @@ export default function OrganizationsPage() {
 
   const openCreate = () => { setForm({ ...EMPTY }); setCreating(true); setModalOrg(null); };
   const openEdit = (org: Organization) => {
-    setForm({ name: org.name, slug: org.slug, country: org.country, ico: org.ico, dic: org.dic, address: org.address, contactPerson: org.contactPerson, billingEmail: org.billingEmail });
+    setForm({ name: org.name, slug: org.slug, billingName: org.billingName, country: org.country, ico: org.ico, dic: org.dic, address: org.address, contactPerson: org.contactPerson, billingEmail: org.billingEmail });
     setModalOrg(org);
     setCreating(false);
   };
@@ -96,10 +122,21 @@ export default function OrganizationsPage() {
                   <input className="input" value={form.slug} onChange={(e) => set("slug", e.target.value)} required pattern="[a-z0-9-]+" placeholder="nazev-organizace" />
                   <p className="text-xs text-gray-400 mt-1">Použije se v URL formuláře: /<strong>{form.slug || "slug"}</strong>/kemp-slug</p>
                 </div>
+                <div>
+                  <label className="label">Odběratel</label>
+                  <input className="input" value={form.billingName} onChange={(e) => set("billingName", e.target.value)} placeholder="Fakturační název firmy" />
+                </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="label">IČO</label>
-                    <input className="input" value={form.ico} onChange={(e) => set("ico", e.target.value)} placeholder="12345678" />
+                    <div className="flex gap-2">
+                      <input className="input" value={form.ico} onChange={(e) => set("ico", e.target.value)} placeholder="12345678" />
+                      <Tooltip text="Načíst z ARES">
+                        <button type="button" onClick={loadAres} disabled={aresLoading} className="btn-secondary px-3 flex-shrink-0">
+                          <i className={`fa-regular fa-rotate ${aresLoading ? "animate-spin" : ""}`} />
+                        </button>
+                      </Tooltip>
+                    </div>
                   </div>
                   <div>
                     <label className="label">DIČ</label>
@@ -112,7 +149,7 @@ export default function OrganizationsPage() {
                 </div>
                 <div>
                   <label className="label">Země</label>
-                  <input className="input" value={form.country} onChange={(e) => set("country", e.target.value)} placeholder="Česká republika" />
+                  <CountrySelect value={form.country} onChange={(v) => set("country", v)} />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -137,24 +174,32 @@ export default function OrganizationsPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Organizace</h1>
-          <p className="text-sm text-gray-500 mt-1">Každá organizace má vlastní kempy, uživatele a jazyky.</p>
+          <p className="text-sm text-gray-500 mt-1">Každá organizace má vlastní objekty, uživatele a jazyky.</p>
         </div>
         <button className="btn-primary" onClick={openCreate}><i className="fa-regular fa-plus mr-1.5" />Nová organizace</button>
       </div>
 
-      <div className="space-y-3 max-w-3xl">
+      <div className="space-y-3">
         {orgs.map((org) => (
           <div key={org.id} className="card p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <h2 className="font-semibold text-gray-900">{org.name}</h2>
+                <h2 className="font-semibold text-gray-900 text-base">{org.name}</h2>
+                <div className="flex items-center gap-2 mt-1">
                   <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{org.slug}</code>
-                  <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">
-                    {org._count.camps} {org._count.camps === 1 ? "kemp" : org._count.camps < 5 ? "kempy" : "kempů"} · {org._count.users} {org._count.users === 1 ? "uživatel" : org._count.users < 5 ? "uživatelé" : "uživatelů"}
+                  <span className="text-xs text-gray-400">
+                    <i className="fa-regular fa-tent mr-1" />{org._count.camps} {org._count.camps === 1 ? "objekt" : org._count.camps < 5 ? "objekty" : "objektů"}
+                  </span>
+                  <span className="text-xs text-gray-300">·</span>
+                  <span className="text-xs text-gray-400">
+                    <i className="fa-regular fa-user mr-1" />{org._count.users} {org._count.users === 1 ? "uživatel" : org._count.users < 5 ? "uživatelé" : "uživatelů"}
+                  </span>
+                  <span className="text-xs text-gray-300">·</span>
+                  <span className="text-xs text-gray-400">
+                    <i className="fa-regular fa-globe mr-1" />{org._count.languages} {org._count.languages === 1 ? "jazyk" : org._count.languages < 5 ? "jazyky" : "jazyků"}
                   </span>
                 </div>
-                <div className="text-sm text-gray-500 mt-1 space-y-0.5">
+                <div className="text-sm text-gray-500 mt-2 space-y-0.5">
                   {org.ico && <p><span className="text-gray-400">IČO:</span> {org.ico}{org.dic && <span className="ml-3"><span className="text-gray-400">DIČ:</span> {org.dic}</span>}</p>}
                   {org.address && <p>{org.address}{org.country && `, ${org.country}`}</p>}
                   {org.contactPerson && <p><i className="fa-regular fa-user mr-1 text-gray-400" />{org.contactPerson}{org.billingEmail && <span className="ml-2 text-blue-600">{org.billingEmail}</span>}</p>}
@@ -162,7 +207,6 @@ export default function OrganizationsPage() {
               </div>
               <div className="flex gap-2 flex-shrink-0">
                 <Link to={`/organizations/${org.id}`} className="btn-secondary text-sm py-1.5"><i className="fa-regular fa-gear mr-1.5" />Nastavení</Link>
-                <button className="btn-secondary text-sm py-1.5" onClick={() => openEdit(org)}><i className="fa-regular fa-pen mr-1.5" />Upravit</button>
                 <button className="btn-danger text-sm py-1.5" onClick={() => handleDelete(org)}><i className="fa-regular fa-trash mr-1.5" />Smazat</button>
               </div>
             </div>

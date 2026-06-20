@@ -21,17 +21,19 @@ interface Props {
   breakdown: PriceBreakdown;
   lang: Language;
   termsText?: string;
+  requireTermsAcceptance?: boolean;
   onSubmit: (data: ContactData) => void;
   onBack: () => void;
   submitting: boolean;
 }
 
-export default function ContactStep({ breakdown, lang, termsText, onSubmit, onBack, submitting }: Props) {
+export default function ContactStep({ breakdown, lang, termsText, requireTermsAcceptance, onSubmit, onBack, submitting }: Props) {
   const t = useT(lang.code);
   const [termsOpen, setTermsOpen] = useState(false);
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const hasTerms = !!termsText?.trim();
+  const needsAcceptance = hasTerms && (requireTermsAcceptance ?? true);
   const hasCaptcha = !!import.meta.env.VITE_HCAPTCHA_SITE_KEY;
 
   const schema = z.object({
@@ -49,7 +51,7 @@ export default function ContactStep({ breakdown, lang, termsText, onSubmit, onBa
   });
 
   const handleFormSubmit = (data: ContactData) => {
-    if (hasTerms && !termsAccepted) return;
+    if (needsAcceptance && !termsAccepted) return;
     if (hasCaptcha && !captchaToken) return;
     onSubmit(data);
   };
@@ -127,7 +129,16 @@ export default function ContactStep({ breakdown, lang, termsText, onSubmit, onBa
 
         <HCaptcha onVerify={setCaptchaToken} onExpire={() => setCaptchaToken(null)} />
 
-        {hasTerms && (
+        {hasTerms && !needsAcceptance && (
+          <p className="text-sm text-gray-500 p-3 rounded-xl border border-gray-200 bg-gray-50">
+            Odesláním rezervace berete na vědomí{" "}
+            <button type="button" className="text-blue-600 underline hover:text-blue-800" onClick={(e) => { e.preventDefault(); setTermsOpen(true); }}>
+              podmínky
+            </button>
+            {" "}zpracování osobních údajů (GDPR).
+          </p>
+        )}
+        {needsAcceptance && (
           <label className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-colors ${termsAccepted ? "border-blue-300 bg-blue-50" : "border-gray-200 bg-gray-50"}`}>
             <input
               type="checkbox"
@@ -148,13 +159,13 @@ export default function ContactStep({ breakdown, lang, termsText, onSubmit, onBa
             </span>
           </label>
         )}
-        {hasTerms && !termsAccepted && (
+        {needsAcceptance && !termsAccepted && (
           <p className="text-xs text-red-500 -mt-2">Pro odeslání rezervace je nutný souhlas s podmínkami.</p>
         )}
 
         <div className="flex gap-3">
           <button type="button" className="btn-secondary" onClick={onBack}>{t.back}</button>
-          <button type="submit" className="btn-primary" disabled={submitting || (hasTerms && !termsAccepted) || (hasCaptcha && !captchaToken)}>
+          <button type="submit" className="btn-primary" disabled={submitting || (needsAcceptance && !termsAccepted) || (hasCaptcha && !captchaToken)}>
             {submitting ? t.contactSubmitting : t.contactSubmit}
           </button>
         </div>

@@ -1,6 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
+import rateLimit from "@fastify/rate-limit";
 import { prismaPlugin } from "./plugins/prisma";
 import { authRoutes } from "./routes/auth";
 import { campRoutes } from "./routes/camps";
@@ -23,6 +24,10 @@ const start = async () => {
 
   await app.register(jwt, {
     secret: process.env.JWT_SECRET || "change-this-secret-in-production",
+  });
+
+  await app.register(rateLimit, {
+    global: false,
   });
 
   await app.register(prismaPlugin);

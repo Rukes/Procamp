@@ -20,7 +20,14 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 - **Seznam rezervací** — virtuální stavy „Proběhla" a „Propadlá", řazení kliknutím na hlavičku, zelené zvýraznění probíhajících pobytů, ikonka poznámky s hover/toggle popoverem, filtr podle stavu včetně „Propadlá"
 - **Detail rezervace** — nepovinná pole vždy zobrazena (šedé „nevyplněno"), vyplněná poznámka zvýrazněna amber boxem, označení aktuálního dne v kalendáři
 - **Paginator** — na všech výpisech (rezervace 25/str, objekty/jazyky/uživatelé 20/str)
-- **Správa uživatelů** — formulář nového/editovaného uživatele otevírán jako modal
+- **Správa uživatelů** — formulář nového/editovaného uživatele otevírán jako modal; generátor hesla s kopírováním do schránky
+- **Oprávnění `org_admin`** — správce organizace může spravovat jazyky a nastavení své organizace (stránka Moje organizace)
+- **Moje organizace** — uživatel s `org_admin` vidí a může upravovat nastavení své organizace (fakturační údaje, ARES sync, podmínky, GDPR)
+- **Nastavení účtu** — každý přihlášený uživatel může změnit svůj e-mail a heslo (menu → Nastavení)
+- **ARES integrace** — automatické načtení fakturačních údajů podle IČO z ares.gov.cz
+- **Výběr země** — standardizovaný select s evropskými zeměmi (ČR jako první, na konci „Jiná mimo EU")
+- **Rate limiting** — login endpoint je omezen na 10 pokusů za 5 minut (ochrana proti brute-force)
+- **Export Excel** — opravený export rezervací do .xlsx
 - **Prostředí** — URL formuláře přesunuta do `VITE_FORM_BASE_URL` env proměnné
 
 ---
@@ -287,7 +294,7 @@ Po spuštění seedu uvidíte:
 ⚠️  Change the password after first login!
 ```
 
-> **DŮLEŽITÉ:** Po prvním přihlášení si změňte heslo! (Menu → Změna hesla)
+> **DŮLEŽITÉ:** Po prvním přihlášení si změňte heslo! (Menu → Nastavení → Změna hesla)
 
 ### 7. Sestavte API
 
