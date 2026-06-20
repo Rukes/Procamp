@@ -38,6 +38,7 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 - **Stránka O autorovi** — statická stránka s informacemi o projektu a autorovi
 - **Přejmenování na MůjKemp.cz** — celý systém přejmenován včetně domén (`app.mujkemp.cz`, `api.mujkemp.cz`, `form.mujkemp.cz`)
 - **Dynamický title** — každá stránka nastavuje `<title>` ve formátu `Stránka | MůjKemp.cz`
+- **Interní poznámka organizace** — SA může u každé organizace uložit soukromou poznámku (červeně ohraničená textarea); pole se nikdy neposílá na frontend nepřihlášeným ani běžným uživatelům; v seznamu organizací se zobrazí červená ikonka s hover/touch popoverem
 
 ---
 

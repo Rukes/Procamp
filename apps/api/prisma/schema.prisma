@@ -23,6 +23,7 @@ model Organization {
   defaultLanguageCode String   @default("cs")
   thousandsSeparator  String   @default(" ")
   decimalSeparator    String   @default(",")
+  internalNote        String?  @db.Text
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   users               User[]

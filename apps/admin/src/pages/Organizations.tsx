@@ -17,6 +17,7 @@ interface Organization {
   address: string;
   contactPerson: string;
   billingEmail: string;
+  internalNote: string | null;
   createdAt: string;
   _count: { camps: number; users: number; languages: number };
 }
@@ -30,6 +31,7 @@ export default function OrganizationsPage() {
   const toast = useToast();
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [modalOrg, setModalOrg] = useState<Organization | null>(null);
+  const [openNoteId, setOpenNoteId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [form, setForm] = useState({ ...EMPTY });
   const [aresLoading, setAresLoading] = useState(false);
@@ -186,7 +188,27 @@ export default function OrganizationsPage() {
           <div key={org.id} className="card p-5">
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <h2 className="font-semibold text-gray-900 text-base">{org.name}</h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-semibold text-gray-900 text-base">{org.name}</h2>
+                  {org.internalNote && (
+                    <div
+                      className="relative"
+                      onMouseEnter={() => setOpenNoteId(org.id)}
+                      onMouseLeave={() => setOpenNoteId(null)}
+                      onTouchStart={(e) => { e.preventDefault(); setOpenNoteId(openNoteId === org.id ? null : org.id); }}
+                    >
+                      <i className="fa-regular fa-note-sticky text-xs text-red-500 cursor-pointer" />
+                      {openNoteId === org.id && (
+                        <div className="absolute left-0 top-5 z-50 w-72 bg-white border border-red-200 rounded-lg shadow-lg p-3">
+                          <p className="text-xs font-semibold text-red-500 mb-1.5 flex items-center gap-1.5">
+                            <i className="fa-regular fa-note-sticky" /> Interní poznámka
+                          </p>
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{org.internalNote}</p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <div className="flex items-center gap-2 mt-1">
                   <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{org.slug}</code>
                   <span className="text-xs text-gray-400">
