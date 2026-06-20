@@ -9,7 +9,7 @@ COPY packages/shared/package.json ./packages/shared/
 COPY apps/api/package.json ./apps/api/
 RUN pnpm install --no-frozen-lockfile
 
-# Build
+# Build (v2)
 FROM deps AS builder
 COPY packages/shared ./packages/shared
 RUN node_modules/.bin/tsc -p packages/shared/tsconfig.json

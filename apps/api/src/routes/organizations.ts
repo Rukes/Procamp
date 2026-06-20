@@ -90,11 +90,15 @@ export async function organizationRoutes(app: FastifyInstance) {
     const { id } = request.params as { id: string };
     const body = request.body as Record<string, unknown>;
     const data = {
-      name: body.name, slug: body.slug, billingName: body.billingName, country: body.country,
-      ico: body.ico, dic: body.dic, address: body.address, contactPerson: body.contactPerson,
-      billingEmail: body.billingEmail, termsText: body.termsText,
-      requireTermsAcceptance: body.requireTermsAcceptance, defaultLanguageCode: body.defaultLanguageCode,
-      thousandsSeparator: body.thousandsSeparator, decimalSeparator: body.decimalSeparator,
+      name: body.name as string, slug: body.slug as string, billingName: body.billingName as string | undefined,
+      country: body.country as string | undefined, ico: body.ico as string | undefined,
+      dic: body.dic as string | undefined, address: body.address as string | undefined,
+      contactPerson: body.contactPerson as string | undefined, billingEmail: body.billingEmail as string | undefined,
+      termsText: body.termsText as string | undefined,
+      requireTermsAcceptance: body.requireTermsAcceptance as boolean | undefined,
+      defaultLanguageCode: body.defaultLanguageCode as string | undefined,
+      thousandsSeparator: body.thousandsSeparator as string | undefined,
+      decimalSeparator: body.decimalSeparator as string | undefined,
       internalNote: body.internalNote !== undefined ? (body.internalNote as string) : undefined,
     };
     const before = await app.prisma.organization.findUnique({ where: { id } });
