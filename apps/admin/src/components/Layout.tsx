@@ -101,6 +101,14 @@ export default function Layout() {
             <i className="fa-regular fa-arrow-right-from-bracket" /> Odhlásit se
           </button>
         </div>
+        <div className="px-4 py-4 border-t border-gray-700 space-y-2">
+          <Link to="/help" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
+            <i className="fa-regular fa-circle-question" /> Nápověda
+          </Link>
+          <Link to="/author" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
+            <i className="fa-regular fa-id-card" /> Autor
+          </Link>
+        </div>
       </aside>
 
       <main className="flex-1 overflow-auto ml-60">

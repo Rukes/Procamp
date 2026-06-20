@@ -18,6 +18,8 @@ import OrganizationDetailPage from "./pages/OrganizationDetail";
 import MyOrganizationPage from "./pages/MyOrganization";
 import UserSettingsPage from "./pages/UserSettings";
 import LogsPage from "./pages/Logs";
+import HelpPage from "./pages/Help";
+import AuthorPage from "./pages/Author";
 
 function Guard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -49,7 +51,9 @@ export default function App() {
           <Route path="my-organization" element={<MyOrganizationPage />} />
           <Route path="settings" element={<UserSettingsPage />} />
           <Route path="logs" element={<LogsPage />} />
+          <Route path="author" element={<AuthorPage />} />
         </Route>
+        <Route path="help" element={<Guard><HelpPage /></Guard>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
       </ToastProvider>

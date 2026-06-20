@@ -1,0 +1,49 @@
+# Objekty
+
+Objekt je kemp, chatová osada, glamping nebo jiné ubytovací zařízení. Každý objekt má vlastní rezervační formulář a vlastní nastavení e-mailů.
+
+## Vytvoření objektu
+
+Klikněte na **+ Nový objekt**, zadejte název a URL identifikátor (slug). Identifikátor se použije v adrese formuláře — doporučujeme použít krátké, jednoduché označení bez diakritiky, např. `kemp-morava`.
+
+## Záložky v detailu objektu
+
+### Typy ubytování
+
+Každý objekt může mít více typů ubytování (např. Karavan, Stan, Chatka, Mobilheim). Pro každý typ nastavte:
+
+- **Název** — pro každý aktivní jazyk zvlášť (zákazník uvidí překlad ve svém jazyce)
+- **Kapacita** — maximální počet míst tohoto typu; systém hlídá obsazenost a neumožní rezervaci přes kapacitu
+- **Pořadí** — určuje v jakém pořadí se typy zobrazí ve formuláři
+- **Ceny** — pro každý jazyk (měnu) zvlášť:
+  - Cena za noc (základní cena za ubytovací místo)
+  - Příplatek za dospělého na noc
+  - Příplatek za dítě na noc
+
+Celková cena = (cena za noc + dospělí × příplatek + děti × příplatek + příplatky) × počet nocí
+
+### Příplatky
+
+Volitelné nebo povinné položky připočítané k ceně rezervace. Příklady: elektřina, pes, klimatizace, snídaně.
+
+- **Název** — pro každý aktivní jazyk
+- **Volitelný / povinný** — volitelné zákazník zaškrtne sám, povinné jsou vždy součástí ceny
+- **Cena za noc** — pro každý jazyk (měnu) zvlášť
+
+### Nastavení
+
+- **Notifikační e-mail** — na tuto adresu přijde e-mail při každé nové rezervaci
+- **Vyžadovat potvrzení rezervace** — pokud je zapnuto, nové rezervace čekají na vaše ruční potvrzení v sekci Rezervace; pokud je vypnuto, rezervace se potvrdí automaticky okamžitě po odeslání
+- **SMTP host / port / uživatel / heslo / odesílatel** — nastavení e-mailového serveru přes který se odesílají potvrzení zákazníkům; bez tohoto nastavení se e-maily neodesílají
+
+### E-mailové šablony
+
+Texty e-mailů pro zákazníka i pro vás. Viz sekce [E-mailové šablony](#emaily).
+
+### Vložení na web
+
+Hotový `<iframe>` kód pro vložení na web. Viz sekce [Formulář na web](#formular).
+
+## Dostupnost a obsazenost
+
+Systém automaticky hlídá obsazenost na základě kapacity typu ubytování a existujících rezervací. Zákazník v kalendáři vidí obsazené dny šedě a nemůže je vybrat.
