@@ -3,7 +3,7 @@ set -e
 
 echo "▶ Spouštím migrace databáze…"
 cd /app/apps/api
-npx prisma migrate deploy
+/app/node_modules/.bin/prisma migrate deploy
 
 echo "▶ Spouštím seed (pouze při první instalaci)…"
 node -e "
