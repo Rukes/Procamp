@@ -61,6 +61,17 @@ function FormApp() {
   }
 
   const { camp, languages, termsText, requireTermsAcceptance } = data;
+
+  if (!languages?.length || !camp.accommodationTypes?.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center p-8">
+          <p className="text-gray-500">Rezervace zatím není možná.</p>
+        </div>
+      </div>
+    );
+  }
+
   const langObj = languages.find((l) => l.code === lang) ?? languages[0];
   const nights = checkIn && checkOut ? Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000) : 0;
 
