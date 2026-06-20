@@ -24,7 +24,12 @@ export default function Layout() {
 
   useEffect(() => {
     if (user?.isSuperAdmin) {
-      api.get("/organizations").then((r) => setOrgs(r.data)).catch(() => {});
+      api.get("/organizations").then((r) => {
+        setOrgs(r.data);
+        if (selectedOrgId && !r.data.find((o: { id: string }) => o.id === selectedOrgId)) {
+          setSelectedOrgId(null);
+        }
+      }).catch(() => {});
     }
   }, [user]);
 

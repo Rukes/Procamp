@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { useToast } from "../contexts/ToastContext";
+import { useOrg } from "../contexts/OrgContext";
 import Tooltip from "../components/Tooltip";
 import CountrySelect from "../components/CountrySelect";
 
@@ -29,6 +30,7 @@ const EMPTY: Omit<Organization, "id" | "createdAt" | "_count"> = {
 export default function OrganizationsPage() {
   useTitle("Organizace");
   const toast = useToast();
+  const { setOrgs: setSidebarOrgs, selectedOrgId, setSelectedOrgId } = useOrg();
   const [orgs, setOrgs] = useState<Organization[]>([]);
   const [modalOrg, setModalOrg] = useState<Organization | null>(null);
   const [openNoteId, setOpenNoteId] = useState<string | null>(null);
@@ -58,7 +60,7 @@ export default function OrganizationsPage() {
     }
   };
 
-  const load = () => api.get("/organizations").then((r) => setOrgs(r.data)).catch(() => {});
+  const load = () => api.get("/organizations").then((r) => { setOrgs(r.data); setSidebarOrgs(r.data); }).catch(() => {});
   useEffect(() => { load(); }, []);
 
   const closeModal = () => { setCreating(false); setModalOrg(null); setForm({ ...EMPTY }); };
@@ -92,6 +94,7 @@ export default function OrganizationsPage() {
     try {
       await api.delete(`/organizations/${org.id}`);
       toast.success("Organizace smazána.");
+      if (selectedOrgId === org.id) setSelectedOrgId(null);
       load();
     } catch {
       toast.error("Nepodařilo se smazat organizaci.");
