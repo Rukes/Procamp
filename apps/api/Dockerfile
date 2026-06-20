@@ -19,6 +19,7 @@ RUN pnpm --filter=api build
 
 # Produkční image
 FROM node:20-alpine AS runner
+RUN apk add --no-cache openssl
 RUN npm install -g pnpm
 WORKDIR /app
 
