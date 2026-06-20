@@ -65,7 +65,7 @@ export default function OrganizationsPage() {
 
   const openCreate = () => { setForm({ ...EMPTY }); setCreating(true); setModalOrg(null); };
   const openEdit = (org: Organization) => {
-    setForm({ name: org.name, slug: org.slug, billingName: org.billingName, country: org.country, ico: org.ico, dic: org.dic, address: org.address, contactPerson: org.contactPerson, billingEmail: org.billingEmail });
+    setForm({ name: org.name, slug: org.slug, billingName: org.billingName, country: org.country, ico: org.ico, dic: org.dic, address: org.address, contactPerson: org.contactPerson, billingEmail: org.billingEmail, internalNote: org.internalNote });
     setModalOrg(org);
     setCreating(false);
   };
