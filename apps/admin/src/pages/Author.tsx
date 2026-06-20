@@ -58,6 +58,17 @@ export default function AuthorPage() {
               samuel@kunerts.cz
             </a>
           </div>
+          <div className="flex items-center gap-3">
+            <i className="fa-brands fa-github text-gray-400 w-4 text-center" />
+            <a
+              href="https://github.com/Rukes/Procamp"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-blue-600 hover:underline"
+            >
+              Github repo
+            </a>
+          </div>
         </div>
       </div>
     </div>
