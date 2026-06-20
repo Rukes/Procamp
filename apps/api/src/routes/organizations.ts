@@ -38,6 +38,18 @@ export async function organizationRoutes(app: FastifyInstance) {
         billingEmail: body.billingEmail ?? "",
       },
     });
+    // Automaticky vytvoř výchozí jazyk (čeština) pro novou organizaci
+    await app.prisma.language.create({
+      data: {
+        code: "cs",
+        name: "Čeština",
+        isDefault: true,
+        currencyCode: "CZK",
+        currencySymbol: "Kč",
+        currencyPosition: "after",
+        organizationId: org.id,
+      },
+    });
     return reply.status(201).send(org);
   });
 
