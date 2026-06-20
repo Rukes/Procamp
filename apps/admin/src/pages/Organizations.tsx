@@ -23,7 +23,7 @@ interface Organization {
 }
 
 const EMPTY: Omit<Organization, "id" | "createdAt" | "_count"> = {
-  name: "", slug: "", billingName: "", country: "", ico: "", dic: "", address: "", contactPerson: "", billingEmail: "",
+  name: "", slug: "", billingName: "", country: "", ico: "", dic: "", address: "", contactPerson: "", billingEmail: "", internalNote: null,
 };
 
 export default function OrganizationsPage() {
