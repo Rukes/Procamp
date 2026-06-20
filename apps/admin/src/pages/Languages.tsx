@@ -158,6 +158,12 @@ export default function LanguagesPage() {
       </div>
 
       <div className="space-y-3">
+        {sorted.length === 0 && (
+          <div className="card p-12 text-center text-gray-400">
+            <i className="fa-regular fa-flag text-3xl mb-3 block" />
+            <p>Žádné jazyky. Přidejte první kliknutím na „+ Přidat jazyk".</p>
+          </div>
+        )}
         {sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((lang) => (
           <div key={lang.id} className="card p-4">
             {editId === lang.id ? (
