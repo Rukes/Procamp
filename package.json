@@ -11,5 +11,13 @@
   },
   "devDependencies": {
     "typescript": "^5.4.5"
+  },
+  "pnpm": {
+    "auditConfig": {
+      "ignoreCves": []
+    },
+    "config": {
+      "minimumReleaseAge": "0 seconds"
+    }
   }
 }
