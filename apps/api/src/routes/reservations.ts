@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { requirePermission, orgFilter } from "../plugins/auth";
+import { requirePermission, orgFilter, campFilter } from "../plugins/auth";
 import { checkAvailability } from "../services/availability";
 import { logActivity, diffObjects } from "../services/activityLog";
 
@@ -13,9 +13,11 @@ export async function reservationRoutes(app: FastifyInstance) {
   app.get("/", { preHandler: requirePermission("reservations_view") }, async (request) => {
     const { campId, status, search, from, to } = request.query as Record<string, string>;
     const orgId = orgFilter(request);
+    const allowedCampIds = campFilter(request);
     const where: Record<string, unknown> = {};
     if (orgId) where.camp = { organizationId: orgId };
     if (campId) where.campId = campId;
+    else if (allowedCampIds) where.campId = { in: allowedCampIds };
     if (status) where.status = status;
     if (from || to) {
       where.checkIn = {};

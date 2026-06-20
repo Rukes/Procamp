@@ -46,6 +46,15 @@ export function orgFilter(request: FastifyRequest): string | null {
   return header || null;
 }
 
+// Vrátí pole campIds pro filtrování, nebo null pokud vidí vše (SA nebo org_admin)
+export function campFilter(request: FastifyRequest): string[] | null {
+  const user = request.user;
+  if (user.isSuperAdmin) return null;
+  if (user.permissions?.org_admin) return null;
+  const ids = (user.permissions as { campIds?: string[] })?.campIds;
+  return Array.isArray(ids) && ids.length > 0 ? ids : null;
+}
+
 declare module "@fastify/jwt" {
   interface FastifyJWT {
     payload: {

@@ -3,13 +3,14 @@ import { useEffect } from "react";
 import { useAuth } from "../contexts/AuthContext";
 import { useOrg } from "../contexts/OrgContext";
 import { api } from "../api/client";
+import { Permission } from "@procamp/shared";
 
-const nav = [
+const nav: { to: string; label: string; icon: string; perm?: keyof Permission }[] = [
   { to: "/dashboard", label: "Dashboard", icon: "fa-chart-bar" },
-  { to: "/camps", label: "Objekty", icon: "fa-tent" },
-  { to: "/reservations", label: "Rezervace", icon: "fa-calendar" },
-  { to: "/users", label: "Uživatelé", icon: "fa-user" },
-  { to: "/languages", label: "Jazyky", icon: "fa-globe" },
+  { to: "/camps", label: "Objekty", icon: "fa-tent", perm: "camps_view" },
+  { to: "/reservations", label: "Rezervace", icon: "fa-calendar", perm: "reservations_view" },
+  { to: "/users", label: "Uživatelé", icon: "fa-user", perm: "users_manage" },
+  { to: "/languages", label: "Jazyky", icon: "fa-globe", perm: "org_admin" },
 ];
 
 const superAdminNav = [
@@ -60,7 +61,7 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-          {(!user?.isSuperAdmin || selectedOrgId) && [...nav, ...(user?.permissions?.org_admin && !user?.isSuperAdmin ? [{ to: "/my-organization", label: "Moje organizace", icon: "fa-building" }] : [])].map((item) => (
+          {(!user?.isSuperAdmin || selectedOrgId) && [...nav, ...(user?.permissions?.org_admin && !user?.isSuperAdmin ? [{ to: "/my-organization", label: "Moje organizace", icon: "fa-building", perm: undefined }] : [])].filter((item) => !item.perm || user?.isSuperAdmin || !!(user?.permissions as Record<string, unknown>)?.[item.perm]).map((item) => (
             <NavLink
               key={item.to}
               to={item.to}

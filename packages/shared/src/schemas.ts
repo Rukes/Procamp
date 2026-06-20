@@ -40,6 +40,7 @@ export const createUserSchema = z.object({
     templates_edit: z.boolean().default(false),
     settings_edit: z.boolean().default(false),
     org_admin: z.boolean().default(false),
+    campIds: z.array(z.string()).optional(),
   }),
 });
 

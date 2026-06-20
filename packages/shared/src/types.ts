@@ -13,6 +13,7 @@ export interface Permission {
   templates_edit: boolean;
   settings_edit: boolean;
   org_admin: boolean;
+  campIds?: string[];
 }
 
 export interface User {

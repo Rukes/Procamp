@@ -53,6 +53,7 @@ export default function UsersPage() {
   const { can, user: me } = useAuth();
   const toast = useToast();
   const [users, setUsers] = useState<User[]>([]);
+  const [camps, setCamps] = useState<{ id: string; name: string }[]>([]);
   const [editUser, setEditUser] = useState<User | null>(null);
   const [editPassword, setEditPassword] = useState("");
   const [creating, setCreating] = useState(false);
@@ -71,7 +72,10 @@ export default function UsersPage() {
   const PER_PAGE = 20;
 
   const load = () => api.get("/users").then((r) => setUsers(r.data)).catch(() => {});
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+    api.get("/camps").then((r) => setCamps(r.data.map((c: { id: string; name: string }) => ({ id: c.id, name: c.name })))).catch(() => {});
+  }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -191,6 +195,36 @@ export default function UsersPage() {
                     ? setForm({ ...form, permissions: { ...form.permissions, [k]: v } })
                     : setEditUser({ ...editUser!, permissions: { ...editUser!.permissions, [k]: v } })}
                 />
+                {camps.length > 0 && (() => {
+                  const currentPerms = creating ? form.permissions : editUser?.permissions ?? { ...DEFAULT_PERMS };
+                  if (currentPerms.org_admin) return null;
+                  const currentCampIds: string[] = (currentPerms as { campIds?: string[] }).campIds ?? [];
+                  const toggleCamp = (campId: string, checked: boolean) => {
+                    const next = checked ? [...currentCampIds, campId] : currentCampIds.filter((id) => id !== campId);
+                    const updated = { ...currentPerms, campIds: next };
+                    if (creating) setForm({ ...form, permissions: updated });
+                    else setEditUser({ ...editUser!, permissions: updated });
+                  };
+                  return (
+                    <>
+                      <hr />
+                      <div>
+                        <p className="text-sm font-medium text-gray-700 mb-1">Přístup k objektům</p>
+                        <p className="text-xs text-gray-400 mb-3">Ponechte vše nezaškrtnuté pro přístup ke všem objektům organizace.</p>
+                        <div className="grid grid-cols-2 gap-1.5">
+                          {camps.map((c) => (
+                            <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer">
+                              <input type="checkbox" className="rounded"
+                                checked={currentCampIds.includes(c.id)}
+                                onChange={(e) => toggleCamp(c.id, e.target.checked)} />
+                              {c.name}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
                 {formError && <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2">{formError}</p>}
                 <div className="flex justify-between w-full pt-2">
                   <button className="btn-primary px-8" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</button>

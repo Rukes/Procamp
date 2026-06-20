@@ -1,13 +1,17 @@
 import { FastifyInstance } from "fastify";
 import { updateCampSchema, createSurchargeSchema } from "@procamp/shared";
-import { requirePermission, requireAuth, orgFilter } from "../plugins/auth";
+import { requirePermission, requireAuth, orgFilter, campFilter } from "../plugins/auth";
 import { logActivity, diffObjects } from "../services/activityLog";
 
 export async function campRoutes(app: FastifyInstance) {
   app.get("/", { preHandler: requirePermission("camps_view") }, async (request) => {
     const orgId = orgFilter(request);
+    const allowedCampIds = campFilter(request);
     return app.prisma.camp.findMany({
-      where: orgId ? { organizationId: orgId } : {},
+      where: {
+        ...(orgId ? { organizationId: orgId } : {}),
+        ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
+      },
       include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
       orderBy: { createdAt: "asc" },
     });
@@ -16,8 +20,13 @@ export async function campRoutes(app: FastifyInstance) {
   app.get("/:id", { preHandler: requirePermission("camps_view") }, async (request) => {
     const { id } = request.params as { id: string };
     const orgId = orgFilter(request);
+    const allowedCampIds = campFilter(request);
     return app.prisma.camp.findFirstOrThrow({
-      where: { id, ...(orgId ? { organizationId: orgId } : {}) },
+      where: {
+        id,
+        ...(orgId ? { organizationId: orgId } : {}),
+        ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
+      },
       include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
     });
   });
