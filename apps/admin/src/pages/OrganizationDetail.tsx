@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { useToast } from "../contexts/ToastContext";
 import { useAuth } from "../contexts/AuthContext";
+import { useOrg } from "../contexts/OrgContext";
 import RichTextEditor from "../components/RichTextEditor";
 import Tooltip from "../components/Tooltip";
 import CountrySelect from "../components/CountrySelect";
@@ -49,6 +50,7 @@ export default function OrganizationDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { selectedOrgId, setSelectedOrgId } = useOrg();
   const toast = useToast();
   const [org, setOrg] = useState<Organization | null>(null);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -125,10 +127,15 @@ export default function OrganizationDetailPage() {
         <button onClick={() => navigate("/organizations")} className="text-gray-400 hover:text-gray-600 transition-colors">
           <i className="fa-regular fa-arrow-left" />
         </button>
-        <div>
+        <div className="flex-1 min-w-0">
           <h1 className="text-2xl font-bold text-gray-900">{org.name}</h1>
           <p className="text-sm text-gray-400 mt-0.5">{org._count.camps} kempů · {org._count.users} uživatelů</p>
         </div>
+        {selectedOrgId !== id && (
+          <button className="btn-secondary text-sm" onClick={() => setSelectedOrgId(id!)}>
+            <i className="fa-regular fa-right-left mr-1.5" />Přepnout
+          </button>
+        )}
       </div>
 
       <div className="flex border-b border-gray-200 mb-6 gap-1">

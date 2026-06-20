@@ -53,7 +53,7 @@ function WysiwygEditor({ value, onChange }: { value: string; onChange: (v: strin
         <span className="w-px bg-gray-300 mx-1" />
         <button type="button" onClick={() => exec("removeFormat")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 text-gray-500"><i className="fa-regular fa-eraser" /></button>
       </div>
-      <div ref={ref} contentEditable suppressContentEditableWarning onInput={() => { if (ref.current) onChange(ref.current.innerHTML); }} className="min-h-64 p-4 text-sm focus:outline-none prose prose-sm max-w-none" style={{ lineHeight: 1.6 }} />
+      <div ref={ref} contentEditable suppressContentEditableWarning onInput={() => { if (ref.current) onChange(ref.current.innerHTML); }} className="min-h-64 max-h-96 overflow-y-auto p-4 text-sm focus:outline-none prose prose-sm max-w-none" style={{ lineHeight: 1.6 }} />
       <div className="border-t border-gray-100 bg-gray-50 p-3">
         <p className="text-xs font-medium text-gray-500 mb-2">Kliknutím vložíte proměnnou do textu:</p>
         <div className="space-y-1">

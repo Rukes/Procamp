@@ -233,6 +233,11 @@ export default function OrganizationsPage() {
                 </div>
               </div>
               <div className="flex gap-2 flex-shrink-0 self-end sm:self-start">
+                {selectedOrgId !== org.id && (
+                  <button className="btn-secondary text-sm py-1.5" onClick={() => { setSelectedOrgId(org.id); }}>
+                    <i className="fa-regular fa-right-left sm:mr-1.5" /><span className="hidden sm:inline">Přepnout</span>
+                  </button>
+                )}
                 <Link to={`/organizations/${org.id}`} className="btn-secondary text-sm py-1.5"><i className="fa-regular fa-gear sm:mr-1.5" /><span className="hidden sm:inline">Nastavení</span></Link>
               </div>
             </div>
