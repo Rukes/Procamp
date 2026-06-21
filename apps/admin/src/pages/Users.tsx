@@ -145,7 +145,7 @@ export default function UsersPage() {
 
       {(creating || editUser) && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 pt-6" onClick={closeModal}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[95vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between sticky top-0 bg-white rounded-t-2xl">
               <h3 className="font-semibold">{creating ? "Nový uživatel" : `Upravit: ${editUser!.name}`}</h3>
               <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
