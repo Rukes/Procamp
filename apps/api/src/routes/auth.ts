@@ -27,6 +27,8 @@ export async function authRoutes(app: FastifyInstance) {
 
     await logActivity(app.prisma, { userId: user.id, userEmail: user.email, ip: request.ip, action: "LOGIN", entity: "user", entityId: user.id });
 
+    const settings = await app.prisma.systemSettings.findUnique({ where: { id: "singleton" }, select: { globalTokenVersion: true } });
+
     const token = app.jwt.sign({
       sub: user.id,
       email: user.email,
@@ -34,6 +36,7 @@ export async function authRoutes(app: FastifyInstance) {
       permissions: user.permissions as unknown as Record<string, boolean>,
       organizationId: user.organizationId ?? null,
       tokenVersion: user.tokenVersion,
+      globalTokenVersion: settings?.globalTokenVersion ?? 0,
     });
 
     return { token, user: { id: user.id, name: user.name, email: user.email, isSuperAdmin: user.isSuperAdmin, permissions: user.permissions, organizationId: user.organizationId ?? null } };

@@ -16,11 +16,25 @@ export async function systemSettingsRoutes(app: FastifyInstance) {
   });
 
   app.put("/", { preHandler: requireSuperAdmin }, async (request) => {
-    const body = request.body as { defaultLanguageCode?: string; thousandsSeparator?: string; decimalSeparator?: string };
+    const body = request.body as {
+      defaultLanguageCode?: string;
+      thousandsSeparator?: string;
+      decimalSeparator?: string;
+      smtpEnabled?: boolean;
+    };
     return app.prisma.systemSettings.upsert({
       where: { id: "singleton" },
       create: { id: "singleton", ...body },
       update: body,
     });
+  });
+
+  app.post("/logout-all", { preHandler: requireSuperAdmin }, async () => {
+    const settings = await app.prisma.systemSettings.upsert({
+      where: { id: "singleton" },
+      create: { id: "singleton", globalTokenVersion: 1 },
+      update: { globalTokenVersion: { increment: 1 } },
+    });
+    return { globalTokenVersion: settings.globalTokenVersion };
   });
 }

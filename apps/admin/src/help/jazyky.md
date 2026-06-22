@@ -25,8 +25,19 @@ Sekce **Jazyky** → **+ Přidat jazyk**. Vyberte jazyk a nastavte:
 - **Kód měny** — mezinárodní označení, např. `CZK`, `EUR`, `PLN`
 - **Symbol měny** — zobrazovaný symbol, např. `Kč`, `€`, `zł`
 - **Pozice symbolu** — zda se symbol zobrazí před nebo za číslem (např. `€100` nebo `100 Kč`)
+- **Koeficient přepočtu cen** — číslo kterým se vynásobí všechny ceny z výchozího jazyka; příklad: pro CZK→EUR zadejte `0.04` (100 Kč = 4 €); náhled přepočtu se zobrazuje ihned
 
 Náhled formátu ceny se zobrazí ihned při vyplňování.
+
+### Co se automaticky zkopíruje při přidání jazyka
+
+Po přidání nového jazyka systém automaticky zkopíruje z výchozího jazyka (čeština):
+
+- **Překlady** typů ubytování a příplatků — texty názvů a popisů
+- **Ceny** typů ubytování a příplatků — přepočítané zadaným koeficientem
+- **E-mailové šablony** — texty šablon pro správce i zákazníka
+
+Po přidání systém zobrazí souhrn kolik položek bylo zkopírováno. Následně si přeložte texty a zkontrolujte ceny v detailu každého objektu.
 
 ## Výchozí jazyk
 
@@ -34,4 +45,4 @@ Jazyk označený jako **Výchozí** se použije pokud zákazník přijde na form
 
 ## Ceny pro každý jazyk
 
-Po přidání jazyka je potřeba vyplnit ceny v detailu každého objektu — u každého typu ubytování a příplatku jsou ceny nastaveny pro každý jazyk zvlášť.
+Ceny jsou nastaveny pro každý jazyk zvlášť v detailu objektu — u každého typu ubytování a příplatku. Při přidání nového jazyka jsou ceny předvyplněny přepočtem z výchozího jazyka, ale doporučujeme je zkontrolovat a případně upravit.

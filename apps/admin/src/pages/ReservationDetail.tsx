@@ -24,6 +24,8 @@ export default function ReservationDetailPage() {
   const [editForm, setEditForm] = useState<Record<string, string>>({});
   const [noteModal, setNoteModal] = useState(false);
   const [noteValue, setNoteValue] = useState("");
+  const [emailMenuOpen, setEmailMenuOpen] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
 
   useEffect(() => {
     if (!editing) return;
@@ -55,6 +57,19 @@ export default function ReservationDetailPage() {
     CONFIRMED: "Rezervace byla potvrzena.",
     CANCELLED: "Rezervace byla zrušena.",
     PENDING: "Rezervace obnovena jako čekající.",
+  };
+
+  const handleResendEmail = async (type: "customer" | "admin") => {
+    setEmailSending(true);
+    setEmailMenuOpen(false);
+    try {
+      await api.post(`/reservations/${id}/resend-email`, { type });
+      toast.success(type === "customer" ? "Potvrzení zákazníkovi bylo odesláno." : "Potvrzení správci bylo odesláno.");
+    } catch {
+      toast.error("Nepodařilo se odeslat e-mail.");
+    } finally {
+      setEmailSending(false);
+    }
   };
 
   const startEdit = () => {
@@ -172,6 +187,24 @@ export default function ReservationDetailPage() {
           {reservation.status === "CANCELLED" && (
             <button className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium transition-colors" onClick={() => setStatus("PENDING")}><i className="fa-regular fa-rotate-left mr-1.5" />Obnovit jako čekající</button>
           )}
+          <div className="relative">
+            <button
+              className="px-4 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-sm font-medium transition-colors flex items-center gap-1.5"
+              onClick={() => setEmailMenuOpen((v) => !v)}
+              disabled={emailSending}
+            >
+              <i className={emailSending ? "fa-regular fa-spinner-third fa-spin" : "fa-regular fa-envelope"} />
+              E-maily
+              <i className="fa-regular fa-chevron-down text-xs" />
+            </button>
+            {emailMenuOpen && (
+              <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-max">
+                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2" onClick={() => { if (confirm("Znovu odeslat potvrzovací e-mail zákazníkovi?")) handleResendEmail("customer"); else setEmailMenuOpen(false); }}>
+                  <i className="fa-regular fa-user text-gray-400" />Znovu odeslat potvrzovací e-mail zákazníkovi
+                </button>
+              </div>
+            )}
+          </div>
           <button className="px-4 py-2 rounded-lg bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-medium transition-colors ml-auto" onClick={startEdit}><i className="fa-regular fa-pen mr-1.5" />Upravit</button>
         </div>
       )}
@@ -346,8 +379,8 @@ export default function ReservationDetailPage() {
               <div><dt className="text-gray-500">Osoby</dt><dd className="font-medium">{reservation.adults} dospělí, {reservation.children} děti</dd></div>
               <div className="col-span-2"><dt className="text-gray-500">Předpokládaný příjezd</dt><dd className={reservation.expectedArrival ? "font-medium" : "text-gray-400 italic"}>{reservation.expectedArrival || "nevyplněno"}</dd></div>
               {reservation.note
-                ? <div className="col-span-2 mt-1 p-3 bg-amber-50 border border-amber-200 rounded-xl"><dt className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1"><i className="fa-regular fa-message-exclamation mr-1.5" />Poznámka</dt><dd className="text-sm font-medium text-amber-900">{reservation.note}</dd></div>
-                : <div className="col-span-2"><dt className="text-gray-500">Poznámka</dt><dd className="text-gray-400 italic">nevyplněno</dd></div>
+                ? <div className="col-span-2 mt-1 p-3 bg-amber-50 border border-amber-200 rounded-xl"><dt className="text-xs font-semibold text-amber-700 uppercase tracking-wide mb-1"><i className="fa-regular fa-message-exclamation mr-1.5" />Poznámka zákazníka</dt><dd className="text-sm font-medium text-amber-900">{reservation.note}</dd></div>
+                : <div className="col-span-2"><dt className="text-gray-500">Poznámka zákazníka</dt><dd className="text-gray-400 italic">nevyplněno</dd></div>
               }
             </dl>
           </div>

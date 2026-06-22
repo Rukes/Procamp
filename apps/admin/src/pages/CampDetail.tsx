@@ -1,4 +1,5 @@
 import { useTitle } from "../hooks/useTitle";
+import Tooltip from "../components/Tooltip";
 import { useEffect, useRef, useState } from "react";
 import RichTextEditor from "../components/RichTextEditor";
 import { useParams, useNavigate } from "react-router-dom";
@@ -30,33 +31,190 @@ const TEMPLATE_VARS = [
 
 const FLAGS: Record<string, string> = { cs: "🇨🇿", en: "🇬🇧", de: "🇩🇪", pl: "🇵🇱", it: "🇮🇹", es: "🇪🇸", fr: "🇫🇷", ru: "🇷🇺", uk: "🇺🇦" };
 
+const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
+  ADMIN_NOTIFICATION: {
+    subject: "Nová rezervace – {{campName}}",
+    body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+  <div style="background:#1e40af;padding:24px 32px;border-radius:8px 8px 0 0">
+    <h1 style="margin:0;color:#ffffff;font-size:20px">🏕️ Nová rezervace</h1>
+    <p style="margin:4px 0 0;color:#bfdbfe;font-size:14px">{{campName}}</p>
+  </div>
+  <div style="background:#f8fafc;padding:24px 32px;border-radius:0 0 8px 8px;border:1px solid #e2e8f0;border-top:none">
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Kontaktní údaje</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr><td style="padding:6px 0;color:#6b7280;width:180px">Jméno a příjmení</td><td style="padding:6px 0;font-weight:600">{{firstName}} {{lastName}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">E-mail</td><td style="padding:6px 8px"><a href="mailto:{{email}}" style="color:#1e40af">{{email}}</a></td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Telefon</td><td style="padding:6px 0">{{phone}}</td></tr>
+    </table>
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Rezervace</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr><td style="padding:6px 0;color:#6b7280;width:180px">Rezervace ubytování</td><td style="padding:6px 0;font-weight:600">{{accommodationType}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Příjezd</td><td style="padding:6px 8px;font-weight:600">{{checkIn}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Odjezd</td><td style="padding:6px 0;font-weight:600">{{checkOut}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Počet nocí</td><td style="padding:6px 8px">{{nights}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Dospělí / Děti</td><td style="padding:6px 0">{{adults}} / {{children}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">SPZ</td><td style="padding:6px 8px">{{licensePlate}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Předpokl. příjezd</td><td style="padding:6px 0">{{expectedArrival}}</td></tr>
+    </table>
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Cena a poznámka</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr style="background:#dbeafe"><td style="padding:10px 8px;color:#1e40af;font-weight:700;font-size:15px;width:180px">Celková cena</td><td style="padding:10px 8px;font-weight:700;font-size:15px;color:#1e40af">{{totalPrice}} Kč</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;vertical-align:top">Poznámka zákazníka</td><td style="padding:6px 0">{{note}}</td></tr>
+    </table>
+    <p style="margin:0;font-size:12px;color:#9ca3af;border-top:1px solid #e2e8f0;padding-top:12px">ID rezervace: {{reservationId}}</p>
+  </div>
+</div>`,
+  },
+  CUSTOMER_CONFIRMATION: {
+    subject: "Potvrzení rezervace – {{campName}}",
+    body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+  <div style="background:#1e40af;padding:24px 32px;border-radius:8px 8px 0 0">
+    <h1 style="margin:0;color:#ffffff;font-size:20px">🏕️ Rezervace přijata</h1>
+    <p style="margin:4px 0 0;color:#bfdbfe;font-size:14px">{{campName}}</p>
+  </div>
+  <div style="background:#f8fafc;padding:24px 32px;border-radius:0 0 8px 8px;border:1px solid #e2e8f0;border-top:none">
+    <p style="font-size:15px;margin:0 0 24px">Dobrý den, <strong>{{firstName}}</strong>,<br>děkujeme za vaši rezervaci. Níže najdete shrnutí.</p>
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Vaše rezervace</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr><td style="padding:6px 0;color:#6b7280;width:180px">Rezervace ubytování</td><td style="padding:6px 0;font-weight:600">{{accommodationType}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Příjezd</td><td style="padding:6px 8px;font-weight:600">{{checkIn}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Odjezd</td><td style="padding:6px 0;font-weight:600">{{checkOut}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Počet nocí</td><td style="padding:6px 8px">{{nights}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Dospělí / Děti</td><td style="padding:6px 0">{{adults}} / {{children}}</td></tr>
+    </table>
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Cena</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr style="background:#dbeafe"><td style="padding:10px 8px;color:#1e40af;font-weight:700;font-size:15px;width:180px">Celková cena</td><td style="padding:10px 8px;font-weight:700;font-size:15px;color:#1e40af">{{totalPrice}} Kč</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:13px" colspan="2">Platba probíhá na místě při příjezdu.</td></tr>
+    </table>
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:16px;margin-bottom:24px">
+      <p style="margin:0;font-size:14px;color:#15803d">✅ Těšíme se na vás! Máte-li jakékoliv dotazy, stačí na tento e-mail odpovědět.</p>
+    </div>
+    <p style="margin:0;font-size:12px;color:#9ca3af;border-top:1px solid #e2e8f0;padding-top:12px">ID rezervace: {{reservationId}}</p>
+  </div>
+</div>`,
+  },
+};
+
+type Popup = { type: "link"; url: string } | { type: "image"; url: string; linkUrl: string };
+
 function WysiwygEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInit = useRef(false);
+  const savedRange = useRef<Range | null>(null);
+  const [sourceMode, setSourceMode] = useState(false);
+  const [popup, setPopup] = useState<Popup | null>(null);
+
   useEffect(() => {
     if (ref.current && !isInit.current) { ref.current.innerHTML = value; isInit.current = true; }
   }, [value]);
+  useEffect(() => {
+    if (!sourceMode && ref.current) { ref.current.innerHTML = value; }
+  }, [sourceMode]);
+
   const exec = (cmd: string, val?: string) => { document.execCommand(cmd, false, val); ref.current?.focus(); if (ref.current) onChange(ref.current.innerHTML); };
-  const insertVar = (v: string) => { ref.current?.focus(); document.execCommand("insertText", false, v); if (ref.current) onChange(ref.current.innerHTML); };
+  const insertVar = (v: string) => {
+    if (sourceMode) { onChange(value + v); return; }
+    ref.current?.focus(); document.execCommand("insertText", false, v); if (ref.current) onChange(ref.current.innerHTML);
+  };
+  const toggleSource = () => {
+    if (!sourceMode && ref.current) onChange(ref.current.innerHTML);
+    if (sourceMode) isInit.current = false;
+    setSourceMode((v) => !v);
+  };
+
+  const saveRange = () => {
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) savedRange.current = sel.getRangeAt(0).cloneRange();
+  };
+  const restoreRange = () => {
+    const sel = window.getSelection();
+    if (sel && savedRange.current) { sel.removeAllRanges(); sel.addRange(savedRange.current); }
+  };
+
+  const openPopup = (type: "link" | "image") => {
+    saveRange();
+    setPopup(type === "link" ? { type: "link", url: "" } : { type: "image", url: "", linkUrl: "" });
+  };
+
+  const insertLink = () => {
+    if (!popup || popup.type !== "link" || !popup.url) return;
+    restoreRange();
+    document.execCommand("createLink", false, popup.url);
+    const links = ref.current?.querySelectorAll(`a[href="${popup.url}"]`);
+    links?.forEach((a) => { (a as HTMLAnchorElement).target = "_blank"; (a as HTMLAnchorElement).rel = "noopener noreferrer"; });
+    if (ref.current) onChange(ref.current.innerHTML);
+    setPopup(null);
+  };
+
+  const insertImage = () => {
+    if (!popup || popup.type !== "image" || !popup.url) return;
+    restoreRange();
+    const img = `<img src="${popup.url}" alt="" style="max-width:100%" />`;
+    const html = popup.linkUrl ? `<a href="${popup.linkUrl}" target="_blank" rel="noopener noreferrer">${img}</a>` : img;
+    document.execCommand("insertHTML", false, html);
+    if (ref.current) onChange(ref.current.innerHTML);
+    setPopup(null);
+  };
+
   return (
-    <div className="border border-gray-200 rounded-lg overflow-hidden">
+    <div className="border border-gray-200 rounded-lg">
       <div className="flex flex-wrap gap-1 px-3 py-2 border-b border-gray-100 bg-gray-50">
-        <button type="button" onClick={() => exec("bold")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 font-bold"><i className="fa-regular fa-bold" /></button>
-        <button type="button" onClick={() => exec("italic")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 italic"><i className="fa-regular fa-italic" /></button>
-        <button type="button" onClick={() => exec("underline")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 underline"><i className="fa-regular fa-underline" /></button>
-        <span className="w-px bg-gray-300 mx-1" />
-        <button type="button" onClick={() => exec("formatBlock", "h2")} className="px-2 py-1 text-sm rounded hover:bg-gray-200">H2</button>
-        <button type="button" onClick={() => exec("formatBlock", "h3")} className="px-2 py-1 text-sm rounded hover:bg-gray-200">H3</button>
-        <button type="button" onClick={() => exec("formatBlock", "p")} className="px-2 py-1 text-sm rounded hover:bg-gray-200"><i className="fa-regular fa-paragraph" /></button>
-        <span className="w-px bg-gray-300 mx-1" />
-        <button type="button" onClick={() => exec("insertUnorderedList")} className="px-2 py-1 text-sm rounded hover:bg-gray-200"><i className="fa-regular fa-list-ul" /></button>
-        <button type="button" onClick={() => exec("insertOrderedList")} className="px-2 py-1 text-sm rounded hover:bg-gray-200"><i className="fa-regular fa-list-ol" /></button>
-        <span className="w-px bg-gray-300 mx-1" />
-        <button type="button" onClick={() => exec("removeFormat")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 text-gray-500"><i className="fa-regular fa-eraser" /></button>
+        {!sourceMode && <>
+          <Tooltip text="Tučně"><button type="button" onClick={() => exec("bold")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 font-bold"><i className="fa-regular fa-bold" /></button></Tooltip>
+          <Tooltip text="Kurzíva"><button type="button" onClick={() => exec("italic")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 italic"><i className="fa-regular fa-italic" /></button></Tooltip>
+          <Tooltip text="Podtržení"><button type="button" onClick={() => exec("underline")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 underline"><i className="fa-regular fa-underline" /></button></Tooltip>
+          <span className="w-px bg-gray-300 mx-1" />
+          <Tooltip text="Nadpis H2"><button type="button" onClick={() => exec("formatBlock", "h2")} className="px-2 py-1 text-sm rounded hover:bg-gray-200">H2</button></Tooltip>
+          <Tooltip text="Nadpis H3"><button type="button" onClick={() => exec("formatBlock", "h3")} className="px-2 py-1 text-sm rounded hover:bg-gray-200">H3</button></Tooltip>
+          <Tooltip text="Odstavec"><button type="button" onClick={() => exec("formatBlock", "p")} className="px-2 py-1 text-sm rounded hover:bg-gray-200"><i className="fa-regular fa-paragraph" /></button></Tooltip>
+          <span className="w-px bg-gray-300 mx-1" />
+          <Tooltip text="Odrážkový seznam"><button type="button" onClick={() => exec("insertUnorderedList")} className="px-2 py-1 text-sm rounded hover:bg-gray-200"><i className="fa-regular fa-list-ul" /></button></Tooltip>
+          <Tooltip text="Číslovaný seznam"><button type="button" onClick={() => exec("insertOrderedList")} className="px-2 py-1 text-sm rounded hover:bg-gray-200"><i className="fa-regular fa-list-ol" /></button></Tooltip>
+          <span className="w-px bg-gray-300 mx-1" />
+          <Tooltip text="Vložit odkaz"><button type="button" onClick={() => openPopup("link")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 text-gray-600"><i className="fa-regular fa-link" /></button></Tooltip>
+          <Tooltip text="Vložit obrázek"><button type="button" onClick={() => openPopup("image")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 text-gray-600"><i className="fa-regular fa-image" /></button></Tooltip>
+          <span className="w-px bg-gray-300 mx-1" />
+          <Tooltip text="Odstranit formátování"><button type="button" onClick={() => exec("removeFormat")} className="px-2 py-1 text-sm rounded hover:bg-gray-200 text-gray-500"><i className="fa-regular fa-eraser" /></button></Tooltip>
+          <span className="w-px bg-gray-300 mx-1" />
+        </>}
+        <button type="button" onClick={toggleSource} className={`px-2 py-1 text-sm rounded transition-colors ${sourceMode ? "bg-blue-100 text-blue-700 hover:bg-blue-200" : "hover:bg-gray-200 text-gray-500"}`}><i className="fa-regular fa-code" /> {sourceMode ? "WYSIWYG" : "HTML"}</button>
       </div>
-      <div ref={ref} contentEditable suppressContentEditableWarning onInput={() => { if (ref.current) onChange(ref.current.innerHTML); }} className="min-h-64 max-h-96 overflow-y-auto p-4 text-sm focus:outline-none prose prose-sm max-w-none" style={{ lineHeight: 1.6 }} />
-      <div className="border-t border-gray-100 bg-gray-50 p-3">
-        <p className="text-xs font-medium text-gray-500 mb-2">Kliknutím vložíte proměnnou do textu:</p>
+
+      {/* Popup pro odkaz */}
+      {popup?.type === "link" && (
+        <div className="border-b border-blue-100 bg-blue-50 px-3 py-2 flex items-center gap-2">
+          <span className="text-xs text-blue-700 font-medium shrink-0">URL odkazu:</span>
+          <input autoFocus className="input py-1 text-sm flex-1" placeholder="https://..." value={popup.url} onChange={(e) => setPopup({ ...popup, url: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); insertLink(); } if (e.key === "Escape") setPopup(null); }} />
+          <button type="button" className="btn-primary py-1 text-xs shrink-0" onClick={insertLink}><i className="fa-regular fa-check mr-1" />Vložit</button>
+          <button type="button" className="btn-secondary py-1 text-xs shrink-0" onClick={() => setPopup(null)}>Zrušit</button>
+        </div>
+      )}
+
+      {/* Popup pro obrázek */}
+      {popup?.type === "image" && (
+        <div className="border-b border-blue-100 bg-blue-50 px-3 py-2 space-y-2">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-blue-700 font-medium shrink-0 w-28">URL obrázku:</span>
+            <input autoFocus className="input py-1 text-sm flex-1" placeholder="https://...obrazek.jpg" value={popup.url} onChange={(e) => setPopup({ ...popup, url: e.target.value })} onKeyDown={(e) => { if (e.key === "Escape") setPopup(null); }} />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-blue-700 font-medium shrink-0 w-28">Odkaz (volitelný):</span>
+            <input className="input py-1 text-sm flex-1" placeholder="https://..." value={popup.linkUrl} onChange={(e) => setPopup({ ...popup, linkUrl: e.target.value })} onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); insertImage(); } if (e.key === "Escape") setPopup(null); }} />
+          </div>
+          <div className="flex gap-2">
+            <button type="button" className="btn-primary py-1 text-xs" onClick={insertImage}><i className="fa-regular fa-check mr-1" />Vložit obrázek</button>
+            <button type="button" className="btn-secondary py-1 text-xs" onClick={() => setPopup(null)}>Zrušit</button>
+          </div>
+        </div>
+      )}
+
+      {sourceMode
+        ? <textarea className="w-full min-h-64 max-h-96 p-4 text-xs font-mono focus:outline-none resize-none" value={value} onChange={(e) => onChange(e.target.value)} spellCheck={false} />
+        : <div ref={ref} contentEditable suppressContentEditableWarning onInput={() => { if (ref.current) onChange(ref.current.innerHTML); }} className="min-h-[32rem] max-h-[48rem] overflow-y-auto p-4 text-sm focus:outline-none prose prose-sm max-w-none" style={{ lineHeight: 1.6 }} />
+      }
+      <div className="border-t-2 border-gray-300 bg-gray-50 p-3">
+        <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Proměnné — kliknutím vložíte do textu</p>
         <div className="space-y-1">
           {TEMPLATE_VARS.map((v) => (
             <button key={v.key} type="button" onClick={() => insertVar(v.key)} className="flex items-center gap-3 w-full text-left px-2 py-1 rounded hover:bg-gray-200 transition-colors">
@@ -358,11 +516,15 @@ export default function CampDetailPage() {
   const [orgSlug, setOrgSlug] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("settings");
   const [saving, setSaving] = useState(false);
+  const [testingSmtp, setTestingSmtp] = useState(false);
+  const [smtpTested, setSmtpTested] = useState(false);
+  const [useCustomSmtp, setUseCustomSmtp] = useState(false);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [editTpl, setEditTpl] = useState<EmailTemplate | null>(null);
   const [tplBody, setTplBody] = useState("");
   const [tplSubject, setTplSubject] = useState("");
+  const [tplKey, setTplKey] = useState(0);
 
   // Accommodation type editor
   const [editType, setEditType] = useState<AccommodationType | null | "new">(null);
@@ -377,6 +539,7 @@ export default function CampDetailPage() {
       api.get(`/email-templates/${id}`),
     ]);
     setCamp(campRes.data);
+    setUseCustomSmtp(campRes.data.useCustomSmtp ?? false);
     setLanguages(langRes.data);
     setTemplates(tplRes.data);
     setOrgSlug(campRes.data.organization?.slug ?? null);
@@ -414,14 +577,49 @@ export default function CampDetailPage() {
     const fd = new FormData(e.currentTarget);
     const data: Record<string, unknown> = {};
     fd.forEach((v, k) => { data[k] = k === "smtpPort" ? Number(v) : v; });
+    data.useCustomSmtp = useCustomSmtp;
+    if (data.useCustomSmtp) {
+      const missing = ["smtpHost", "smtpPort", "smtpUser", "smtpFrom", "smtpReplyTo"].filter((k) => !data[k]);
+      const hasPassword = !!(fd.get("smtpPassword") || (camp as unknown as Record<string,string>).smtpPasswordEncrypted);
+      if (missing.length > 0 || !hasPassword) {
+        toast.error("Vyplňte všechna SMTP pole (host, port, uživatel, heslo, odesílatel, reply-to).");
+        setSaving(false);
+        return;
+      }
+    }
     try {
       const res = await api.put(`/camps/${id}`, data);
       setCamp(res.data);
+      setUseCustomSmtp(res.data.useCustomSmtp ?? false);
       toast.success("SMTP nastavení bylo uloženo.");
     } catch {
       toast.error("Nepodařilo se uložit SMTP nastavení.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const smtpFormRef = useRef<HTMLFormElement>(null);
+
+  const handleTestSmtp = async () => {
+    if (!smtpFormRef.current) return;
+    setTestingSmtp(true);
+    const fd = new FormData(smtpFormRef.current);
+    const payload: Record<string, unknown> = {
+      host: fd.get("smtpHost") || undefined,
+      port: fd.get("smtpPort") ? Number(fd.get("smtpPort")) : undefined,
+      user: fd.get("smtpUser") || undefined,
+      password: fd.get("smtpPassword") || undefined,
+    };
+    try {
+      await api.post(`/camps/${id}/test-smtp`, payload);
+      setSmtpTested(true);
+      toast.success("Připojení k SMTP serveru bylo úspěšné.");
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+      toast.error(msg ?? "Test SMTP připojení selhal.");
+    } finally {
+      setTestingSmtp(false);
     }
   };
 
@@ -593,19 +791,39 @@ export default function CampDetailPage() {
 
       {/* SMTP */}
       {tab === "smtp" && (
-        <form onSubmit={handleSaveSMTP} className="card p-6 space-y-4 max-w-2xl">
-          <p className="text-sm text-gray-500">Nastavte SMTP pro odesílání e-mailů z tohoto objektu.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div><label className="label">SMTP Host</label><input className="input" name="smtpHost" defaultValue={(camp as unknown as Record<string,string>).smtpHost ?? ""} /></div>
-            <div><label className="label">SMTP Port</label><input className="input" name="smtpPort" type="number" defaultValue={(camp as unknown as Record<string,number>).smtpPort ?? 587} /></div>
-            <div><label className="label">SMTP Uživatel</label><input className="input" name="smtpUser" defaultValue={(camp as unknown as Record<string,string>).smtpUser ?? ""} /></div>
-            <div><label className="label">SMTP Heslo</label><input className="input" name="smtpPassword" type="password" placeholder="Ponechte prázdné pro zachování" /></div>
-            <div className="col-span-2"><label className="label">Odesílatel (From)</label><input className="input" name="smtpFrom" defaultValue={(camp as unknown as Record<string,string>).smtpFrom ?? ""} /></div>
+        <form ref={smtpFormRef} onSubmit={handleSaveSMTP} className="card p-6 space-y-4 max-w-2xl">
+          <p className="text-sm text-gray-500">Ve výchozím nastavení se e-maily odesílají přes systémový SMTP server. Pokud chcete použít vlastní, zaškrtněte níže.</p>
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              name="useCustomSmtp"
+              className="w-4 h-4 rounded border-gray-300 text-blue-600"
+              checked={useCustomSmtp}
+              onChange={(e) => setUseCustomSmtp(e.target.checked)}
+            />
+            <span className="text-sm font-medium text-gray-700">Použít vlastní SMTP nastavení</span>
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4" style={{ display: useCustomSmtp ? "" : "none" }}>
+            <div><label className="label">SMTP Host</label><input className="input" name="smtpHost" defaultValue={(camp as unknown as Record<string,string>).smtpHost ?? ""} onChange={() => setSmtpTested(false)} /></div>
+            <div><label className="label">SMTP Port</label><input className="input" name="smtpPort" type="number" defaultValue={(camp as unknown as Record<string,number>).smtpPort ?? 587} onChange={() => setSmtpTested(false)} /></div>
+            <div><label className="label">SMTP Uživatel</label><input className="input" name="smtpUser" defaultValue={(camp as unknown as Record<string,string>).smtpUser ?? ""} onChange={() => setSmtpTested(false)} /></div>
+            <div><label className="label">SMTP Heslo</label><input className="input" name="smtpPassword" type="password" placeholder="Ponechte prázdné pro zachování" onChange={() => setSmtpTested(false)} /></div>
+            <div className="col-span-2"><label className="label">Odesílatel (From)</label><input className="input" name="smtpFrom" defaultValue={(camp as unknown as Record<string,string>).smtpFrom ?? ""} placeholder="Název kempu <email@domena.cz>" onChange={() => setSmtpTested(false)} /></div>
+            <div className="col-span-2"><label className="label">Reply-To <span className="text-gray-400 font-normal text-xs">(adresa pro odpovědi zákazníků)</span></label><input className="input" name="smtpReplyTo" defaultValue={(camp as unknown as Record<string,string>).smtpReplyTo ?? ""} placeholder="info@kempmylnska.cz" onChange={() => setSmtpTested(false)} /></div>
           </div>
           {can("camps_edit") && (
-            <button className="btn-primary" type="submit" disabled={saving}>
-              {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit SMTP</>}
-            </button>
+            <div className="flex gap-2 items-center">
+              {useCustomSmtp && (
+                <button className={smtpTested ? "btn-secondary" : "btn-primary"} type="button" disabled={testingSmtp} onClick={handleTestSmtp}>
+                  {testingSmtp ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Testuji…</> : smtpTested ? <><i className="fa-regular fa-check mr-1.5" />Připojení ověřeno</> : <><i className="fa-regular fa-plug mr-1.5" />Ověřit připojení před uložením</>}
+                </button>
+              )}
+              {(!useCustomSmtp || smtpTested) && (
+                <button className="btn-primary" type="submit" disabled={saving}>
+                  {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit SMTP</>}
+                </button>
+              )}
+            </div>
           )}
         </form>
       )}
@@ -666,8 +884,22 @@ export default function CampDetailPage() {
                 <button type="button" className="text-gray-400 hover:text-gray-600" onClick={() => setEditTpl(null)}><i className="fa-regular fa-arrow-left mr-1" />Zpět</button>
                 <h3 className="font-semibold">{editTpl.type === "ADMIN_NOTIFICATION" ? "Notifikace správci" : `Potvrzení zákazníkovi — ${FLAGS[editTpl.languageCode] ?? ""} ${editTpl.languageCode.toUpperCase()}`}</h3>
               </div>
-              <div><label className="label">Předmět</label><input className="input max-w-2xl" value={tplSubject} onChange={(e) => setTplSubject(e.target.value)} required /></div>
-              <div><label className="label">Tělo e-mailu</label><WysiwygEditor value={tplBody} onChange={setTplBody} /></div>
+              <div className="max-w-2xl">
+                <div className="flex items-center justify-between mb-1">
+                  <label className="label mb-0">Předmět</label>
+                  <button className="btn-secondary text-amber-700 border-amber-200 hover:bg-amber-50 text-xs py-1" type="button" onClick={() => {
+                    if (!editTpl) return;
+                    const def = DEFAULT_TEMPLATES[editTpl.type];
+                    if (!def) return;
+                    if (!confirm("Obnovit výchozí šablonu? Současný obsah bude nahrazen. Změna se uloží až po kliknutí na Uložit šablonu.")) return;
+                    setTplSubject(def.subject);
+                    setTplBody(def.body);
+                    setTplKey((k) => k + 1);
+                  }}><i className="fa-regular fa-rotate-left mr-1.5" />Obnovit výchozí šablonu</button>
+                </div>
+                <input className="input w-full" value={tplSubject} onChange={(e) => setTplSubject(e.target.value)} required />
+              </div>
+              <div><label className="label">Tělo e-mailu</label><WysiwygEditor key={tplKey} value={tplBody} onChange={setTplBody} /></div>
               <div className="flex gap-2 pt-2">
                 <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit šablonu</button>
                 <button className="btn-secondary" type="button" onClick={() => setEditTpl(null)}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>

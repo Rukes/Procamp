@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { requirePermission, orgFilter, campFilter } from "../plugins/auth";
 import { checkAvailability } from "../services/availability";
 import { logActivity, diffObjects } from "../services/activityLog";
+import { sendReservationEmails } from "../services/email";
 
 const INCLUDE = {
   camp: true,
@@ -49,6 +50,8 @@ export async function reservationRoutes(app: FastifyInstance) {
       firstName: string; lastName: string; email: string; phone: string;
       licensePlate?: string; expectedArrival?: string; note?: string;
       languageCode?: string;
+      sendCustomerEmail?: boolean;
+      sendAdminEmail?: boolean;
     };
 
     const checkIn = new Date(body.checkIn);
@@ -102,6 +105,9 @@ export async function reservationRoutes(app: FastifyInstance) {
     });
 
     await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "CREATE", entity: "reservation", entityId: reservation.id, payload: reservation });
+    if (body.sendCustomerEmail || body.sendAdminEmail) {
+      sendReservationEmails(app.prisma, reservation as never, nights, { sendCustomer: body.sendCustomerEmail ?? false, sendAdmin: body.sendAdminEmail ?? false }).catch(() => {});
+    }
     return reply.status(201).send(reservation);
   });
 
@@ -146,6 +152,21 @@ export async function reservationRoutes(app: FastifyInstance) {
     const reservation = await app.prisma.reservation.findUnique({ where: { id }, include: INCLUDE });
     await app.prisma.reservation.delete({ where: { id } });
     await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "DELETE", entity: "reservation", entityId: id, payload: reservation });
+    return { success: true };
+  });
+
+  app.post("/:id/resend-email", { preHandler: requirePermission("reservations_edit") }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { type } = request.body as { type: "customer" | "admin" };
+    const reservation = await app.prisma.reservation.findUnique({ where: { id }, include: { ...INCLUDE, camp: true } });
+    if (!reservation) return reply.status(404).send({ error: "Not found" });
+    const checkIn = new Date(reservation.checkIn);
+    const checkOut = new Date(reservation.checkOut);
+    const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
+    await sendReservationEmails(app.prisma, reservation as never, nights, {
+      sendCustomer: type === "customer",
+      sendAdmin: type === "admin",
+    }, request.user.email);
     return { success: true };
   });
 

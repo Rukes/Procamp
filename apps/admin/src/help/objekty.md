@@ -4,7 +4,7 @@ Objekt je kemp, chatová osada, glamping nebo jiné ubytovací zařízení. Kaž
 
 ## Vytvoření objektu
 
-Klikněte na **+ Nový objekt**, zadejte název a URL identifikátor (slug). Identifikátor se použije v adrese formuláře — doporučujeme použít krátké, jednoduché označení bez diakritiky, např. `kemp-morava`.
+Klikněte na **+ Nový objekt**, zadejte název, URL identifikátor (slug) a **e-mail správce** (notifikační e-mail pro oznámení o nových rezervacích). Identifikátor se použije v adrese formuláře — doporučujeme použít krátké, jednoduché označení bez diakritiky, např. `kemp-morava`.
 
 ## Záložky v detailu objektu
 
@@ -32,9 +32,9 @@ Volitelné nebo povinné položky připočítané k ceně rezervace. Příklady:
 
 ### Nastavení
 
-- **Notifikační e-mail** — na tuto adresu přijde e-mail při každé nové rezervaci
+- **Notifikační e-mail** — na tuto adresu přijde e-mail při každé nové rezervaci; slouží také jako Reply-To při systémovém SMTP
 - **Vyžadovat potvrzení rezervace** — pokud je zapnuto, nové rezervace čekají na vaše ruční potvrzení v sekci Rezervace; pokud je vypnuto, rezervace se potvrdí automaticky okamžitě po odeslání
-- **SMTP host / port / uživatel / heslo / odesílatel** — nastavení e-mailového serveru přes který se odesílají potvrzení zákazníkům; bez tohoto nastavení se e-maily neodesílají
+- **Použít vlastní SMTP nastavení** — zaškrtněte pokud chcete odesílat e-maily z vlastního serveru místo systémového; po zaškrtnutí vyplňte: SMTP host, port, uživatel, heslo, odesílatel (From) a Reply-To; všechna pole jsou povinná; klikněte na **Ověřit připojení před uložením** — systém otestuje přihlášení k SMTP serveru a po úspěchu se zobrazí tlačítko Uložit; bez systémového ani vlastního SMTP se e-maily neodesílají
 
 ### E-mailové šablony
 

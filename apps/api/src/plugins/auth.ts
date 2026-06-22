@@ -15,9 +15,16 @@ export async function verifyCaptcha(token: string | undefined): Promise<boolean>
 }
 
 async function verifyTokenVersion(request: FastifyRequest, reply: FastifyReply) {
-  const { sub, tokenVersion } = request.user;
-  const user = await (request.server as any).prisma.user.findUnique({ where: { id: sub }, select: { tokenVersion: true } });
+  const { sub, tokenVersion, globalTokenVersion } = request.user as any;
+  const [user, settings] = await Promise.all([
+    (request.server as any).prisma.user.findUnique({ where: { id: sub }, select: { tokenVersion: true } }),
+    (request.server as any).prisma.systemSettings.findUnique({ where: { id: "singleton" }, select: { globalTokenVersion: true } }),
+  ]);
   if (!user || user.tokenVersion !== tokenVersion) {
+    reply.status(401).send({ error: "Session expired" });
+    return;
+  }
+  if (settings && globalTokenVersion !== undefined && settings.globalTokenVersion !== globalTokenVersion) {
     reply.status(401).send({ error: "Session expired" });
   }
 }

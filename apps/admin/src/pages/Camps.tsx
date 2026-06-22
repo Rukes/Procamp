@@ -16,6 +16,7 @@ export default function CampsPage() {
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
+  const [notificationEmail, setNotificationEmail] = useState("");
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
   const PER_PAGE = 20;
@@ -30,8 +31,8 @@ export default function CampsPage() {
     e.preventDefault();
     setError("");
     try {
-      await api.post("/camps", { name, slug });
-      setCreating(false); setName(""); setSlug("");
+      await api.post("/camps", { name, slug, notificationEmail });
+      setCreating(false); setName(""); setSlug(""); setNotificationEmail("");
       toast.success(`Objekt „${name}" byl vytvořen.`);
       load();
     } catch (err: unknown) {
@@ -68,11 +69,11 @@ export default function CampsPage() {
       </div>
 
       {creating && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-16" onClick={() => { setCreating(false); setName(""); setSlug(""); setError(""); }}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-16" onClick={() => { setCreating(false); setName(""); setSlug(""); setNotificationEmail(""); setError(""); }}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h2 className="font-semibold text-gray-900">Nový objekt</h2>
-              <button type="button" className="text-gray-400 hover:text-gray-700 text-xl leading-none" onClick={() => { setCreating(false); setName(""); setSlug(""); setError(""); }}>×</button>
+              <button type="button" className="text-gray-400 hover:text-gray-700 text-xl leading-none" onClick={() => { setCreating(false); setName(""); setSlug(""); setNotificationEmail(""); setError(""); }}>×</button>
             </div>
             <form onSubmit={handleCreate} className="px-6 py-5 space-y-4">
               <div>
@@ -93,10 +94,14 @@ export default function CampsPage() {
                 <input className="input" value={slug} onChange={(e) => setSlug(e.target.value)} required pattern="[a-z0-9-]+" />
                 <p className="text-xs text-gray-500 mt-1">Použije se v URL formuláře: /form/{"{org-slug}"}/<strong>{slug || "nazev-objektu"}</strong></p>
               </div>
+              <div>
+                <label className="label">E-mail správce <span className="text-gray-400 font-normal text-xs">(notifikace o rezervacích)</span></label>
+                <input className="input" type="email" value={notificationEmail} onChange={(e) => setNotificationEmail(e.target.value)} required placeholder="info@kempmylnska.cz" />
+              </div>
               {error && <p className="text-sm text-red-600">{error}</p>}
               <div className="flex gap-2 pt-1">
                 <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Vytvořit</button>
-                <button className="btn-secondary" type="button" onClick={() => { setCreating(false); setName(""); setSlug(""); setError(""); }}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
+                <button className="btn-secondary" type="button" onClick={() => { setCreating(false); setName(""); setSlug(""); setNotificationEmail(""); setError(""); }}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
               </div>
             </form>
           </div>

@@ -18,6 +18,7 @@ const nav: { to: string; label: string; icon: string; perm?: keyof Permission; n
 const superAdminNav = [
   { to: "/organizations", label: "Organizace", icon: "fa-building" },
   { to: "/logs", label: "Logy", icon: "fa-list-check" },
+  { to: "/system", label: "Systém", icon: "fa-gears" },
 ];
 
 export default function Layout() {

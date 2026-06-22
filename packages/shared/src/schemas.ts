@@ -52,7 +52,9 @@ export const updateCampSchema = z.object({
   smtpUser: z.string().optional(),
   smtpPassword: z.string().optional(),
   smtpFrom: z.string().optional(),
+  smtpReplyTo: z.string().optional(),
   requiresConfirmation: z.boolean().optional(),
+  useCustomSmtp: z.boolean().optional(),
 });
 
 export const createSurchargeSchema = z.object({

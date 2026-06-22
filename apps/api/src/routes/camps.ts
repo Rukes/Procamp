@@ -46,11 +46,11 @@ export async function campRoutes(app: FastifyInstance) {
   });
 
   app.post("/", { preHandler: requirePermission("camps_create") }, async (request, reply) => {
-    const { name, slug } = request.body as { name: string; slug: string };
+    const { name, slug, notificationEmail } = request.body as { name: string; slug: string; notificationEmail: string };
     const orgId = orgFilter(request);
     if (!orgId) return reply.status(400).send({ error: "Nejprve vyberte organizaci." });
     const camp = await app.prisma.camp.create({
-      data: { name, slug, notificationEmail: "", ...(orgId ? { organizationId: orgId } : {}) },
+      data: { name, slug, notificationEmail: notificationEmail ?? "", ...(orgId ? { organizationId: orgId } : {}) },
       include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true } } },
     });
 
@@ -59,33 +59,75 @@ export async function campRoutes(app: FastifyInstance) {
         {
           campId: camp.id, type: "ADMIN_NOTIFICATION", languageCode: "cs",
           subject: "Nová rezervace – {{campName}}",
-          body: `<h2>Nová rezervace</h2>
-<p><strong>Jméno:</strong> {{firstName}} {{lastName}}</p>
-<p><strong>E-mail:</strong> {{email}}</p>
-<p><strong>Telefon:</strong> {{phone}}</p>
-<p><strong>Typ ubytování:</strong> {{accommodationType}}</p>
-<p><strong>Příjezd:</strong> {{checkIn}}</p>
-<p><strong>Odjezd:</strong> {{checkOut}}</p>
-<p><strong>Počet nocí:</strong> {{nights}}</p>
-<p><strong>Dospělí:</strong> {{adults}}, <strong>Děti:</strong> {{children}}</p>
-<p><strong>SPZ:</strong> {{licensePlate}}</p>
-<p><strong>Předpokládaný příjezd:</strong> {{expectedArrival}}</p>
-<p><strong>Poznámka:</strong> {{note}}</p>
-<p><strong>Celková cena:</strong> {{totalPrice}}</p>`,
+          body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+  <div style="background:#1e40af;padding:24px 32px;border-radius:8px 8px 0 0">
+    <h1 style="margin:0;color:#ffffff;font-size:20px">🏕️ Nová rezervace</h1>
+    <p style="margin:4px 0 0;color:#bfdbfe;font-size:14px">{{campName}}</p>
+  </div>
+  <div style="background:#f8fafc;padding:24px 32px;border-radius:0 0 8px 8px;border:1px solid #e2e8f0;border-top:none">
+
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Kontaktní údaje</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr><td style="padding:6px 0;color:#6b7280;width:180px">Jméno a příjmení</td><td style="padding:6px 0;font-weight:600">{{firstName}} {{lastName}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">E-mail</td><td style="padding:6px 8px"><a href="mailto:{{email}}" style="color:#1e40af">{{email}}</a></td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Telefon</td><td style="padding:6px 0">{{phone}}</td></tr>
+    </table>
+
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Rezervace</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr><td style="padding:6px 0;color:#6b7280;width:180px">Rezervace ubytování</td><td style="padding:6px 0;font-weight:600">{{accommodationType}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Příjezd</td><td style="padding:6px 8px;font-weight:600">{{checkIn}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Odjezd</td><td style="padding:6px 0;font-weight:600">{{checkOut}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Počet nocí</td><td style="padding:6px 8px">{{nights}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Dospělí / Děti</td><td style="padding:6px 0">{{adults}} / {{children}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">SPZ</td><td style="padding:6px 8px">{{licensePlate}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Předpokl. příjezd</td><td style="padding:6px 0">{{expectedArrival}}</td></tr>
+    </table>
+
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Cena a poznámka</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr style="background:#dbeafe"><td style="padding:10px 8px;color:#1e40af;font-weight:700;font-size:15px;width:180px">Celková cena</td><td style="padding:10px 8px;font-weight:700;font-size:15px;color:#1e40af">{{totalPrice}} Kč</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;vertical-align:top">Poznámka zákazníka</td><td style="padding:6px 0">{{note}}</td></tr>
+    </table>
+
+    <p style="margin:0;font-size:12px;color:#9ca3af;border-top:1px solid #e2e8f0;padding-top:12px">ID rezervace: {{reservationId}}</p>
+  </div>
+</div>`,
         },
         {
           campId: camp.id, type: "CUSTOMER_CONFIRMATION", languageCode: "cs",
           subject: "Potvrzení rezervace – {{campName}}",
-          body: `<h2>Vaše rezervace byla přijata</h2>
-<p>Dobrý den, {{firstName}},</p>
-<p>děkujeme za rezervaci v kempu <strong>{{campName}}</strong>.</p>
-<p><strong>Typ ubytování:</strong> {{accommodationType}}</p>
-<p><strong>Příjezd:</strong> {{checkIn}}</p>
-<p><strong>Odjezd:</strong> {{checkOut}}</p>
-<p><strong>Počet nocí:</strong> {{nights}}</p>
-<p><strong>Celková cena:</strong> {{totalPrice}}</p>
-<p>Platba probíhá na místě.</p>
-<p>Těšíme se na vás!</p>`,
+          body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+  <div style="background:#1e40af;padding:24px 32px;border-radius:8px 8px 0 0">
+    <h1 style="margin:0;color:#ffffff;font-size:20px">🏕️ Rezervace přijata</h1>
+    <p style="margin:4px 0 0;color:#bfdbfe;font-size:14px">{{campName}}</p>
+  </div>
+  <div style="background:#f8fafc;padding:24px 32px;border-radius:0 0 8px 8px;border:1px solid #e2e8f0;border-top:none">
+
+    <p style="font-size:15px;margin:0 0 24px">Dobrý den, <strong>{{firstName}}</strong>,<br>děkujeme za vaši rezervaci. Níže najdete shrnutí.</p>
+
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Vaše rezervace</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr><td style="padding:6px 0;color:#6b7280;width:180px">Rezervace ubytování</td><td style="padding:6px 0;font-weight:600">{{accommodationType}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Příjezd</td><td style="padding:6px 8px;font-weight:600">{{checkIn}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Odjezd</td><td style="padding:6px 0;font-weight:600">{{checkOut}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Počet nocí</td><td style="padding:6px 8px">{{nights}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Dospělí / Děti</td><td style="padding:6px 0">{{adults}} / {{children}}</td></tr>
+    </table>
+
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Cena</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr style="background:#dbeafe"><td style="padding:10px 8px;color:#1e40af;font-weight:700;font-size:15px;width:180px">Celková cena</td><td style="padding:10px 8px;font-weight:700;font-size:15px;color:#1e40af">{{totalPrice}} Kč</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:13px" colspan="2">Platba probíhá na místě při příjezdu.</td></tr>
+    </table>
+
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:16px;margin-bottom:24px">
+      <p style="margin:0;font-size:14px;color:#15803d">✅ Těšíme se na vás! Máte-li jakékoliv dotazy, stačí na tento e-mail odpovědět.</p>
+    </div>
+
+    <p style="margin:0;font-size:12px;color:#9ca3af;border-top:1px solid #e2e8f0;padding-top:12px">ID rezervace: {{reservationId}}</p>
+  </div>
+</div>`,
         },
       ],
     });
@@ -116,6 +158,29 @@ export async function campRoutes(app: FastifyInstance) {
       await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "camp", entityId: id, payload: diff });
     }
     return camp;
+  });
+
+  app.post("/:id/test-smtp", { preHandler: requirePermission("camps_edit") }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { host?: string; port?: number; user?: string; password?: string; from?: string };
+    const camp = await app.prisma.camp.findUnique({ where: { id } });
+    if (!camp) return reply.status(404).send({ error: "Objekt nenalezen" });
+
+    const host = body.host || camp.smtpHost;
+    const port = body.port || camp.smtpPort;
+    const user = body.user || camp.smtpUser;
+    const pass = body.password || camp.smtpPasswordEncrypted;
+
+    if (!host || !user || !pass) return reply.status(400).send({ error: "SMTP není nakonfigurováno" });
+
+    try {
+      const nodemailer = await import("nodemailer");
+      const transport = nodemailer.default.createTransport({ host, port, auth: { user, pass } } as any);
+      await transport.verify();
+      return { success: true, message: "Připojení k SMTP serveru bylo úspěšné." };
+    } catch (err: unknown) {
+      return reply.status(400).send({ error: "Připojení selhalo: " + String(err) });
+    }
   });
 
   app.delete("/:id", { preHandler: requirePermission("camps_delete") }, async (request) => {

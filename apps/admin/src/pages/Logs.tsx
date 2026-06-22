@@ -193,7 +193,7 @@ export default function LogsPage() {
         <p className="text-sm text-gray-500 mt-1">Přihlášení, vytvoření, úpravy a smazání záznamů.</p>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="flex flex-wrap gap-2 mb-4 max-w-lg">
         <select className="input flex-1 min-w-[140px]" value={filterAction} onChange={(e) => setFilterAction(e.target.value)}>
           <option value="">Všechny akce</option>
           {Object.entries(ACTION_LABELS).map(([k, v]) => (

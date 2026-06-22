@@ -53,6 +53,8 @@ export default function ReservationNewPage() {
     internalNote: "",
     languageCode: "cs",
   });
+  const [sendCustomer, setSendCustomer] = useState(true);
+  const [sendAdmin, setSendAdmin] = useState(false);
 
   useEffect(() => {
     api.get("/camps").then((r) => { setCamps(r.data); if (r.data.length === 1) setCampId(r.data[0].id); }).catch(() => {});
@@ -126,6 +128,8 @@ export default function ReservationNewPage() {
         campId,
         ...form,
         selectedSurchargeIds,
+        sendCustomerEmail: sendCustomer,
+        sendAdminEmail: sendAdmin,
       });
       toast.success("Rezervace byla vytvořena.");
       navigate(`/reservations/${res.data.id}`);
@@ -301,6 +305,16 @@ export default function ReservationNewPage() {
             <div>
               <label className="label">E-mail</label>
               <input className="input" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} required />
+              <div className="flex items-center gap-4 mt-2">
+                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                  <input type="checkbox" className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600" checked={sendCustomer} onChange={(e) => setSendCustomer(e.target.checked)} />
+                  Odeslat potvrzení zákazníkovi
+                </label>
+                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                  <input type="checkbox" className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600" checked={sendAdmin} onChange={(e) => setSendAdmin(e.target.checked)} />
+                  Odeslat potvrzení správci
+                </label>
+              </div>
             </div>
             <div>
               <label className="label">Telefon</label>

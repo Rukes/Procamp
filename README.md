@@ -20,6 +20,27 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 
 ---
 
+## Co je nového (červen 2026 — aktualizace 4)
+
+- **Ověření SMTP před uložením** — tlačítko „Ověřit připojení před uložením" testuje přihlášení k SMTP serveru přes nodemailer `verify()`; tlačítko Uložit SMTP se zobrazí až po úspěšném testu; pokud uživatel změní jakékoliv pole, test se resetuje a musí proběhnout znovu
+- **Obnovit výchozí šablonu** — tlačítko v editoru e-mailové šablony (vpravo od pole Předmět); po potvrzení načte výchozí šablonu; neuloží se automaticky, uložení provede uživatel ručně
+- **Opravy e-mailových šablon** — typ ubytování se nyní zobrazuje jako textový název (nikoliv `[object Object]`); datum příjezdu a odjezdu formátováno jako `22. 6. 2026`; label „Typ ubytování" přejmenován na „Rezervace ubytování" v obou šablonách
+- **Poznámka zákazníka** — přejmenování v detailu rezervace pro odlišení od interní poznámky
+
+## Co je nového (červen 2026 — aktualizace 3)
+
+- **Systémový SMTP** — globální SMTP server nastavený přes env proměnné (`SYSTEM_SMTP_*`); použije se pro všechny objekty které nemají vlastní SMTP; bez systémového SMTP musí mít každý objekt vlastní nastavení
+- **Vlastní SMTP objektu** — checkbox „Použít vlastní SMTP nastavení" v detailu objektu; pokud není zaškrtnut, použije se systémový SMTP; nová pole: **Reply-To** (adresa pro odpovědi zákazníků) — povinná při vlastním SMTP; systémový SMTP používá notifikační e-mail objektu jako reply-to automaticky
+- **Stránka Systém (SA)** — kill switch pro veškerý mailing (pokud je vypnut, neodesílají se žádné e-maily); tlačítko „Odhlásit všechny uživatele" (global logout přes `globalTokenVersion`)
+- **Global logout** — zvýšení `globalTokenVersion` v DB okamžitě invaliduje všechny přihlášené session
+- **E-maily při ručním vytvoření rezervace** — při vytvoření rezervace v adminu lze zaškrtnout „Odeslat potvrzení zákazníkovi" (výchozí: ano) a „Odeslat potvrzení správci" (výchozí: ne)
+- **Opakované odeslání e-mailu** — v detailu rezervace dropdown tlačítko „E-maily" → „Znovu odeslat potvrzovací e-mail zákazníkovi" (s potvrzením)
+- **Logování e-mailů** — každé odeslání nebo selhání e-mailu se loguje do logu aktivit jako `EMAIL_SENT` / `EMAIL_FAILED` se svázáním na ID rezervace a uživatele který akci spustil
+- **Lepší defaultní e-mailové šablony** — nové šablony pro správce i zákazníka s modrým headerem, sekcemi (kontakt, rezervace, cena), tabulkovým zobrazením a zvýrazněnou celkovou cenou
+- **Vylepšený WYSIWYG editor šablon** — přepínání mezi vizuálním editorem a HTML zdrojovým kódem; vkládání odkazů a obrázků (s volitelným odkazem) přes inline popup; tooltopy na všech tlačítkách toolbaru; výrazné odělení sekce proměnných
+- **E-mail správce povinný při vytvoření objektu** — pole Notifikační e-mail je nyní součástí formuláře nového objektu
+- **Přidání jazyka kopíruje data** — při přidání nového jazyka se automaticky zkopírují překlady typů ubytování, příplatků a e-mailových šablon z výchozího jazyka; ceny se přepočtou zadaným koeficientem (např. 0,04 pro CZK→EUR); po přidání systém zobrazí souhrn co bylo zkopírováno
+
 ## Co je nového (červen 2026 — aktualizace 2)
 
 - **Blokace termínů** — nová sekce pro uzavření termínů (údržba, soukromá akce…); blokace celého objektu nebo konkrétního typu; zákazník v formuláři blokované dny nevidí jako dostupné
@@ -476,7 +497,25 @@ Pro konkrétní jazyk přidejte parametr `?lang=en` (nebo jiný kód jazyka, kte
 
 ## Nastavení e-mailů (SMTP)
 
-V detailu kempu → záložka **Nastavení** vyplňte SMTP údaje:
+Systém podporuje dva způsoby odesílání e-mailů:
+
+### 1. Systémový SMTP (doporučeno)
+
+Nastavte globální SMTP server přes env proměnné v `apps/api/.env`:
+
+```env
+SYSTEM_SMTP_HOST="smtp.vas-provider.cz"
+SYSTEM_SMTP_PORT=587
+SYSTEM_SMTP_USER="info@mujkemp.cz"
+SYSTEM_SMTP_PASS="heslo-sem"
+SYSTEM_SMTP_FROM="MůjKemp.cz <info@mujkemp.cz>"
+```
+
+Systémový SMTP použijí automaticky všechny objekty které nemají vlastní SMTP. Reply-To se nastaví na notifikační e-mail příslušného objektu.
+
+### 2. Vlastní SMTP objektu
+
+V detailu objektu → záložka **Nastavení** zaškrtněte „Použít vlastní SMTP nastavení" a vyplňte:
 
 | Pole | Příklad |
 |------|---------|
@@ -484,8 +523,12 @@ V detailu kempu → záložka **Nastavení** vyplňte SMTP údaje:
 | SMTP Port | `587` (TLS) nebo `465` (SSL) |
 | SMTP Uživatel | `info@vas-domen.cz` |
 | SMTP Heslo | heslo k e-mailu |
-| Odesílatel | `info@vas-domen.cz` |
-| Notifikační e-mail | kam přijdou oznámení o nové rezervaci |
+| Odesílatel (From) | `Kemp Mlýnská <info@kempmylnska.cz>` |
+| Reply-To | `info@kempmylnska.cz` |
+
+### Kill switch
+
+Super admin může na stránce **Systém** jedním přepínačem vypnout veškerý mailing — e-maily se pak neodesílají bez ohledu na nastavení SMTP.
 
 ---
 

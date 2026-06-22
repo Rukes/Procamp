@@ -23,7 +23,7 @@ const PREDEFINED = [
 const previewPrice = (sym: string, pos: "before" | "after") =>
   pos === "before" ? `${sym} 100` : `100 ${sym}`;
 
-const EMPTY_FORM = { code: "", currencyCode: "", currencySymbol: "", currencyPosition: "after" as "before" | "after" };
+const EMPTY_FORM = { code: "", currencyCode: "", currencySymbol: "", currencyPosition: "after" as "before" | "after", priceCoefficient: "" };
 
 export default function LanguagesPage() {
   useTitle("Jazyky");
@@ -47,16 +47,26 @@ export default function LanguagesPage() {
     const preset = PREDEFINED.find((p) => p.code === addForm.code);
     if (!preset) return;
     try {
-      await api.post("/languages", {
+      const coeff = addForm.priceCoefficient ? parseFloat(addForm.priceCoefficient) : 1;
+      const res = await api.post("/languages", {
         code: preset.code,
         name: preset.name,
         currencyCode: addForm.currencyCode,
         currencySymbol: addForm.currencySymbol,
         currencyPosition: addForm.currencyPosition,
+        priceCoefficient: coeff,
       });
       setAddOpen(false);
       setAddForm(EMPTY_FORM);
-      toast.success(`Jazyk „${preset.name}" byl přidán.`);
+      const { copied } = res.data;
+      const parts = [];
+      if (copied.types > 0) parts.push(`${copied.types} typů ubytování`);
+      if (copied.surcharges > 0) parts.push(`${copied.surcharges} příplatků`);
+      if (copied.templates > 0) parts.push(`${copied.templates} e-mailových šablon`);
+      const detail = parts.length > 0
+        ? ` Zkopírováno z výchozího jazyka: ${parts.join(", ")}. Zkontrolujte a upravte překlady a ceny.`
+        : "";
+      toast.success(`Jazyk „${preset.name}" byl přidán.${detail}`);
       load();
     } catch {
       toast.error("Nepodařilo se přidat jazyk.");
@@ -96,7 +106,7 @@ export default function LanguagesPage() {
     return ai - bi;
   });
 
-  const addValid = addForm.code && addForm.currencyCode.trim() && addForm.currencySymbol.trim();
+  const addValid = addForm.code && addForm.currencyCode.trim() && addForm.currencySymbol.trim() && addForm.priceCoefficient.trim();
 
   return (
     <div className="p-8 max-w-2xl">
@@ -107,6 +117,12 @@ export default function LanguagesPage() {
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-semibold">Přidat jazyk</h3>
               <button onClick={() => setAddOpen(false)} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
+            </div>
+            <div className="px-6 pt-4 pb-0">
+              <p className="text-sm text-blue-700 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+                <i className="fa-regular fa-circle-info mr-2" />
+                Přidání nového jazyka automaticky zkopíruje všechny texty z výchozího jazyka (čeština) a ceny přepočte nastaveným koeficientem. Po uložení si přeložte nastavení objektů dle potřeby.
+              </p>
             </div>
             <form onSubmit={handleAdd} className="p-6 space-y-4">
               <div>
@@ -136,6 +152,24 @@ export default function LanguagesPage() {
               {addForm.currencySymbol && (
                 <p className="text-xs text-gray-500">Náhled: <strong>{previewPrice(addForm.currencySymbol, addForm.currencyPosition)}</strong></p>
               )}
+              <div>
+                <label className="label">Přepočet cen z výchozího jazyka (koeficient)</label>
+                <input
+                  className="input"
+                  type="number"
+                  step="0.0001"
+                  min="0.0001"
+                  value={addForm.priceCoefficient}
+                  onChange={(e) => setAddForm({ ...addForm, priceCoefficient: e.target.value })}
+                  placeholder="např. 0.04 (CZK → EUR)"
+                  required
+                />
+                {addForm.priceCoefficient && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Cena 100 Kč → <strong>{(100 * parseFloat(addForm.priceCoefficient || "0")).toFixed(2)} {addForm.currencySymbol || "?"}</strong>
+                  </p>
+                )}
+              </div>
               <div className="flex gap-2 pt-1">
                 <button className="btn-primary" type="submit" disabled={!addValid}><i className="fa-regular fa-plus mr-1.5" />Přidat</button>
                 <button className="btn-secondary" type="button" onClick={() => setAddOpen(false)}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>

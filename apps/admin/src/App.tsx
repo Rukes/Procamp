@@ -18,6 +18,7 @@ import OrganizationDetailPage from "./pages/OrganizationDetail";
 import MyOrganizationPage from "./pages/MyOrganization";
 import UserSettingsPage from "./pages/UserSettings";
 import BlockingsPage from "./pages/Blockings";
+import SystemPage from "./pages/System";
 import LogsPage from "./pages/Logs";
 import HelpPage from "./pages/Help";
 import AuthorPage from "./pages/Author";
@@ -53,6 +54,7 @@ export default function App() {
           <Route path="settings" element={<UserSettingsPage />} />
           <Route path="blockings" element={<BlockingsPage />} />
           <Route path="logs" element={<LogsPage />} />
+          <Route path="system" element={<SystemPage />} />
           <Route path="author" element={<AuthorPage />} />
         </Route>
         <Route path="help" element={<Guard><HelpPage /></Guard>} />

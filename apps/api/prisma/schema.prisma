@@ -52,6 +52,8 @@ model SystemSettings {
   defaultLanguageCode String   @default("cs")
   thousandsSeparator  String   @default(" ")
   decimalSeparator    String   @default(",")
+  smtpEnabled         Boolean  @default(true)
+  globalTokenVersion  Int      @default(0)
   updatedAt           DateTime @updatedAt
 }
 
@@ -82,7 +84,9 @@ model Camp {
   smtpUser              String              @default("")
   smtpPasswordEncrypted String              @default("")
   smtpFrom              String              @default("")
+  smtpReplyTo           String              @default("")
   requiresConfirmation  Boolean             @default(true)
+  useCustomSmtp         Boolean             @default(false)
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
   accommodationTypes    AccommodationType[]
