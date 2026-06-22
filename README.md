@@ -1,5 +1,17 @@
 # MůjKemp.cz — Rezervační systém pro kempingy
 
+## O projektu
+
+Cílem rezervačního systému **MůjKemp.cz** je naprogramovat běžným pronajímatelům jednoduchý systém pouze za provozní poplatek. Vývoj obdobného systému stojí desetitisíce až statisíce korun a je následně náročný na údržbu. Systém vznikl na popud známého jako open source — je celý naprogramovaný pomocí Anthropic Claude.
+
+Cena systému je stanovena pouze za provoz, nikoli za vývoj.
+
+**Autor:** Samuel Kunert — [kunerts.cz](https://www.kunerts.cz/) — [samuel@kunerts.cz](mailto:samuel@kunerts.cz) — [GitHub](https://github.com/Rukes/Procamp)
+
+Poděkování: za tvorbu grafických podkladů a loga [Štěpánu Ševčíkovi](https://grafikasevcik.cz), za pomoc se správou VPS Michalovi Řeznikovi.
+
+---
+
 Webová aplikace pro správu rezervací kempů. Obsahuje:
 
 - **Admin panel** — správa kempů, rezervací, uživatelů, e-mailových šablon a jazyků
