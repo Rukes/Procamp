@@ -13,11 +13,13 @@ import uzivatele from "../help/uzivatele.md?raw";
 import jazyky from "../help/jazyky.md?raw";
 import emaily from "../help/emaily.md?raw";
 import formular from "../help/formulár.md?raw";
+import blokace from "../help/blokace.md?raw";
 const TOPICS = [
   { id: "zacínáme",   label: "Začínáme",              icon: "fa-rocket",        content: zacíname },
   { id: "organizace", label: "Organizace",             icon: "fa-building",      content: organizace },
   { id: "objekty",    label: "Objekty",                icon: "fa-tent",          content: objekty },
   { id: "rezervace",  label: "Rezervace",              icon: "fa-calendar",      content: rezervace },
+  { id: "blokace",    label: "Blokace termínů",        icon: "fa-calendar-xmark", content: blokace },
   { id: "uzivatele",  label: "Uživatelé & oprávnění",  icon: "fa-user",          content: uzivatele },
   { id: "jazyky",     label: "Jazyky & měny",          icon: "fa-globe",         content: jazyky },
   { id: "emaily",     label: "E-mailové šablony",      icon: "fa-envelope",      content: emaily },
