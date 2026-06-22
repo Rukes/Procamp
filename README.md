@@ -8,6 +8,18 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 
 ---
 
+## Co je nového (červen 2026 — aktualizace 2)
+
+- **Blokace termínů** — nová sekce pro uzavření termínů (údržba, soukromá akce…); blokace celého objektu nebo konkrétního typu; zákazník v formuláři blokované dny nevidí jako dostupné
+- **Interní poznámka na rezervaci** — pole viditelné pouze správcům, zákazník ho nikdy nevidí; v seznamu zobrazena jako červená ikona s popoverem
+- **Sdílený kalendář rezervací** — měsíční kalendář s výběrem dne, počty na dnech, tlačítko Dnes; použit na Dashboardu i v záložce Kalendář v Rezervacích
+- **Dashboard** — sjednocena tabulka rezervací (poznámky, e-mail, typ, os.); na mobilu seznam nahoře, kalendář dole
+- **Filtry rezervací** — přidán filtr Příjezd od/do; export respektuje všechny aktivní filtry (objekt, status, vyhledávání, datum)
+- **Nový objekt jako modal** — formulář pro vytvoření objektu otevírán v modalu místo inline karty
+- **Záložky objektu na mobilu** — horizontálně scrollovatelné, vhodné pro úzké displeje
+- **Modaly zarovnány nahoru** — všechny modaly v admin panelu i formuláři zobrazeny nahoře obrazovky
+- **Formulář — ikony** — přidány ikony ke všem polím v kontaktním kroku; nadpis prvního kroku sjednocen na „Vyberte typ rezervace" (všechny jazyky); poznámky příplatků zobrazeny přes SurchargeNote komponentu; Font Awesome přidán do formuláře
+
 ## Co je nového (červen 2026 — aktualizace)
 
 - **Responzivní design** — admin panel plně použitelný na mobilních zařízeních; hamburger menu, scrollovatelné tabulky, přizpůsobené filtry a tlačítka
