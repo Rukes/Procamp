@@ -89,6 +89,7 @@ model Camp {
   surcharges            Surcharge[]
   reservations          Reservation[]
   emailTemplates        EmailTemplate[]
+  blockedPeriods        BlockedPeriod[]
 
   @@unique([organizationId, slug])
 }
@@ -104,6 +105,7 @@ model AccommodationType {
   updatedAt        DateTime                @updatedAt
   prices           AccommodationTypePrice[]
   reservations     Reservation[]
+  blockedPeriods   BlockedPeriod[]
 }
 
 model AccommodationTypePrice {
@@ -179,6 +181,20 @@ model ReservationSurcharge {
   priceSnapshot Float
 
   @@unique([reservationId, surchargeId])
+}
+
+model BlockedPeriod {
+  id                  String             @id @default(cuid())
+  campId              String
+  camp                Camp               @relation(fields: [campId], references: [id], onDelete: Cascade)
+  accommodationTypeId String?
+  accommodationType   AccommodationType? @relation(fields: [accommodationTypeId], references: [id], onDelete: Cascade)
+  dateFrom            DateTime
+  dateTo              DateTime
+  reason              String             @default("")
+  internalNote        String?            @db.Text
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
 }
 
 model ActivityLog {

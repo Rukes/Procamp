@@ -13,6 +13,7 @@ import { emailTemplateRoutes } from "./routes/email-templates";
 import { systemSettingsRoutes } from "./routes/system-settings";
 import { organizationRoutes } from "./routes/organizations";
 import { activityLogRoutes } from "./routes/activity-logs";
+import { blockedPeriodRoutes } from "./routes/blocked-periods";
 import { publicFormRoutes } from "./routes/public/form";
 
 const app = Fastify({ logger: true });
@@ -47,6 +48,7 @@ const start = async () => {
   await app.register(systemSettingsRoutes, { prefix: "/api/system-settings" });
   await app.register(organizationRoutes, { prefix: "/api/organizations" });
   await app.register(activityLogRoutes, { prefix: "/api/activity-logs" });
+  await app.register(blockedPeriodRoutes, { prefix: "/api/blocked-periods" });
 
   app.get("/api/health", async () => ({ status: "ok" }));
 

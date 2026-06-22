@@ -9,6 +9,7 @@ import Tooltip from "./Tooltip";
 const nav: { to: string; label: string; icon: string; perm?: keyof Permission; newLink?: string }[] = [
   { to: "/dashboard", label: "Dashboard", icon: "fa-chart-bar" },
   { to: "/reservations", label: "Rezervace", icon: "fa-calendar", perm: "reservations_view", newLink: "/reservations/new" },
+  { to: "/blockings", label: "Blokace", icon: "fa-calendar-xmark", perm: "reservations_edit" },
   { to: "/camps", label: "Objekty", icon: "fa-tent", perm: "camps_view" },
   { to: "/users", label: "Uživatelé", icon: "fa-user", perm: "users_manage" },
   { to: "/languages", label: "Jazyky", icon: "fa-globe", perm: "org_admin" },

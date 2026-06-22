@@ -17,6 +17,7 @@ import OrganizationsPage from "./pages/Organizations";
 import OrganizationDetailPage from "./pages/OrganizationDetail";
 import MyOrganizationPage from "./pages/MyOrganization";
 import UserSettingsPage from "./pages/UserSettings";
+import BlockingsPage from "./pages/Blockings";
 import LogsPage from "./pages/Logs";
 import HelpPage from "./pages/Help";
 import AuthorPage from "./pages/Author";
@@ -50,6 +51,7 @@ export default function App() {
           <Route path="organizations/:id" element={<OrganizationDetailPage />} />
           <Route path="my-organization" element={<MyOrganizationPage />} />
           <Route path="settings" element={<UserSettingsPage />} />
+          <Route path="blockings" element={<BlockingsPage />} />
           <Route path="logs" element={<LogsPage />} />
           <Route path="author" element={<AuthorPage />} />
         </Route>

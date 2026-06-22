@@ -26,7 +26,15 @@ export async function checkAvailability(
     },
   });
 
-  return { available: overlapping < capacity, capacity, booked: overlapping };
+  const blocked = await (prisma as any).blockedPeriod.count({
+    where: {
+      campId,
+      OR: [{ accommodationTypeId }, { accommodationTypeId: null }],
+      AND: [{ dateFrom: { lt: checkOut } }, { dateTo: { gt: checkIn } }],
+    },
+  });
+
+  return { available: overlapping < capacity && blocked === 0, capacity, booked: overlapping };
 }
 
 export async function getOccupiedDates(
@@ -55,7 +63,27 @@ export async function getOccupiedDates(
     }
   }
 
-  return Object.entries(dayCount)
+  const occupied = Object.entries(dayCount)
     .filter(([, count]) => count >= capacity)
     .map(([date]) => date);
+
+  const blocks = await (prisma as any).blockedPeriod.findMany({
+    where: {
+      campId,
+      OR: [{ accommodationTypeId }, { accommodationTypeId: null }],
+    },
+    select: { dateFrom: true, dateTo: true },
+  });
+
+  const blockedDays = new Set<string>();
+  for (const b of blocks) {
+    const cur = new Date(b.dateFrom);
+    const end = new Date(b.dateTo);
+    while (cur < end) {
+      blockedDays.add(cur.toISOString().slice(0, 10));
+      cur.setDate(cur.getDate() + 1);
+    }
+  }
+
+  return [...new Set([...occupied, ...blockedDays])];
 }
