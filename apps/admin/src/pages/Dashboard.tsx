@@ -1,91 +1,53 @@
 import { useTitle } from "../hooks/useTitle";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import { Reservation, Camp } from "@procamp/shared";
-import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths } from "date-fns";
+import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
 import { useOrg } from "../contexts/OrgContext";
 import { langFlag } from "../utils/langFlag";
+import ReservationCalendar from "../components/ReservationCalendar";
 
-const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
-const STATUS_CLASS: Record<string, string> = { PENDING: "badge-pending", CONFIRMED: "badge-confirmed", CANCELLED: "badge-cancelled" };
-const DAY_NAMES = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
-
-function MiniCalendar({ reservations }: { reservations: (Reservation & { camp: Camp })[] }) {
-  const navigate = useNavigate();
-  const [month, setMonth] = useState(new Date());
-  const start = startOfMonth(month);
-  const end = endOfMonth(month);
-  const days = eachDayOfInterval({ start, end });
-
-  // offset: Mon=0
-  const startOffset = (start.getDay() + 6) % 7;
-  const cells: (Date | null)[] = [...Array(startOffset).fill(null), ...days];
-  while (cells.length % 7 !== 0) cells.push(null);
-
-  const reservationsOnDay = (d: Date) =>
-    reservations.filter((r) => {
-      const ci = new Date(r.checkIn);
-      const co = new Date(r.checkOut);
-      return d >= ci && d < co;
-    });
-
-  const arrivals = (d: Date) =>
-    reservations.filter((r) => isSameDay(new Date(r.checkIn), d));
-
+function NotePopover({ note, internal = false }: { note: string; internal?: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState({ top: 0, left: 0 });
+  const btnRef = useRef<HTMLButtonElement>(null);
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      if (btnRef.current && !btnRef.current.closest("[data-note-popover]")?.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => { document.removeEventListener("mousedown", handler); document.removeEventListener("touchstart", handler); };
+  }, [open]);
+  const handleOpen = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (btnRef.current) {
+      const rect = btnRef.current.getBoundingClientRect();
+      const popW = 256; const margin = 8;
+      let left = rect.left + rect.width / 2 - popW / 2;
+      if (left < margin) left = margin;
+      if (left + popW > window.innerWidth - margin) left = window.innerWidth - popW - margin;
+      setPos({ top: rect.bottom + 6, left });
+    }
+    setOpen((v) => !v);
+  };
   return (
-    <div className="card p-5 select-none">
-      <div className="flex items-center justify-between mb-4">
-        <button onClick={() => setMonth(subMonths(month, 1))} className="text-gray-400 hover:text-gray-700 px-2 py-1 rounded"><i className="fa-regular fa-chevron-left" /></button>
-        <h3 className="font-semibold text-gray-900">{format(month, "LLLL yyyy", { locale: cs })}</h3>
-        <button onClick={() => setMonth(addMonths(month, 1))} className="text-gray-400 hover:text-gray-700 px-2 py-1 rounded"><i className="fa-regular fa-chevron-right" /></button>
-      </div>
-      <div className="grid grid-cols-7 gap-0.5 mb-1">
-        {DAY_NAMES.map((d) => (
-          <div key={d} className="text-center text-xs font-medium text-gray-400 py-1">{d}</div>
-        ))}
-      </div>
-      <div className="grid grid-cols-7 gap-0.5">
-        {cells.map((day, i) => {
-          if (!day) return <div key={i} />;
-          const staying = reservationsOnDay(day);
-          const arriving = arrivals(day);
-          const today = isSameDay(day, new Date());
-          return (
-            <div
-              key={i}
-              title={staying.length ? `${staying.length} rezervací` : undefined}
-              className={`relative text-center text-sm rounded py-1.5 cursor-default transition-colors
-                ${today ? "bg-blue-600 text-white font-bold" : ""}
-                ${!today && staying.length ? "bg-green-50" : ""}
-                ${!today && !staying.length ? "hover:bg-gray-50 text-gray-700" : ""}
-              `}
-            >
-              {day.getDate()}
-              {arriving.length > 0 && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-orange-400 inline-block" />
-              )}
-              {staying.length > 0 && !arriving.length && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div className="mt-3 flex gap-4 text-xs text-gray-500">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-400 inline-block" /> příjezd</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /> pobyt</span>
-      </div>
-      <button
-        className="mt-3 w-full text-xs text-blue-600 hover:underline text-center"
-        onClick={() => navigate("/reservations?view=calendar")}
-      >
-        Zobrazit všechny rezervace <i className="fa-regular fa-arrow-right ml-1" />
+    <div data-note-popover className="relative flex-shrink-0" onMouseEnter={(e) => { if (window.matchMedia("(hover: hover)").matches) handleOpen(e as unknown as React.MouseEvent); }} onMouseLeave={() => { if (window.matchMedia("(hover: hover)").matches) setOpen(false); }}>
+      <button ref={btnRef} type="button" onClick={handleOpen} className={internal ? "text-red-500 hover:text-red-600 transition-colors" : "text-amber-500 hover:text-amber-600 transition-colors"}>
+        <i className={internal ? "fa-solid fa-note" : "fa-regular fa-message-lines"} />
       </button>
+      {open && (
+        <div className="fixed z-50 w-64 bg-gray-900 text-white text-xs rounded-xl px-3 py-2.5 shadow-xl" style={{ top: pos.top, left: pos.left }}>{note}</div>
+      )}
     </div>
   );
 }
+
+const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
+const STATUS_CLASS: Record<string, string> = { PENDING: "badge-pending", CONFIRMED: "badge-confirmed", CANCELLED: "badge-cancelled" };
 
 export default function DashboardPage() {
   useTitle("Dashboard");
@@ -172,21 +134,24 @@ export default function DashboardPage() {
       )}
 
       {/* Split: seznam vlevo, kalendář vpravo — na mobile pod sebou */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-6 items-start">
-        <div className="card">
+      <div className="grid grid-cols-1 lg:grid-cols-[340px_1fr] gap-6 items-start">
+
+        <div className="card order-1 lg:order-2">
           <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
             <h2 className="font-semibold text-gray-900">Poslední rezervace</h2>
             <Link to="/reservations?view=list" className="text-sm text-blue-600 hover:underline">Všechny <i className="fa-regular fa-arrow-right" /></Link>
           </div>
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm min-w-[700px]">
               <thead>
-                <tr className="border-b border-gray-100 text-left text-gray-500">
-                  <th className="px-6 py-3 font-medium">Jméno a příjmení</th>
-                  <th className="px-6 py-3 font-medium">Objekt</th>
-                  <th className="px-6 py-3 font-medium">Příjezd</th>
-                  <th className="px-6 py-3 font-medium">Odjezd</th>
-                  <th className="px-6 py-3 font-medium">Status</th>
+                <tr className="border-b border-gray-100 text-left text-gray-500 bg-gray-50">
+                  <th className="px-4 py-3 font-medium">Jméno a příjmení</th>
+                  <th className="px-4 py-3 font-medium">Objekt</th>
+                  <th className="px-4 py-3 font-medium">Typ</th>
+                  <th className="px-4 py-3 font-medium">Příjezd</th>
+                  <th className="px-4 py-3 font-medium">Odjezd</th>
+                  <th className="px-4 py-3 font-medium text-right">Os.</th>
+                  <th className="px-4 py-3 font-medium">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
@@ -196,11 +161,26 @@ export default function DashboardPage() {
                     className="hover:bg-gray-50 cursor-pointer"
                     onClick={() => navigate(`/reservations/${r.id}`)}
                   >
-                    <td className="px-6 py-3 font-medium text-gray-900">{langFlag(r.languageCode)} {r.firstName} {r.lastName}</td>
-                    <td className="px-6 py-3 text-gray-600">{r.camp?.name ?? "-"}</td>
-                    <td className="px-6 py-3">{format(new Date(r.checkIn), "d. M. yyyy", { locale: cs })}</td>
-                    <td className="px-6 py-3">{format(new Date(r.checkOut), "d. M. yyyy", { locale: cs })}</td>
-                    <td className="px-6 py-3">
+                    <td className="px-4 py-3">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <p className="font-medium text-gray-900">{langFlag(r.languageCode)} {r.firstName} {r.lastName}</p>
+                          <p className="text-xs text-gray-400">{r.email}</p>
+                        </div>
+                        {(r.note || r.internalNote) && (
+                          <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
+                            {r.internalNote && <NotePopover note={r.internalNote} internal />}
+                            {r.note && <NotePopover note={r.note} />}
+                          </div>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-600">{r.camp?.name ?? "—"}</td>
+                    <td className="px-4 py-3">{(() => { const t = r.accommodationType; if (!t) return "—"; const tr = t.translations as Record<string, { name: string }>; return tr.cs?.name ?? tr[Object.keys(tr)[0]]?.name ?? "—"; })()}</td>
+                    <td className="px-4 py-3">{format(new Date(r.checkIn), "d. M. yyyy", { locale: cs })}</td>
+                    <td className="px-4 py-3">{format(new Date(r.checkOut), "d. M. yyyy", { locale: cs })}</td>
+                    <td className="px-4 py-3 text-right">{r.adults}+{r.children}</td>
+                    <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <span className={STATUS_CLASS[r.status]}>{STATUS_LABEL[r.status]}</span>
                         {r.status === "PENDING" && (
@@ -214,14 +194,13 @@ export default function DashboardPage() {
                   </tr>
                 ))}
                 {recent.length === 0 && (
-                  <tr><td colSpan={5} className="px-6 py-8 text-center text-gray-400">Žádné rezervace</td></tr>
+                  <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">Žádné rezervace</td></tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
-
-        <MiniCalendar reservations={reservations} />
+        <ReservationCalendar reservations={reservations} showAllLink className="order-2 lg:order-1" />
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { useTitle } from "../hooks/useTitle";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { api } from "../api/client";
 import { User, Permission } from "@procamp/shared";
 import { useAuth } from "../contexts/AuthContext";
@@ -60,6 +60,8 @@ export default function UsersPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "", reservationsDefaultView: "list", permissions: { ...DEFAULT_PERMS } });
   const [formError, setFormError] = useState("");
 
+  const pwInputRef = useRef<HTMLInputElement>(null);
+
   const genPassword = () => {
     const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
     let pw = "";
@@ -67,6 +69,7 @@ export default function UsersPage() {
     if (creating) setForm((f) => ({ ...f, password: pw }));
     else setEditPassword(pw);
     navigator.clipboard.writeText(pw).catch(() => {});
+    if (pwInputRef.current) pwInputRef.current.type = "text";
   };
   const [page, setPage] = useState(1);
   const PER_PAGE = 20;
@@ -167,7 +170,11 @@ export default function UsersPage() {
                 <div>
                   <label className="label">{creating ? "Heslo" : "Nové heslo (ponechte prázdné pro zachování)"}</label>
                   <div className="flex gap-2">
-                    <input className="input" type="text"
+                    <input className="input"
+                      ref={pwInputRef}
+                      type="password"
+                      onFocus={(e) => e.currentTarget.type = "text"}
+                      onBlur={(e) => e.currentTarget.type = "password"}
                       value={creating ? form.password : editPassword}
                       onChange={(e) => creating ? setForm({ ...form, password: e.target.value }) : setEditPassword(e.target.value)}
                       required={creating} minLength={8} />

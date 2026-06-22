@@ -6,6 +6,8 @@ export interface PublicAccommodationType {
   id: string;
   name: string;
   capacity: number;
+  shortDescription?: string | null;
+  longDescription?: string | null;
   pricePerNight: number;
   adultPricePerNight: number;
   childPricePerNight: number;
@@ -16,6 +18,7 @@ export interface PublicSurcharge {
   name: string;
   pricePerNight: number;
   isOptional: boolean;
+  note?: string | null;
 }
 
 interface CampPublic extends Omit<Camp, "surcharges" | "accommodationTypes"> {

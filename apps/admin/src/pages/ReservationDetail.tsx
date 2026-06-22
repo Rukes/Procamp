@@ -22,6 +22,8 @@ export default function ReservationDetailPage() {
   const [languages, setLanguages] = useState<{ code: string; currencySymbol: string; currencyPosition: string }[]>([]);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState<Record<string, string>>({});
+  const [noteModal, setNoteModal] = useState(false);
+  const [noteValue, setNoteValue] = useState("");
 
   useEffect(() => {
     if (!editing) return;
@@ -70,6 +72,7 @@ export default function ReservationDetailPage() {
       licensePlate: reservation.licensePlate ?? "",
       expectedArrival: reservation.expectedArrival ?? "",
       note: reservation.note ?? "",
+      internalNote: reservation.internalNote ?? "",
     });
     setEditing(true);
   };
@@ -98,6 +101,22 @@ export default function ReservationDetailPage() {
       window.history.back();
     } catch {
       toast.error("Nepodařilo se smazat rezervaci.");
+    }
+  };
+
+  const openNoteModal = () => {
+    setNoteValue(reservation?.internalNote ?? "");
+    setNoteModal(true);
+  };
+
+  const handleSaveNote = async () => {
+    try {
+      await api.patch(`/reservations/${id}/internal-note`, { internalNote: noteValue });
+      toast.success("Interní poznámka uložena.");
+      setNoteModal(false);
+      load();
+    } catch {
+      toast.error("Nepodařilo se uložit poznámku.");
     }
   };
 
@@ -207,8 +226,12 @@ export default function ReservationDetailPage() {
 
               <hr />
               <div>
-                <label className="label">Poznámka</label>
+                <label className="label">Poznámka zákazníka</label>
                 <textarea className="input" rows={3} value={editForm.note} onChange={(e) => setEditForm({ ...editForm, note: e.target.value })} />
+              </div>
+              <div>
+                <label className="label text-red-600"><i className="fa-regular fa-lock mr-1.5" />Interní poznámka</label>
+                <textarea className="input border-red-200 focus:border-red-400 focus:ring-red-200" rows={3} value={editForm.internalNote} onChange={(e) => setEditForm({ ...editForm, internalNote: e.target.value })} placeholder="Viditelná pouze pro správce" />
               </div>
 
               <div className="flex gap-2 pt-2">
@@ -216,6 +239,25 @@ export default function ReservationDetailPage() {
                 <button className="btn-secondary" type="button" onClick={() => setEditing(false)}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Interní poznámka modal */}
+      {noteModal && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-2 pt-4 sm:p-4 sm:pt-12" onClick={() => setNoteModal(false)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+              <h2 className="font-semibold text-gray-900">Interní poznámka</h2>
+              <button onClick={() => setNoteModal(false)} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
+            </div>
+            <div className="p-6 space-y-4">
+              <textarea className="input" rows={5} value={noteValue} onChange={(e) => setNoteValue(e.target.value)} placeholder="Viditelná pouze pro správce" autoFocus />
+              <div className="flex gap-2">
+                <button className="btn-primary" onClick={handleSaveNote}><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</button>
+                <button className="btn-secondary" onClick={() => setNoteModal(false)}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -309,6 +351,24 @@ export default function ReservationDetailPage() {
               }
             </dl>
           </div>
+          {can("reservations_edit") && (
+            <div className={`card p-5 ${reservation.internalNote ? "border-red-200 bg-red-50" : "border-gray-200"}`}>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-4">
+                  <h2 className={`font-semibold text-sm ${reservation.internalNote ? "text-red-700" : "text-gray-500"}`}>
+                    <i className="fa-regular fa-lock mr-1.5" />Interní poznámka
+                  </h2>
+                  <button onClick={openNoteModal} className="text-xs text-gray-400 border border-gray-200 hover:border-gray-300 hover:text-gray-600 px-2 py-0.5 rounded transition-colors">
+                    <i className="fa-regular fa-pen mr-1" />{reservation.internalNote ? "Upravit" : "Přidat"}
+                  </button>
+                </div>
+              </div>
+              {reservation.internalNote
+                ? <p className="text-sm text-red-800 whitespace-pre-wrap">{reservation.internalNote}</p>
+                : <p className="text-sm text-gray-400 italic">Žádná interní poznámka.</p>
+              }
+            </div>
+          )}
         </div>
 
       </div>

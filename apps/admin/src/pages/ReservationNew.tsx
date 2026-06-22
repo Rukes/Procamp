@@ -50,6 +50,7 @@ export default function ReservationNewPage() {
     licensePlate: "",
     expectedArrival: "",
     note: "",
+    internalNote: "",
     languageCode: "cs",
   });
 
@@ -307,8 +308,12 @@ export default function ReservationNewPage() {
             </div>
           </div>
           <div>
-            <label className="label">Poznámka</label>
+            <label className="label">Poznámka zákazníka</label>
             <textarea className="input" rows={3} value={form.note} onChange={(e) => set("note", e.target.value)} />
+          </div>
+          <div>
+            <label className="label text-red-600"><i className="fa-regular fa-lock mr-1.5" />Interní poznámka</label>
+            <textarea className="input border-red-200 focus:border-red-400 focus:ring-red-200" rows={3} value={form.internalNote} onChange={(e) => set("internalNote", e.target.value)} placeholder="Viditelná pouze pro správce" />
           </div>
         </div>
 

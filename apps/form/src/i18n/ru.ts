@@ -15,7 +15,7 @@ export const ru: Translations = {
   stepConfig: "Гости и цена",
   stepContact: "Контакт",
 
-  typeTitle: "Тип размещения",
+  typeTitle: "Выберите тип бронирования",
   typeSubtitle: "Выберите тип размещения.",
   typeNoTypes: "Типы размещения не настроены.",
   typeSoldOut: "Занято",

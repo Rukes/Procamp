@@ -35,14 +35,17 @@ export async function publicFormRoutes(app: FastifyInstance) {
 
     // Return accommodation types with translated name and lang-specific prices
     const accommodationTypes = camp.accommodationTypes.map((t) => {
-      const translations = t.translations as Record<string, { name: string }>;
-      const name = translations[lang]?.name ?? translations["cs"]?.name ?? "";
+      const translations = t.translations as Record<string, { name: string; shortDescription?: string; longDescription?: string }>;
+      const tr = translations[lang] ?? translations["cs"] ?? {};
+      const name = tr.name ?? "";
       const price = t.prices.find((p) => p.languageCode === lang) ?? t.prices[0];
       return {
         id: t.id,
         name,
-        capacity: t.capacity,
+        capacity: t.capacity === -1 ? 999 : t.capacity,
         sortOrder: t.sortOrder,
+        shortDescription: tr.shortDescription ?? null,
+        longDescription: tr.longDescription ?? null,
         pricePerNight: price?.pricePerNight ?? 0,
         adultPricePerNight: price?.adultPricePerNight ?? 0,
         childPricePerNight: price?.childPricePerNight ?? 0,
@@ -50,10 +53,11 @@ export async function publicFormRoutes(app: FastifyInstance) {
     });
 
     const surcharges = camp.surcharges.map((s) => {
-      const translations = s.translations as Record<string, { name: string }>;
-      const name = translations[lang]?.name ?? translations["cs"]?.name ?? "";
+      const translations = s.translations as Record<string, { name: string; note?: string }>;
+      const tr = translations[lang] ?? translations["cs"] ?? {};
+      const name = tr.name ?? "";
       const price = s.prices.find((p) => p.languageCode === lang) ?? s.prices[0];
-      return { id: s.id, name, pricePerNight: price?.pricePerNight ?? 0, isOptional: s.isOptional };
+return { id: s.id, name, pricePerNight: price?.pricePerNight ?? 0, isOptional: s.isOptional, note: tr.note ?? null };
     });
 
     return { camp: { ...publicCamp, accommodationTypes, surcharges }, languages, currentLang: lang, termsText, requireTermsAcceptance };

@@ -56,7 +56,7 @@ export interface Surcharge {
   id: string;
   campId: string;
   isOptional: boolean;
-  translations: Record<string, { name: string }>;
+  translations: Record<string, { name: string; note?: string }>;
   prices: SurchargePrice[];
 }
 
@@ -72,7 +72,7 @@ export interface AccommodationTypePrice {
 export interface AccommodationType {
   id: string;
   campId: string;
-  translations: Record<string, { name: string }>;
+  translations: Record<string, { name: string; shortDescription?: string; longDescription?: string }>;
   capacity: number;
   sortOrder: number;
   prices: AccommodationTypePrice[];
@@ -110,6 +110,7 @@ export interface Reservation {
   licensePlate?: string;
   expectedArrival?: string;
   note?: string;
+  internalNote?: string | null;
   totalPrice: number;
   status: ReservationStatus;
   languageCode: string;

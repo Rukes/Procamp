@@ -10,6 +10,8 @@ export async function checkAvailability(
 ): Promise<{ available: boolean; capacity: number; booked: number }> {
   const accType = await prisma.accommodationType.findUniqueOrThrow({ where: { id: accommodationTypeId } });
   const capacity = accType.capacity;
+  if (capacity === 0) return { available: false, capacity, booked: 0 };
+  if (capacity === -1) return { available: true, capacity, booked: 0 };
 
   const overlapping = await prisma.reservation.count({
     where: {
@@ -34,6 +36,8 @@ export async function getOccupiedDates(
 ): Promise<string[]> {
   const accType = await prisma.accommodationType.findUniqueOrThrow({ where: { id: accommodationTypeId } });
   const capacity = accType.capacity;
+  if (capacity === 0) return []; // vypnuto — žádné termíny nenabídneme (ale type bude skrytý)
+  if (capacity === -1) return []; // neomezeno — nikdy obsazeno
 
   const reservations = await prisma.reservation.findMany({
     where: { campId, accommodationTypeId, status: { in: ["PENDING", "CONFIRMED"] } },

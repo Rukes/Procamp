@@ -15,7 +15,7 @@ export const cs: Translations = {
   stepConfig: "Osoby a cena",
   stepContact: "Kontakt",
 
-  typeTitle: "Typ ubytování",
+  typeTitle: "Vyberte typ rezervace",
   typeSubtitle: "Vyberte typ ubytování.",
   typeNoTypes: "Žádné typy ubytování nejsou nakonfigurovány.",
   typeSoldOut: "Obsazeno",

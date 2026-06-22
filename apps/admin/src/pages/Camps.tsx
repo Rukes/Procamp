@@ -68,33 +68,38 @@ export default function CampsPage() {
       </div>
 
       {creating && (
-        <div className="card p-6 mb-6">
-          <h2 className="font-semibold mb-4">Nový objekt</h2>
-          <form onSubmit={handleCreate} className="space-y-3">
-            <div>
-              <label className="label">Název objektu</label>
-              <input className="input" value={name} onChange={(e) => {
-                    setName(e.target.value);
-                    const s = e.target.value
-                      .normalize("NFD")
-                      .replace(/[̀-ͯ]/g, "")
-                      .toLowerCase()
-                      .replace(/\s+/g, "-")
-                      .replace(/[^a-z0-9-]/g, "");
-                    setSlug(s);
-                  }} required />
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-16" onClick={() => { setCreating(false); setName(""); setSlug(""); setError(""); }}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h2 className="font-semibold text-gray-900">Nový objekt</h2>
+              <button type="button" className="text-gray-400 hover:text-gray-700 text-xl leading-none" onClick={() => { setCreating(false); setName(""); setSlug(""); setError(""); }}>×</button>
             </div>
-            <div>
-              <label className="label">URL slug (identifikátor)</label>
-              <input className="input" value={slug} onChange={(e) => setSlug(e.target.value)} required pattern="[a-z0-9-]+" />
-              <p className="text-xs text-gray-500 mt-1">Použije se v URL formuláře: /form/{"{org-slug}"}/<strong>{slug || "nazev-objektu"}</strong></p>
-            </div>
-            {error && <p className="text-sm text-red-600">{error}</p>}
-            <div className="flex gap-2">
-              <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Vytvořit</button>
-              <button className="btn-secondary" type="button" onClick={() => setCreating(false)}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
-            </div>
-          </form>
+            <form onSubmit={handleCreate} className="px-6 py-5 space-y-4">
+              <div>
+                <label className="label">Název objektu</label>
+                <input className="input" autoFocus value={name} onChange={(e) => {
+                  setName(e.target.value);
+                  const s = e.target.value
+                    .normalize("NFD")
+                    .replace(/[̀-ͯ]/g, "")
+                    .toLowerCase()
+                    .replace(/\s+/g, "-")
+                    .replace(/[^a-z0-9-]/g, "");
+                  setSlug(s);
+                }} required />
+              </div>
+              <div>
+                <label className="label">URL slug (identifikátor)</label>
+                <input className="input" value={slug} onChange={(e) => setSlug(e.target.value)} required pattern="[a-z0-9-]+" />
+                <p className="text-xs text-gray-500 mt-1">Použije se v URL formuláře: /form/{"{org-slug}"}/<strong>{slug || "nazev-objektu"}</strong></p>
+              </div>
+              {error && <p className="text-sm text-red-600">{error}</p>}
+              <div className="flex gap-2 pt-1">
+                <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Vytvořit</button>
+                <button className="btn-secondary" type="button" onClick={() => { setCreating(false); setName(""); setSlug(""); setError(""); }}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

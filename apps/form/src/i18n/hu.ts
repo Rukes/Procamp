@@ -15,7 +15,7 @@ export const hu: Translations = {
   stepConfig: "Személyek és ár",
   stepContact: "Kapcsolat",
 
-  typeTitle: "Szálláshely típusa",
+  typeTitle: "Válassza ki a foglalás típusát",
   typeSubtitle: "Válasszon szálláshely típust.",
   typeNoTypes: "Nincsenek konfigurált szálláshely típusok.",
   typeSoldOut: "Telt ház",

@@ -134,7 +134,7 @@ export async function campRoutes(app: FastifyInstance) {
 
   app.post("/:campId/surcharges", { preHandler: requirePermission("camps_edit") }, async (request, reply) => {
     const { campId } = request.params as { campId: string };
-    const { isOptional, translations } = request.body as { isOptional?: boolean; translations: Record<string, { name: string }> };
+    const { isOptional, translations } = request.body as { isOptional?: boolean; translations: Record<string, { name: string; note?: string }> };
     const s = await app.prisma.surcharge.create({
       data: { campId, isOptional: isOptional ?? true, translations },
       include: { prices: true },
@@ -145,8 +145,8 @@ export async function campRoutes(app: FastifyInstance) {
 
   app.put("/:campId/surcharges/:id", { preHandler: requirePermission("camps_edit") }, async (request) => {
     const { id } = request.params as { campId: string; id: string };
-    const { isOptional, translations } = request.body as { isOptional?: boolean; translations: Record<string, { name: string }> };
-    const s = await app.prisma.surcharge.update({ where: { id }, data: { isOptional, translations }, include: { prices: true } });
+    const { isOptional, translations } = request.body as { isOptional?: boolean; translations: Record<string, { name: string; note?: string }> };
+const s = await app.prisma.surcharge.update({ where: { id }, data: { isOptional, translations }, include: { prices: true } });
     await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "surcharge", entityId: id, payload: { translations } });
     return s;
   });

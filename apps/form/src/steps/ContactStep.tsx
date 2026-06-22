@@ -60,7 +60,7 @@ export default function ContactStep({ breakdown, lang, termsText, requireTermsAc
   return (
     <>
       {termsOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setTermsOpen(false)}>
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-8 overflow-y-auto" onClick={() => setTermsOpen(false)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
               <h3 className="font-semibold text-gray-900">Obchodní podmínky & GDPR</h3>
@@ -79,36 +79,36 @@ export default function ContactStep({ breakdown, lang, termsText, requireTermsAc
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="label">{t.contactFirstName} *</label>
+            <label className="label"><i className="fa-regular fa-user mr-1.5 text-gray-400" />{t.contactFirstName} *</label>
             <input className="input" {...register("firstName")} />
             {errors.firstName && <p className="text-xs text-red-500 mt-1">{errors.firstName.message}</p>}
           </div>
           <div>
-            <label className="label">{t.contactLastName} *</label>
+            <label className="label"><i className="fa-regular fa-user mr-1.5 text-gray-400" />{t.contactLastName} *</label>
             <input className="input" {...register("lastName")} />
             {errors.lastName && <p className="text-xs text-red-500 mt-1">{errors.lastName.message}</p>}
           </div>
         </div>
 
         <div>
-          <label className="label">{t.contactEmail} *</label>
+          <label className="label"><i className="fa-regular fa-envelope mr-1.5 text-gray-400" />{t.contactEmail} *</label>
           <input className="input" type="email" {...register("email")} />
           {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email.message}</p>}
         </div>
 
         <div>
-          <label className="label">{t.contactPhone} *</label>
+          <label className="label"><i className="fa-regular fa-phone mr-1.5 text-gray-400" />{t.contactPhone} *</label>
           <input className="input" type="tel" {...register("phone")} />
           {errors.phone && <p className="text-xs text-red-500 mt-1">{errors.phone.message}</p>}
         </div>
 
         <div>
-          <label className="label">{t.contactLicensePlate} <span className="text-gray-400 font-normal">({t.optional})</span></label>
+          <label className="label"><i className="fa-regular fa-car mr-1.5 text-gray-400" />{t.contactLicensePlate} <span className="text-gray-400 font-normal">({t.optional})</span></label>
           <input className="input" {...register("licensePlate")} placeholder={t.contactLicensePlatePlaceholder} />
         </div>
 
         <div>
-          <label className="label">{t.contactArrival} <span className="text-gray-400 font-normal">({t.optional})</span></label>
+          <label className="label"><i className="fa-regular fa-clock mr-1.5 text-gray-400" />{t.contactArrival} <span className="text-gray-400 font-normal">({t.optional})</span></label>
           <select className="input" {...register("expectedArrival")}>
             <option value="">{t.contactArrivalUnknown}</option>
             {Array.from({ length: 24 }, (_, i) => (i + 14) % 24).map((h) => {
@@ -121,7 +121,7 @@ export default function ContactStep({ breakdown, lang, termsText, requireTermsAc
         </div>
 
         <div>
-          <label className="label">{t.contactNote} <span className="text-gray-400 font-normal">({t.optional})</span></label>
+          <label className="label"><i className="fa-regular fa-message-lines mr-1.5 text-gray-400" />{t.contactNote} <span className="text-gray-400 font-normal">({t.optional})</span></label>
           <textarea className="input resize-none" rows={3} {...register("note")} />
         </div>
 

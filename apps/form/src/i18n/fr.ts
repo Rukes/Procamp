@@ -15,7 +15,7 @@ export const fr: Translations = {
   stepConfig: "Personnes et prix",
   stepContact: "Contact",
 
-  typeTitle: "Type d'hébergement",
+  typeTitle: "Choisissez le type de réservation",
   typeSubtitle: "Sélectionnez le type d'hébergement.",
   typeNoTypes: "Aucun type d'hébergement configuré.",
   typeSoldOut: "Complet",

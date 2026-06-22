@@ -94,16 +94,16 @@ model Camp {
 }
 
 model AccommodationType {
-  id           String                  @id @default(cuid())
-  campId       String
-  camp         Camp                    @relation(fields: [campId], references: [id], onDelete: Cascade)
-  translations Json                    @default("{}")
-  capacity     Int                     @default(0)
-  sortOrder    Int                     @default(0)
-  createdAt    DateTime                @default(now())
-  updatedAt    DateTime                @updatedAt
-  prices       AccommodationTypePrice[]
-  reservations Reservation[]
+  id               String                  @id @default(cuid())
+  campId           String
+  camp             Camp                    @relation(fields: [campId], references: [id], onDelete: Cascade)
+  translations     Json                    @default("{}")
+  capacity         Int                     @default(1)
+  sortOrder        Int                     @default(0)
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  prices           AccommodationTypePrice[]
+  reservations     Reservation[]
 }
 
 model AccommodationTypePrice {
@@ -160,6 +160,7 @@ model Reservation {
   licensePlate        String?
   expectedArrival     String?
   note                String?
+  internalNote        String?              @db.Text
   totalPrice          Float
   priceSnapshot       Json?
   status              String               @default("PENDING")

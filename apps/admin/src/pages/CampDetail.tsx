@@ -1,5 +1,6 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useRef, useState } from "react";
+import RichTextEditor from "../components/RichTextEditor";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { Camp, Surcharge, EmailTemplate, Language, AccommodationType, AccommodationTypePrice } from "@procamp/shared";
@@ -87,6 +88,11 @@ function SurchargeEditor({ surcharge, languages, campId, onSave, onClose }: Surc
     return Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v.name]));
   });
   const isOptional = true;
+  const [notes, setNotes] = useState<Record<string, string>>(() => {
+    if (!surcharge) return {};
+    const t = surcharge.translations as Record<string, { name: string; note?: string }>;
+    return Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v.note ?? ""]));
+  });
   const [prices, setPrices] = useState<Record<string, string>>(() => {
     if (!surcharge) return {};
     return Object.fromEntries(surcharge.prices.map((p) => [p.languageCode, String(p.pricePerNight)]));
@@ -100,7 +106,10 @@ function SurchargeEditor({ surcharge, languages, campId, onSave, onClose }: Surc
     setSaving(true);
     try {
       const translations = Object.fromEntries(
-        Object.entries(names).filter(([, v]) => v.trim()).map(([k, v]) => [k, { name: v.trim() }])
+        Object.entries(names).filter(([, v]) => v.trim()).map(([k, v]) => [k, {
+          name: v.trim(),
+          ...(notes[k]?.trim() ? { note: notes[k].trim() } : {}),
+        }])
       );
       let surchargeId: string;
       if (surcharge) {
@@ -161,6 +170,11 @@ function SurchargeEditor({ surcharge, languages, campId, onSave, onClose }: Surc
             </div>
           </div>
 
+          <div>
+            <label className="label">Poznámka <span className="text-gray-400 font-normal">(nepovinné — zobrazí se v formuláři po najetí na <code>i</code>)</span></label>
+            <input className="input" value={notes[activeLang] ?? ""} onChange={(e) => setNotes({ ...notes, [activeLang]: e.target.value })} placeholder="Např. cena za jednoho psa za noc…" />
+          </div>
+
           <div className="flex gap-2 pt-1">
             <button className="btn-primary" type="submit" disabled={saving || !allNamesFilled} title={!allNamesFilled ? "Vyplňte název ve všech jazycích" : undefined}>
               {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</>}
@@ -187,10 +201,20 @@ function AccommodationTypeEditor({ type, languages, campId, onSave, onClose }: T
   const [activeLang, setActiveLang] = useState(languages[0]?.code ?? "cs");
   const [names, setNames] = useState<Record<string, string>>(() => {
     if (!type) return {};
-    const t = type.translations as Record<string, { name: string }>;
+    const t = type.translations as Record<string, { name: string; shortDescription?: string; longDescription?: string }>;
     return Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v.name]));
   });
-  const [capacity, setCapacity] = useState(type?.capacity ?? 0);
+  const [shortDescriptions, setShortDescriptions] = useState<Record<string, string>>(() => {
+    if (!type) return {};
+    const t = type.translations as Record<string, { name: string; shortDescription?: string; longDescription?: string }>;
+    return Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v.shortDescription ?? ""]));
+  });
+  const [longDescriptions, setLongDescriptions] = useState<Record<string, string>>(() => {
+    if (!type) return {};
+    const t = type.translations as Record<string, { name: string; shortDescription?: string; longDescription?: string }>;
+    return Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v.longDescription ?? ""]));
+  });
+  const [capacity, setCapacity] = useState(type?.capacity ?? 1);
   const [prices, setPrices] = useState<Record<string, { pricePerNight: string; adultPricePerNight: string; childPricePerNight: string }>>(() => {
     if (!type) return {};
     return Object.fromEntries(type.prices.map((p) => [p.languageCode, { pricePerNight: String(p.pricePerNight), adultPricePerNight: String(p.adultPricePerNight), childPricePerNight: String(p.childPricePerNight) }]));
@@ -206,7 +230,13 @@ function AccommodationTypeEditor({ type, languages, campId, onSave, onClose }: T
     e.preventDefault();
     setSaving(true);
     try {
-      const translations = Object.fromEntries(Object.entries(names).filter(([, v]) => v.trim()).map(([k, v]) => [k, { name: v.trim() }]));
+      const translations = Object.fromEntries(
+        Object.entries(names).filter(([, v]) => v.trim()).map(([k, v]) => [k, {
+          name: v.trim(),
+          ...(shortDescriptions[k]?.trim() ? { shortDescription: shortDescriptions[k].trim() } : {}),
+          ...(longDescriptions[k]?.trim() ? { longDescription: longDescriptions[k].trim() } : {}),
+        }])
+      );
       const numericPrices = Object.fromEntries(
         Object.entries(prices).map(([lang, p]) => [lang, {
           pricePerNight: parseFloat(p.pricePerNight) || 0,
@@ -252,7 +282,12 @@ function AccommodationTypeEditor({ type, languages, campId, onSave, onClose }: T
           {/* Kapacita */}
           <div>
             <label className="label">Kapacita (počet míst)</label>
-            <input className="input max-w-xs" type="number" min="0" value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} />
+            <input className="input max-w-xs" type="number" min="-1" value={capacity} onChange={(e) => setCapacity(Number(e.target.value))} />
+            <div className="text-xs text-gray-400 mt-1 space-y-0.5">
+              <p><code className="bg-gray-100 px-1 rounded">0</code> = vypnuto — typ se nezobrazí v rezervačním formuláři</p>
+              <p><code className="bg-gray-100 px-1 rounded">-1</code> = neomezená kapacita — vždy dostupný</p>
+              <p><code className="bg-gray-100 px-1 rounded">1+</code> = maximální počet souběžných rezervací pro dané termíny</p>
+            </div>
           </div>
 
           {/* Záložky per jazyk — název + ceny dohromady */}
@@ -274,6 +309,14 @@ function AccommodationTypeEditor({ type, languages, campId, onSave, onClose }: T
               <div>
                 <label className="label">Název</label>
                 <input className="input" value={names[activeLang] ?? ""} onChange={(e) => setNames({ ...names, [activeLang]: e.target.value })} placeholder="Např. Karavan, Stan, Chata…" />
+              </div>
+              <div>
+                <label className="label">Krátký popis <span className="text-gray-400 font-normal">(nepovinné — zobrazí se pod cenou v rezervačním formuláři)</span></label>
+                <input className="input" value={shortDescriptions[activeLang] ?? ""} onChange={(e) => setShortDescriptions({ ...shortDescriptions, [activeLang]: e.target.value })} placeholder="Např. vhodné pro 2 osoby, s připojením na elektřinu…" />
+              </div>
+              <div>
+                <label className="label">Podrobný popis <span className="text-gray-400 font-normal">(nepovinné — zobrazí se po kliknutí na <code>i</code>)</span></label>
+                <RichTextEditor value={longDescriptions[activeLang] ?? ""} onChange={(v) => setLongDescriptions({ ...longDescriptions, [activeLang]: v })} />
               </div>
               <div className="grid grid-cols-3 gap-3">
                 <div>
@@ -452,9 +495,9 @@ export default function CampDetailPage() {
         </a>
       </div>
 
-      <div className="flex gap-1 mb-6 border-b border-gray-200">
+      <div className="flex gap-1 mb-6 border-b border-gray-200 overflow-x-auto scrollbar-none -mx-4 px-4 md:mx-0 md:px-0">
         {tabs.map((t) => (
-          <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors ${tab === t.key ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
+          <button key={t.key} onClick={() => setTab(t.key)} className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors whitespace-nowrap flex-shrink-0 ${tab === t.key ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}>
             {t.label}
           </button>
         ))}

@@ -15,7 +15,7 @@ export const uk: Translations = {
   stepConfig: "Особи та ціна",
   stepContact: "Контакт",
 
-  typeTitle: "Тип проживання",
+  typeTitle: "Оберіть тип бронювання",
   typeSubtitle: "Оберіть тип проживання.",
   typeNoTypes: "Типи проживання не налаштовано.",
   typeSoldOut: "Зайнято",

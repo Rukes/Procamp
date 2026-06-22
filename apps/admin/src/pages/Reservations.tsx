@@ -8,8 +8,9 @@ import { cs } from "date-fns/locale";
 import { useAuth } from "../contexts/AuthContext";
 import { langFlag } from "../utils/langFlag";
 import Pagination from "../components/Pagination";
+import ReservationCalendar from "../components/ReservationCalendar";
 
-function NotePopover({ note }: { note: string }) {
+function NotePopover({ note, internal = false }: { note: string; internal?: boolean }) {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState({ top: 0, left: 0 });
   const btnRef = useRef<HTMLButtonElement>(null);
@@ -40,8 +41,8 @@ function NotePopover({ note }: { note: string }) {
 
   return (
     <div data-note-popover className="relative flex-shrink-0 mt-0.5" onMouseEnter={(e) => { if (window.matchMedia("(hover: hover)").matches) handleOpen(e as unknown as React.MouseEvent); }} onMouseLeave={() => { if (window.matchMedia("(hover: hover)").matches) setOpen(false); }}>
-      <button ref={btnRef} type="button" onClick={handleOpen} className="text-amber-500 hover:text-amber-600 transition-colors">
-        <i className="fa-regular fa-message-lines" />
+      <button ref={btnRef} type="button" onClick={handleOpen} className={internal ? "text-red-500 hover:text-red-600 transition-colors" : "text-amber-500 hover:text-amber-600 transition-colors"}>
+        <i className={internal ? "fa-solid fa-note" : "fa-regular fa-message-lines"} />
       </button>
       {open && (
         <div
@@ -88,6 +89,8 @@ export default function ReservationsPage() {
   const [search, setSearch] = useState("");
   const [campFilter, setCampFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
   const [searchParams] = useSearchParams();
   const [view, setView] = useState<"list" | "calendar">(searchParams.get("view") === "calendar" ? "calendar" : "list");
   const [page, setPage] = useState(1);
@@ -115,7 +118,7 @@ export default function ReservationsPage() {
     api.get("/languages").then((r) => setLanguages(r.data)).catch(() => {});
   }, []);
 
-  useEffect(() => { load(); setPage(1); }, [search, campFilter, statusFilter]);
+  useEffect(() => { load(); setPage(1); }, [search, campFilter, statusFilter, dateFrom, dateTo]);
 
   const handleConfirm = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
@@ -136,20 +139,26 @@ export default function ReservationsPage() {
     return () => document.removeEventListener("mousedown", handler);
   }, [exportOpen]);
 
-  const handleExport = useCallback(async (format: "xlsx" | "csv") => {
+  const handleExport = useCallback(async (fmt: "xlsx" | "csv") => {
     setExportOpen(false);
-    const params = campFilter ? `?campId=${campFilter}` : "";
-    const mime = format === "xlsx"
+    const params = new URLSearchParams();
+    if (campFilter) params.set("campId", campFilter);
+    if (statusFilter) params.set("status", statusFilter);
+    if (search) params.set("search", search);
+    if (dateFrom) params.set("dateFrom", dateFrom);
+    if (dateTo) params.set("dateTo", dateTo);
+    const qs = params.toString() ? `?${params.toString()}` : "";
+    const mime = fmt === "xlsx"
       ? "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
       : "text/csv;charset=utf-8;";
-    const res = await api.get(`/reservations/export/${format}${params}`, { responseType: "blob" });
+    const res = await api.get(`/reservations/export/${fmt}${qs}`, { responseType: "blob" });
     const url = URL.createObjectURL(new Blob([res.data], { type: mime }));
     const a = document.createElement("a");
     a.href = url;
-    a.download = `rezervace.${format}`;
+    a.download = `rezervace.${fmt}`;
     a.click();
     URL.revokeObjectURL(url);
-  }, [campFilter]);
+  }, [campFilter, statusFilter, search, dateFrom, dateTo]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => d === "asc" ? "desc" : "asc");
@@ -186,6 +195,10 @@ export default function ReservationsPage() {
       if (aLast !== bLast) return aLast ? 1 : -1;
     }
     return sortDir === "asc" ? cmp : -cmp;
+  }).filter((r) => {
+    if (dateFrom && new Date(r.checkIn) < new Date(dateFrom)) return false;
+    if (dateTo && new Date(r.checkOut) > new Date(new Date(dateTo).setHours(23, 59, 59, 999))) return false;
+    return true;
   });
 
   const SortIcon = ({ k }: { k: SortKey }) => (
@@ -202,20 +215,6 @@ export default function ReservationsPage() {
       {children}<SortIcon k={k} />
     </th>
   );
-
-  // Calendar
-  const today = new Date();
-  const calDays: Date[] = [];
-  const start = new Date(today.getFullYear(), today.getMonth(), 1);
-  const end = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) calDays.push(new Date(d));
-
-  const getReservationsForDay = (day: Date) =>
-    reservations.filter((r) => {
-      const ci = new Date(r.checkIn);
-      const co = new Date(r.checkOut);
-      return ci <= day && co > day;
-    });
 
   return (
     <div className="p-4 md:p-8">
@@ -262,6 +261,21 @@ export default function ReservationsPage() {
             <option value="CANCELLED">Zrušena</option>
           </select>
         </div>
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <label className="block text-xs text-gray-500 mb-1">Příjezd od</label>
+            <input className="input w-full" type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} />
+          </div>
+          <div className="flex-1">
+            <label className="block text-xs text-gray-500 mb-1">Příjezd do</label>
+            <input className="input w-full" type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} />
+          </div>
+          {(dateFrom || dateTo) && (
+            <button className="text-sm text-gray-400 hover:text-gray-700 pb-2 px-1" onClick={() => { setDateFrom(""); setDateTo(""); }}>
+              <i className="fa-regular fa-xmark" />
+            </button>
+          )}
+        </div>
       </div>
 
       {view === "list" ? (
@@ -295,8 +309,11 @@ export default function ReservationsPage() {
                           <p className="font-medium text-gray-900">{langFlag(r.languageCode)} {r.firstName} {r.lastName}</p>
                           <p className="text-xs text-gray-400">{r.email}</p>
                         </div>
-                        {r.note && (
-                          <NotePopover note={r.note} />
+                        {(r.note || r.internalNote) && (
+                          <div className="flex items-center gap-1 flex-shrink-0 mt-0.5">
+                            {r.internalNote && <NotePopover note={r.internalNote} internal />}
+                            {r.note && <NotePopover note={r.note} />}
+                          </div>
                         )}
                       </div>
                     </td>
@@ -331,30 +348,7 @@ export default function ReservationsPage() {
           </div>
         </div>
       ) : (
-        <div className="card p-6">
-          <h2 className="font-semibold mb-4">{format(today, "MMMM yyyy", { locale: cs })}</h2>
-          <div className="grid grid-cols-7 gap-1">
-            {["Po", "Út", "St", "Čt", "Pá", "So", "Ne"].map((d) => (
-              <div key={d} className="text-center text-xs font-medium text-gray-500 py-2">{d}</div>
-            ))}
-            {Array.from({ length: (start.getDay() || 7) - 1 }).map((_, i) => <div key={`e${i}`} />)}
-            {calDays.map((day) => {
-              const dayRes = getReservationsForDay(day);
-              const isToday = day.toDateString() === today.toDateString();
-              return (
-                <div key={day.toISOString()} className={`min-h-16 p-1.5 rounded-lg border text-xs ${isToday ? "border-2 border-gray-900" : "border-gray-100"}`}>
-                  <span className={`font-bold ${isToday ? "text-gray-900" : "text-gray-700"}`}>{day.getDate()}</span>
-                  {dayRes.slice(0, 2).map((r) => (
-                    <Link key={r.id} to={`/reservations/${r.id}`} className="block mt-0.5 truncate bg-blue-100 text-blue-700 rounded px-1">
-                      {langFlag(r.languageCode)} {r.firstName} {r.lastName[0]}.
-                    </Link>
-                  ))}
-                  {dayRes.length > 2 && <span className="text-gray-400">+{dayRes.length - 2} více</span>}
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <ReservationCalendar reservations={sorted} />
       )}
     </div>
   );

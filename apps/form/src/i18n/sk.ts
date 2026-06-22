@@ -15,7 +15,7 @@ export const sk: Translations = {
   stepConfig: "Osoby a cena",
   stepContact: "Kontakt",
 
-  typeTitle: "Typ ubytovania",
+  typeTitle: "Vyberte typ rezervácie",
   typeSubtitle: "Vyberte typ ubytovania.",
   typeNoTypes: "Žiadne typy ubytovania nie sú nakonfigurované.",
   typeSoldOut: "Obsadené",

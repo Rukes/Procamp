@@ -111,7 +111,7 @@ export async function reservationRoutes(app: FastifyInstance) {
       firstName?: string; lastName?: string; email?: string; phone?: string;
       accommodationTypeId?: string; checkIn?: string; checkOut?: string;
       adults?: number; children?: number;
-      licensePlate?: string; expectedArrival?: string; note?: string;
+      licensePlate?: string; expectedArrival?: string; note?: string; internalNote?: string;
     };
     const before = await app.prisma.reservation.findUnique({ where: { id } });
     const data: Record<string, unknown> = { ...body };
@@ -124,6 +124,12 @@ export async function reservationRoutes(app: FastifyInstance) {
       await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "reservation", entityId: id, payload: diff });
     }
     return updated;
+  });
+
+  app.patch("/:id/internal-note", { preHandler: requirePermission("reservations_edit") }, async (request) => {
+    const { id } = request.params as { id: string };
+    const { internalNote } = request.body as { internalNote: string };
+    return app.prisma.reservation.update({ where: { id }, data: { internalNote: internalNote || null }, include: INCLUDE });
   });
 
   app.patch("/:id/status", { preHandler: requirePermission("reservations_edit") }, async (request) => {
@@ -144,10 +150,28 @@ export async function reservationRoutes(app: FastifyInstance) {
   });
 
   // Export Excel
+  const buildExportWhere = (q: Record<string, string>) => {
+    const where: Record<string, any> = {};
+    if (q.campId) where.campId = q.campId;
+    if (q.status) where.status = q.status;
+    if (q.search) where.OR = [
+      { firstName: { contains: q.search, mode: "insensitive" } },
+      { lastName: { contains: q.search, mode: "insensitive" } },
+      { email: { contains: q.search, mode: "insensitive" } },
+      { phone: { contains: q.search, mode: "insensitive" } },
+    ];
+    if (q.dateFrom || q.dateTo) {
+      where.checkIn = {};
+      if (q.dateFrom) where.checkIn.gte = new Date(q.dateFrom);
+      if (q.dateTo) where.checkOut = { lte: new Date(new Date(q.dateTo).setHours(23, 59, 59, 999)) };
+    }
+    return where;
+  };
+
   app.get("/export/xlsx", { preHandler: requirePermission("reservations_view") }, async (request, reply) => {
-    const { campId } = request.query as { campId?: string };
+    const q = request.query as Record<string, string>;
     const reservations = await app.prisma.reservation.findMany({
-      where: campId ? { campId } : {},
+      where: buildExportWhere(q),
       include: { camp: true, accommodationType: true },
       orderBy: { checkIn: "asc" },
     });
@@ -202,9 +226,9 @@ export async function reservationRoutes(app: FastifyInstance) {
 
   // Export CSV
   app.get("/export/csv", { preHandler: requirePermission("reservations_view") }, async (request, reply) => {
-    const { campId } = request.query as { campId?: string };
+    const q = request.query as Record<string, string>;
     const reservations = await app.prisma.reservation.findMany({
-      where: campId ? { campId } : {},
+      where: buildExportWhere(q),
       include: { camp: true, accommodationType: true },
       orderBy: { checkIn: "asc" },
     });
