@@ -1,5 +1,6 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
+import Pagination from "../components/Pagination";
 import HelpModal from "../components/HelpModal";
 import { api } from "../api/client";
 import { Camp } from "@procamp/shared";
@@ -38,6 +39,8 @@ export default function BlockingsPage() {
   const [error, setError] = useState("");
   const [campFilter, setCampFilter] = useState("");
   const [loaded, setLoaded] = useState(false);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(50);
 
   const load = () => {
     Promise.all([
@@ -121,6 +124,7 @@ export default function BlockingsPage() {
   };
 
   const filtered = campFilter ? periods.filter((p) => p.campId === campFilter) : periods;
+  const paged = perPage === 0 ? filtered : filtered.slice((page - 1) * perPage, page * perPage);
 
   return (
     <div className="p-4 md:p-8">
@@ -166,7 +170,7 @@ export default function BlockingsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((p) => (
+                {paged.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3 font-medium text-gray-900">{p.camp?.name ?? "—"}</td>
                     <td className="px-4 py-3 text-gray-600">{typeName(p)}</td>
@@ -191,6 +195,7 @@ export default function BlockingsPage() {
           </div>
         )}
       </div>
+      <Pagination page={page} total={filtered.length} perPage={perPage} onChange={setPage} onPerPageChange={(pp) => { setPerPage(pp); setPage(1); }} />
 
       {/* Modal */}
       {modalOpen && (

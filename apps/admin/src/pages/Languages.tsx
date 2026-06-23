@@ -34,7 +34,7 @@ export default function LanguagesPage() {
   const [languages, setLanguages] = useState<Language[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const [page, setPage] = useState(1);
-  const PER_PAGE = 20;
+  const [perPage, setPerPage] = useState(50);
   const [addForm, setAddForm] = useState(EMPTY_FORM);
   const [editId, setEditId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<{ currencyCode: string; currencySymbol: string; currencyPosition: "before" | "after" }>({ currencyCode: "", currencySymbol: "", currencyPosition: "after" });
@@ -204,7 +204,7 @@ export default function LanguagesPage() {
             <p>Žádné jazyky. Přidejte první kliknutím na „+ Přidat jazyk".</p>
           </div>
         )}
-        {sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((lang) => (
+        {(perPage === 0 ? sorted : sorted.slice((page - 1) * perPage, page * perPage)).map((lang) => (
           <div key={lang.id} className="card p-4">
             {editId === lang.id ? (
               <div className="space-y-3">
@@ -259,7 +259,7 @@ export default function LanguagesPage() {
           </div>
         ))}
       </div>
-      <Pagination page={page} total={sorted.length} perPage={PER_PAGE} onChange={setPage} />
+      <Pagination page={page} total={sorted.length} perPage={perPage} onChange={setPage} onPerPageChange={setPerPage} />
     </div>
   );
 }

@@ -78,7 +78,7 @@ export default function UsersPage() {
     if (pwInputRef.current) pwInputRef.current.type = "text";
   };
   const [page, setPage] = useState(1);
-  const PER_PAGE = 20;
+  const [perPage, setPerPage] = useState(50);
 
   const load = () => api.get("/users").then((r) => setUsers(r.data)).catch(() => {});
   useEffect(() => {
@@ -260,7 +260,7 @@ export default function UsersPage() {
             <p>Žádní uživatelé. Přidejte prvního kliknutím na „+ Nový uživatel".</p>
           </div>
         )}
-        {users.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((u) => (
+        {(perPage === 0 ? users : users.slice((page - 1) * perPage, page * perPage)).map((u) => (
           <div key={u.id} className="card p-4 flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
@@ -278,7 +278,7 @@ export default function UsersPage() {
           </div>
         ))}
       </div>
-      <Pagination page={page} total={users.length} perPage={PER_PAGE} onChange={setPage} />
+      <Pagination page={page} total={users.length} perPage={perPage} onChange={setPage} onPerPageChange={setPerPage} />
     </div>
   );
 }

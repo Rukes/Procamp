@@ -1,6 +1,7 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState, useMemo, Fragment } from "react";
 import { api } from "../api/client";
+import Pagination from "../components/Pagination";
 
 interface LogEntry {
   id: string;
@@ -34,7 +35,6 @@ const ENTITY_LABELS: Record<string, string> = {
 // Noisy fields to hide from diff
 const SKIP_FIELDS = new Set(["updatedAt", "createdAt"]);
 
-const PER_PAGE = 50;
 
 type SortKey = "createdAt" | "userEmail" | "action" | "entity";
 
@@ -149,26 +149,27 @@ export default function LogsPage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(50);
   const [filterAction, setFilterAction] = useState("");
   const [filterEntity, setFilterEntity] = useState("");
+  const [search, setSearch] = useState("");
   const [activeLog, setActiveLog] = useState<LogEntry | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>("createdAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
   const load = () => {
-    const params = new URLSearchParams({ page: String(page), limit: String(PER_PAGE) });
+    const params = new URLSearchParams({ page: String(page), limit: String(perPage === 0 ? 9999 : perPage) });
     if (filterAction) params.set("action", filterAction);
     if (filterEntity) params.set("entity", filterEntity);
+    if (search) params.set("search", search);
     api.get(`/activity-logs?${params}`).then((r) => {
       setLogs(r.data.logs);
       setTotal(r.data.total);
     }).catch(() => {});
   };
 
-  useEffect(() => { setPage(1); }, [filterAction, filterEntity]);
-  useEffect(() => { load(); }, [page, filterAction, filterEntity]);
-
-  const totalPages = Math.ceil(total / PER_PAGE);
+  useEffect(() => { setPage(1); }, [filterAction, filterEntity, search, perPage]);
+  useEffect(() => { load(); }, [page, perPage, filterAction, filterEntity, search]);
 
   const handleSort = (key: SortKey) => {
     if (sortKey === key) setSortDir((d) => d === "asc" ? "desc" : "asc");
@@ -193,7 +194,8 @@ export default function LogsPage() {
         <p className="text-sm text-gray-500 mt-1">Přihlášení, vytvoření, úpravy a smazání záznamů.</p>
       </div>
 
-      <div className="flex flex-wrap gap-2 mb-4 max-w-lg">
+      <div className="flex flex-wrap gap-2 mb-4 max-w-2xl">
+        <input className="input min-w-[400px]" placeholder="Hledat uživatele, ID, obsah…" value={search} onChange={(e) => setSearch(e.target.value)} />
         <select className="input flex-1 min-w-[140px]" value={filterAction} onChange={(e) => setFilterAction(e.target.value)}>
           <option value="">Všechny akce</option>
           {Object.entries(ACTION_LABELS).map(([k, v]) => (
@@ -264,19 +266,7 @@ export default function LogsPage() {
         </div>
       </div>
 
-      {totalPages > 1 && (
-        <div className="flex items-center justify-between mt-4">
-          <span className="text-sm text-gray-500">Strana {page} z {totalPages}</span>
-          <div className="flex gap-2">
-            <button className="btn-secondary text-sm py-1.5" disabled={page === 1} onClick={() => setPage(page - 1)}>
-              <i className="fa-regular fa-chevron-left mr-1" />Předchozí
-            </button>
-            <button className="btn-secondary text-sm py-1.5" disabled={page === totalPages} onClick={() => setPage(page + 1)}>
-              Další<i className="fa-regular fa-chevron-right ml-1" />
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination page={page} total={total} perPage={perPage} onChange={setPage} onPerPageChange={setPerPage} />
     </div>
   );
 }

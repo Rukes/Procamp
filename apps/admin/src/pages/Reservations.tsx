@@ -96,9 +96,9 @@ export default function ReservationsPage() {
   const [searchParams] = useSearchParams();
   const [view, setView] = useState<"list" | "calendar">(searchParams.get("view") === "calendar" ? "calendar" : "list");
   const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(50);
   const [sortKey, setSortKey] = useState<SortKey>("checkIn");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const PER_PAGE = 25;
 
   const load = () => {
     const params = new URLSearchParams();
@@ -301,7 +301,7 @@ export default function ReservationsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50">
-              {sorted.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((r) => {
+              {(perPage === 0 ? sorted : sorted.slice((page - 1) * perPage, page * perPage)).map((r) => {
                 const es = effectiveStatus(r);
                 return (
                   <tr
@@ -349,13 +349,11 @@ export default function ReservationsPage() {
             </tbody>
           </table>
           </div>
-          <div className="px-4 pb-4">
-            <Pagination page={page} total={sorted.length} perPage={PER_PAGE} onChange={setPage} />
-          </div>
         </div>
       ) : (
         <ReservationCalendar reservations={sorted} />
       )}
+      <Pagination page={page} total={sorted.length} perPage={perPage} onChange={setPage} onPerPageChange={setPerPage} />
     </div>
   );
 }

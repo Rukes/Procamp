@@ -1,5 +1,6 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useRef, useState } from "react";
+import Pagination from "../components/Pagination";
 import { api } from "../api/client";
 import { User, Permission } from "@procamp/shared";
 import { useAuth } from "../contexts/AuthContext";
@@ -59,6 +60,8 @@ export default function AllUsersPage() {
   const toast = useToast();
   const [users, setUsers] = useState<UserWithOrg[]>([]);
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(50);
   const [editUser, setEditUser] = useState<UserWithOrg | null>(null);
   const [editPassword, setEditPassword] = useState("");
   const [formError, setFormError] = useState("");
@@ -129,6 +132,7 @@ export default function AllUsersPage() {
     const q = search.toLowerCase();
     return !q || u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || (u.organization?.name ?? "").toLowerCase().includes(q);
   });
+  const paged = perPage === 0 ? filtered : filtered.slice((page - 1) * perPage, page * perPage);
 
   if (!me?.isSuperAdmin) return <div className="p-8 text-gray-500">Pouze pro super adminy.</div>;
 
@@ -158,7 +162,7 @@ export default function AllUsersPage() {
             {filtered.length === 0 && (
               <tr><td colSpan={5} className="px-4 py-12 text-center text-gray-400">Žádní uživatelé.</td></tr>
             )}
-            {filtered.map((u) => (
+            {paged.map((u) => (
               <tr key={u.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3 font-medium">{u.name}</td>
                 <td className="px-4 py-3 text-gray-500">{u.email}</td>
@@ -196,6 +200,7 @@ export default function AllUsersPage() {
           </tbody>
         </table>
       </div>
+      <Pagination page={page} total={filtered.length} perPage={perPage} onChange={setPage} onPerPageChange={(pp) => { setPerPage(pp); setPage(1); }} />
 
       {editUser && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-4 pt-6" onClick={() => setEditUser(null)}>

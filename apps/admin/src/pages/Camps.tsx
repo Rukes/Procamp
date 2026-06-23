@@ -21,7 +21,7 @@ export default function CampsPage() {
   const [notificationEmail, setNotificationEmail] = useState("");
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
-  const PER_PAGE = 20;
+  const [perPage, setPerPage] = useState(50);
 
   const load = () => {
     api.get("/camps").then((r) => setCamps(r.data)).catch(() => {});
@@ -115,7 +115,7 @@ export default function CampsPage() {
       )}
 
       <div className="grid gap-4">
-        {camps.slice((page - 1) * PER_PAGE, page * PER_PAGE).map((camp) => {
+        {(perPage === 0 ? camps : camps.slice((page - 1) * perPage, page * perPage)).map((camp) => {
           const occupancy = getOccupancy(camp);
           return (
             <div key={camp.id} className="card p-5 flex items-center justify-between">
@@ -151,7 +151,7 @@ export default function CampsPage() {
           </div>
         )}
       </div>
-      <Pagination page={page} total={camps.length} perPage={PER_PAGE} onChange={setPage} />
+      <Pagination page={page} total={camps.length} perPage={perPage} onChange={setPage} onPerPageChange={setPerPage} />
     </div>
   );
 }
