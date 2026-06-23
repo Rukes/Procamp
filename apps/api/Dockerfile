@@ -33,6 +33,7 @@ COPY --from=builder /app/apps/api/dist ./apps/api/dist
 COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 COPY --from=builder /app/node_modules/.pnpm ./node_modules/.pnpm
 COPY apps/api/prisma ./apps/api/prisma
+COPY apps/api/public ./apps/api/public
 
 # Spustí migrace a seed při startu, pak spustí API
 COPY apps/api/docker-entrypoint.sh /entrypoint.sh
