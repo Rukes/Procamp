@@ -35,6 +35,7 @@ interface CampData {
   currentLang: string;
   termsText: string;
   requireTermsAcceptance: boolean;
+  gaTrackingId: string | null;
 }
 
 export function useCamp(orgSlug: string, campSlug: string, lang: string) {

@@ -19,6 +19,7 @@ Vyplňte údaje vaší firmy nebo živnosti:
 
 - **Výchozí jazyk** — jazyk ve kterém se formulář otevře zákazníkovi, pokud není v odkazu specifikován jiný
 - **Formát čísel** — oddělovač tisíců a desetinných míst (přizpůsobí se vaší zemi)
+- **Google Analytics ID** — volitelné Measurement ID (ve formátu `G-XXXXXXXXXX`); pokud je vyplněno, události z rezervačního formuláře (`begin_checkout`, `purchase`) budou odesílány do vaší GA property
 
 ## Podmínky & GDPR
 

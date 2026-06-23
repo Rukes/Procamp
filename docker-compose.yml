@@ -54,6 +54,7 @@ services:
       args:
         VITE_API_URL: ${VITE_API_URL}
         VITE_HCAPTCHA_SITE_KEY: ${VITE_HCAPTCHA_SITE_KEY}
+        VITE_GA_ID: ${VITE_GA_ID:-}
     restart: unless-stopped
     ports:
       - "3002:80"

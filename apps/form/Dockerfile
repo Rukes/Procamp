@@ -13,6 +13,8 @@ ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 ARG VITE_HCAPTCHA_SITE_KEY
 ENV VITE_HCAPTCHA_SITE_KEY=$VITE_HCAPTCHA_SITE_KEY
+ARG VITE_GA_ID
+ENV VITE_GA_ID=$VITE_GA_ID
 COPY packages/shared ./packages/shared
 RUN node_modules/.bin/tsc -p packages/shared/tsconfig.json
 COPY apps/form ./apps/form

@@ -20,6 +20,13 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 
 ---
 
+## Co je nového (červen 2026 — aktualizace 7)
+
+- **Google Analytics** — dvojité sledování rezervací; systémové GA ID se nastavuje přes env proměnnou `VITE_GA_ID` (build-time); klientské GA ID se zadává v nastavení organizace; pokud jsou obě ID nastavena, události se odesílají do obou property současně; sledovány události `begin_checkout` (výběr typu ubytování) a `purchase` (dokončení rezervace)
+- **Odeslání potvrzení na jiný e-mail** — v detailu rezervace nová možnost odeslat potvrzovací e-mail na libovolnou adresu (např. zákazník zadal špatný e-mail)
+- **Trim textových polí** — všechna textová pole (jméno, e-mail, telefon, SPZ, poznámka) jsou při vytvoření rezervace automaticky ořezána o mezery na začátku a konci
+- **Sjednocení WYSIWYG editorů** — všechny textové editory v adminu (popis ubytování, informace o objektu, e-mailové šablony, podmínky) mají stejný toolbar
+
 ## Co je nového (červen 2026 — aktualizace 6)
 
 - **Logo a favicon** — logo zobrazeno v postranním menu (desktop i mobilní drawer) a v mobilním top baru; logo na přihlašovací stránce; favicon pro všechna zařízení a prohlížeče (admin i formulář); loga jsou servována přes API ze složky `apps/api/public/logos/`
@@ -188,6 +195,9 @@ DB_PASSWORD=silne-heslo-sem
 JWT_SECRET=sem-vlozit-nahodny-retezec-node-e-console.log-crypto.randomBytes-64-toString-hex
 VITE_API_URL=https://api.mujkemp.cz
 VITE_FORM_BASE_URL=https://form.mujkemp.cz
+
+# Volitelné — systémové Google Analytics (sledování rezervací napříč všemi klienty)
+VITE_GA_ID=G-XXXXXXXXXX
 ```
 
 ```bash

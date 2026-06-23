@@ -19,7 +19,7 @@ export async function publicFormRoutes(app: FastifyInstance) {
       include: {
         surcharges: { include: { prices: true } },
         accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } },
-        organization: { select: { termsText: true, requireTermsAcceptance: true } },
+        organization: { select: { termsText: true, requireTermsAcceptance: true, gaTrackingId: true } },
       },
     });
     if (!camp) return reply.status(404).send({ error: "Camp not found" });
@@ -32,6 +32,7 @@ export async function publicFormRoutes(app: FastifyInstance) {
     const { smtpPasswordEncrypted, smtpHost, smtpPort, smtpUser, smtpFrom, notificationEmail, organization, ...publicCamp } = camp;
     const termsText = organization?.termsText ?? "";
     const requireTermsAcceptance = organization?.requireTermsAcceptance ?? false;
+    const gaTrackingId = organization?.gaTrackingId ?? null;
 
     // Return accommodation types with translated name and lang-specific prices
     const accommodationTypes = camp.accommodationTypes.map((t) => {
@@ -60,7 +61,7 @@ export async function publicFormRoutes(app: FastifyInstance) {
 return { id: s.id, name, pricePerNight: price?.pricePerNight ?? 0, isOptional: s.isOptional, note: tr.note ?? null };
     });
 
-    return { camp: { ...publicCamp, accommodationTypes, surcharges }, languages, currentLang: lang, termsText, requireTermsAcceptance };
+    return { camp: { ...publicCamp, accommodationTypes, surcharges }, languages, currentLang: lang, termsText, requireTermsAcceptance, gaTrackingId };
   });
 
   // Get occupied dates for an accommodation type

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useCamp, PublicAccommodationType } from "./hooks/useCamp";
@@ -13,6 +13,7 @@ import ConfigStep from "./steps/ConfigStep";
 import { calcBreakdown } from "./steps/SummaryStep";
 import ContactStep, { ContactData } from "./steps/ContactStep";
 import ConfirmationStep from "./steps/ConfirmationStep";
+import { initAnalytics, trackBeginCheckout, trackPurchase } from "./hooks/useAnalytics";
 
 function InfoModal({ html, onClose, title }: { html: string; onClose: () => void; title: string }) {
   return (
@@ -50,6 +51,15 @@ function FormApp() {
 
   const occupied = useOccupied(orgSlug!, campSlug!, type?.id ?? null);
   const t = useT(lang);
+  const gaInitialized = useRef(false);
+
+  const gaTrackingId = data?.gaTrackingId ?? null;
+  useEffect(() => {
+    if (!gaInitialized.current && data) {
+      initAnalytics(gaTrackingId);
+      gaInitialized.current = true;
+    }
+  }, [data, gaTrackingId]);
 
   const handleLangChange = (code: string) => {
     setLang(code);
@@ -111,6 +121,13 @@ function FormApp() {
         languageCode: lang,
       });
       setConfirmed({ totalPrice: res.data.totalPrice, nights: res.data.nights });
+      trackPurchase({
+        reservationId: res.data.id,
+        campName: camp.name,
+        totalPrice: res.data.totalPrice,
+        currency: langObj?.currencyCode ?? "CZK",
+        nights: res.data.nights,
+      });
       setStep(4);
     } catch (err: unknown) {
       const code = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
@@ -160,7 +177,7 @@ function FormApp() {
             camp={camp}
             selected={type}
             lang={langObj}
-            onSelect={(selected) => { setType(selected); setStep(1); }}
+            onSelect={(selected) => { setType(selected); setStep(1); trackBeginCheckout(camp.name); }}
           />
         )}
         {step === 1 && (

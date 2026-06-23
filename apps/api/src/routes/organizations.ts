@@ -7,7 +7,7 @@ export async function organizationRoutes(app: FastifyInstance) {
   const ORG_PUBLIC_SELECT = {
     id: true, name: true, slug: true, billingName: true, country: true, ico: true, dic: true,
     address: true, contactPerson: true, billingEmail: true, termsText: true, requireTermsAcceptance: true,
-    defaultLanguageCode: true, thousandsSeparator: true, decimalSeparator: true, createdAt: true, updatedAt: true,
+    defaultLanguageCode: true, thousandsSeparator: true, decimalSeparator: true, gaTrackingId: true, createdAt: true, updatedAt: true,
   };
 
   app.get("/mine", { preHandler: requireAuth }, async (request, reply) => {
@@ -23,7 +23,7 @@ export async function organizationRoutes(app: FastifyInstance) {
     const body = request.body as {
       name?: string; billingName?: string; country?: string; ico?: string; dic?: string;
       address?: string; contactPerson?: string; billingEmail?: string;
-      termsText?: string; defaultLanguageCode?: string; thousandsSeparator?: string; decimalSeparator?: string;
+      termsText?: string; defaultLanguageCode?: string; thousandsSeparator?: string; decimalSeparator?: string; gaTrackingId?: string;
     };
     const before = await app.prisma.organization.findUnique({ where: { id: organizationId } });
     const org = await app.prisma.organization.update({ where: { id: organizationId }, data: body, select: ORG_PUBLIC_SELECT });
@@ -100,6 +100,7 @@ export async function organizationRoutes(app: FastifyInstance) {
       thousandsSeparator: body.thousandsSeparator as string | undefined,
       decimalSeparator: body.decimalSeparator as string | undefined,
       internalNote: body.internalNote !== undefined ? (body.internalNote as string) : undefined,
+      gaTrackingId: body.gaTrackingId !== undefined ? (body.gaTrackingId as string | null) : undefined,
     };
     const before = await app.prisma.organization.findUnique({ where: { id } });
     const org = await app.prisma.organization.update({ where: { id }, data });

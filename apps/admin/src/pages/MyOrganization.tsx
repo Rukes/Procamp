@@ -22,6 +22,7 @@ interface Organization {
   defaultLanguageCode: string;
   thousandsSeparator: string;
   decimalSeparator: string;
+  gaTrackingId?: string | null;
 }
 
 interface Language { id: string; code: string; name: string; }
@@ -191,6 +192,12 @@ export default function MyOrganizationPage() {
               </div>
             </div>
             <p className="text-sm text-gray-500">Náhled: <strong>{formatPreview(form.thousandsSeparator ?? " ", form.decimalSeparator ?? ",")}</strong></p>
+            <hr />
+            <div>
+              <label className="label">Google Analytics ID <span className="text-gray-400 font-normal">(volitelné)</span></label>
+              <input className="input font-mono" value={form.gaTrackingId ?? ""} onChange={(e) => set("gaTrackingId", e.target.value)} placeholder="G-XXXXXXXXXX" />
+              <p className="text-xs text-gray-400 mt-1">Measurement ID pro sledování rezervací v Google Analytics. Pokud je vyplněno, události z rezervačního formuláře budou odesílány do vaší GA property.</p>
+            </div>
           </>
         )}
 
