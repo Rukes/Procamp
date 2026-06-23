@@ -19,6 +19,7 @@ interface Organization {
   contactPerson: string;
   billingEmail: string;
   internalNote: string | null;
+  gaTrackingId: string | null;
   createdAt: string;
   _count: { camps: number; users: number; languages: number };
 }
@@ -225,6 +226,14 @@ export default function OrganizationsPage() {
                   <span className="text-xs text-gray-400">
                     <i className="fa-regular fa-globe mr-1" />{org._count.languages} {org._count.languages === 1 ? "jazyk" : org._count.languages < 5 ? "jazyky" : "jazyků"}
                   </span>
+                  {org.gaTrackingId && (
+                    <>
+                      <span className="text-xs text-gray-300">·</span>
+                      <span className="text-xs text-green-600">
+                        <i className="fa-brands fa-google mr-1" />GA aktivní
+                      </span>
+                    </>
+                  )}
                 </div>
                 <div className="text-sm text-gray-500 mt-2 space-y-0.5">
                   {org.ico && <p><span className="text-gray-400">IČO:</span> {org.ico}{org.dic && <span className="ml-3"><span className="text-gray-400">DIČ:</span> {org.dic}</span>}</p>}
