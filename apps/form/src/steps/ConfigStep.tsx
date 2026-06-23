@@ -74,12 +74,15 @@ export default function ConfigStep({
 }: Props) {
   const t = useT(lang.code);
   const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
-  const mandatoryIds = camp.surcharges.filter((s) => !s.isOptional).map((s) => s.id);
+  const mandatoryIds = camp.surcharges.filter((s) => !s.isOptional && (!s.applicableTypeIds?.length || s.applicableTypeIds.includes(type.id))).map((s) => s.id);
   const allSelected = [...new Set([...mandatoryIds, ...selectedSurchargeIds])];
   const breakdown = calcBreakdown(camp, type, checkIn, checkOut, adults, children, allSelected, lang);
 
-  const optional = camp.surcharges.filter((s) => s.isOptional);
-  const mandatory = camp.surcharges.filter((s) => !s.isOptional);
+  const appliesToType = (s: { applicableTypeIds?: string[] }) =>
+    !s.applicableTypeIds?.length || s.applicableTypeIds.includes(type.id);
+
+  const optional = camp.surcharges.filter((s) => s.isOptional && appliesToType(s));
+  const mandatory = camp.surcharges.filter((s) => !s.isOptional && appliesToType(s));
 
   const toggleSurcharge = (id: string) => {
     onChangeSurcharges(

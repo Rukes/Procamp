@@ -134,9 +134,11 @@ model Surcharge {
   id            String               @id @default(cuid())
   campId        String
   camp          Camp                 @relation(fields: [campId], references: [id], onDelete: Cascade)
-  isOptional    Boolean              @default(true)
-  translations  Json                 @default("{}")
-  sortOrder     Int                  @default(0)
+  isOptional           Boolean              @default(true)
+  isHidden             Boolean              @default(false)
+  translations         Json                 @default("{}")
+  sortOrder            Int                  @default(0)
+  applicableTypeIds    String[]             @default([])
   createdAt     DateTime             @default(now())
   prices        SurchargePrice[]
   reservationSurcharges ReservationSurcharge[]

@@ -136,11 +136,12 @@ interface SurchargeEditorProps {
   surcharge: Surcharge | null;
   languages: Language[];
   campId: string;
+  accommodationTypes: AccommodationType[];
   onSave: () => void;
   onClose: () => void;
 }
 
-function SurchargeEditor({ surcharge, languages, campId, onSave, onClose }: SurchargeEditorProps) {
+function SurchargeEditor({ surcharge, languages, campId, accommodationTypes, onSave, onClose }: SurchargeEditorProps) {
   const toast = useToast();
   const [activeLang, setActiveLang] = useState(languages[0]?.code ?? "cs");
   const [names, setNames] = useState<Record<string, string>>(() => {
@@ -158,6 +159,10 @@ function SurchargeEditor({ surcharge, languages, campId, onSave, onClose }: Surc
     if (!surcharge) return {};
     return Object.fromEntries(surcharge.prices.map((p) => [p.languageCode, String(p.pricePerNight)]));
   });
+  const [applicableTypeIds, setApplicableTypeIds] = useState<string[]>(
+    (surcharge as (Surcharge & { applicableTypeIds?: string[] }) | null)?.applicableTypeIds ?? []
+  );
+  const [isHidden, setIsHidden] = useState<boolean>((surcharge as (Surcharge & { isHidden?: boolean }) | null)?.isHidden ?? false);
   const [saving, setSaving] = useState(false);
 
   const allNamesFilled = languages.every((l) => names[l.code]?.trim());
@@ -174,10 +179,10 @@ function SurchargeEditor({ surcharge, languages, campId, onSave, onClose }: Surc
       );
       let surchargeId: string;
       if (surcharge) {
-        await api.put(`/camps/${campId}/surcharges/${surcharge.id}`, { isOptional, translations });
+        await api.put(`/camps/${campId}/surcharges/${surcharge.id}`, { isOptional, isHidden, translations, applicableTypeIds });
         surchargeId = surcharge.id;
       } else {
-        const res = await api.post(`/camps/${campId}/surcharges`, { isOptional, translations });
+        const res = await api.post(`/camps/${campId}/surcharges`, { isOptional, isHidden, translations, applicableTypeIds });
         surchargeId = res.data.id;
       }
       for (const [lang, price] of Object.entries(prices)) {
@@ -235,6 +240,38 @@ function SurchargeEditor({ surcharge, languages, campId, onSave, onClose }: Surc
             <label className="label">Poznámka <span className="text-gray-400 font-normal">(nepovinné — zobrazí se v formuláři po najetí na <code>i</code>)</span></label>
             <input className="input" value={notes[activeLang] ?? ""} onChange={(e) => setNotes({ ...notes, [activeLang]: e.target.value })} placeholder="Např. cena za jednoho psa za noc…" />
           </div>
+
+          <label className="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-red-600" checked={isHidden} onChange={(e) => setIsHidden(e.target.checked)} />
+            <span className="text-sm font-medium text-gray-700">Nezobrazovat ve formuláři <span className="text-gray-400 font-normal">(příplatek bude skrytý pro zákazníky)</span></span>
+          </label>
+
+          {!isHidden && accommodationTypes.length > 0 && (
+            <div>
+              <label className="label">Zobrazit pro typy ubytování <span className="text-gray-400 font-normal">(prázdné = všechny)</span></label>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {accommodationTypes.map((t) => {
+                  const tr = t.translations as Record<string, { name: string }>;
+                  const name = tr.cs?.name ?? tr[Object.keys(tr)[0]]?.name ?? t.id;
+                  const checked = applicableTypeIds.includes(t.id);
+                  return (
+                    <label key={t.id} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border cursor-pointer text-sm transition-colors ${checked ? "bg-blue-50 border-blue-300 text-blue-800" : "bg-gray-50 border-gray-200 text-gray-700 hover:border-gray-300"}`}>
+                      <input
+                        type="checkbox"
+                        className="hidden"
+                        checked={checked}
+                        onChange={(e) => setApplicableTypeIds(e.target.checked ? [...applicableTypeIds, t.id] : applicableTypeIds.filter((id) => id !== t.id))}
+                      />
+                      <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${checked ? "bg-blue-600 border-blue-600" : "border-gray-300"}`}>
+                        {checked && <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10"><path d="M1.5 5l2.5 2.5 4.5-4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                      </span>
+                      {name}
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="flex gap-2 pt-1">
             <button className="btn-primary" type="submit" disabled={saving || !allNamesFilled} title={!allNamesFilled ? "Vyplňte název ve všech jazycích" : undefined}>
@@ -880,6 +917,7 @@ export default function CampDetailPage() {
               surcharge={editSurcharge === "new" ? null : editSurcharge}
               languages={languages}
               campId={id!}
+              accommodationTypes={camp?.accommodationTypes ?? []}
               onSave={() => { setEditSurcharge(null); load(); }}
               onClose={() => setEditSurcharge(null)}
             />
@@ -902,7 +940,7 @@ export default function CampDetailPage() {
             return (
               <div
                 key={s.id}
-                className={`card p-5 flex items-center justify-between transition-all ${dragOverId === s.id && dragId.current !== s.id ? "ring-2 ring-blue-400 ring-offset-1" : ""}`}
+                className={`card p-5 flex items-center justify-between transition-all ${dragOverId === s.id && dragId.current !== s.id ? "ring-2 ring-blue-400 ring-offset-1" : ""} ${(s as Surcharge & { isHidden?: boolean }).isHidden ? "opacity-50 bg-gray-50" : ""}`}
                 draggable={can("camps_edit")}
                 onDragStart={() => { dragId.current = s.id; }}
                 onDragOver={(e) => { e.preventDefault(); setDragOverId(s.id); }}
@@ -929,7 +967,20 @@ export default function CampDetailPage() {
                   <div>
                     <p className="font-semibold text-gray-900">{t.cs?.name ?? t[Object.keys(t)[0]]?.name ?? "—"}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
+                      {(s as Surcharge & { isHidden?: boolean }).isHidden && <span className="text-amber-500 block">Skryto ve formuláři</span>}
                       {csPrice ? `${csPrice.pricePerNight} Kč / noc` : ""}
+                      {(() => {
+                        const ids = (s as Surcharge & { applicableTypeIds?: string[] }).applicableTypeIds;
+                        const allTypes = camp.accommodationTypes ?? [];
+                        const names = !ids?.length
+                          ? "vše"
+                          : ids.map((tid) => {
+                              const at = allTypes.find((at) => at.id === tid);
+                              const tr = at?.translations as Record<string, { name: string }> | undefined;
+                              return tr?.cs?.name ?? tr?.[Object.keys(tr ?? {})[0]]?.name ?? tid;
+                            }).join(", ");
+                        return <span className="block">Volitelné pro: {names}</span>;
+                      })()}
                     </p>
                   </div>
                 </div>

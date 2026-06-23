@@ -53,12 +53,13 @@ export async function publicFormRoutes(app: FastifyInstance) {
       };
     });
 
-    const surcharges = camp.surcharges.map((s) => {
+    const surcharges = camp.surcharges.flatMap((s) => {
+      if (s.isHidden) return [];
       const translations = s.translations as Record<string, { name: string; note?: string }>;
       const tr = translations[lang] ?? translations["cs"] ?? {};
       const name = tr.name ?? "";
       const price = s.prices.find((p) => p.languageCode === lang) ?? s.prices[0];
-return { id: s.id, name, pricePerNight: price?.pricePerNight ?? 0, isOptional: s.isOptional, note: tr.note ?? null };
+      return [{ id: s.id, name, pricePerNight: price?.pricePerNight ?? 0, isOptional: s.isOptional, note: tr.note ?? null, applicableTypeIds: s.applicableTypeIds ?? [] }];
     });
 
     return { camp: { ...publicCamp, accommodationTypes, surcharges }, languages, currentLang: lang, termsText, requireTermsAcceptance, gaTrackingId };

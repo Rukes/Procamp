@@ -59,7 +59,9 @@ export interface Surcharge {
   id: string;
   campId: string;
   isOptional: boolean;
+  isHidden: boolean;
   translations: Record<string, { name: string; note?: string }>;
+  applicableTypeIds: string[];
   prices: SurchargePrice[];
 }
 
