@@ -1,5 +1,6 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
+import HelpModal from "../components/HelpModal";
 import { Link } from "react-router-dom";
 import { api } from "../api/client";
 import { Camp, Reservation } from "@procamp/shared";
@@ -11,6 +12,7 @@ export default function CampsPage() {
   useTitle("Objekty");
   const { can } = useAuth();
   const toast = useToast();
+  const [helpOpen, setHelpOpen] = useState(false);
   const [camps, setCamps] = useState<Camp[]>([]);
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [creating, setCreating] = useState(false);
@@ -62,7 +64,11 @@ export default function CampsPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Objekty</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-900">Objekty</h1>
+          <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
+        </div>
+        {helpOpen && <HelpModal topic="objekty" onClose={() => setHelpOpen(false)} />}
         {can("camps_create") && (
           <button className="btn-primary" onClick={() => setCreating(true)}><i className="fa-regular fa-plus mr-1.5" />Nový objekt</button>
         )}

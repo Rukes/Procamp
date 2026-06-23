@@ -93,8 +93,8 @@ export default function ConfigStep({
     <div className="step-card space-y-6">
       <div>
         <h2 className="text-base font-semibold text-gray-900 mb-3">{t.configPersonsTitle}</h2>
-        <Counter label={t.configAdults} sub={t.configAdultsSub} value={adults} onChange={onChangeAdults} min={1} />
-        <Counter label={t.configChildren} sub={t.configChildrenSub} value={children} onChange={onChangeChildren} />
+        {!camp.hideAdults && <Counter label={t.configAdults} sub={t.configAdultsSub} value={adults} onChange={onChangeAdults} min={1} />}
+        {!camp.hideChildren && <Counter label={t.configChildren} sub={t.configChildrenSub} value={children} onChange={onChangeChildren} />}
       </div>
 
       {camp.surcharges.length > 0 && (

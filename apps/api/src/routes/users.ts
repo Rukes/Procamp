@@ -4,7 +4,7 @@ import { createUserSchema } from "@procamp/shared";
 import { requirePermission, requireAuth, orgFilter } from "../plugins/auth";
 import { logActivity, diffObjects } from "../services/activityLog";
 
-const USER_SELECT = { id: true, name: true, email: true, isSuperAdmin: true, permissions: true, reservationsDefaultView: true, organizationId: true, createdAt: true };
+const USER_SELECT = { id: true, name: true, email: true, isSuperAdmin: true, permissions: true, reservationsDefaultView: true, organizationId: true, createdAt: true, organization: { select: { id: true, name: true } } };
 
 export async function userRoutes(app: FastifyInstance) {
   const guard = requirePermission("users_manage");
@@ -72,6 +72,14 @@ export async function userRoutes(app: FastifyInstance) {
     const { sub } = request.user;
     const { reservationsDefaultView } = request.body as { reservationsDefaultView: string };
     return app.prisma.user.update({ where: { id: sub }, data: { reservationsDefaultView }, select: USER_SELECT });
+  });
+
+  app.post("/:id/force-logout", { preHandler: requirePermission("users_manage") }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    if (id === request.user.sub) return reply.status(400).send({ error: "Cannot force-logout yourself" });
+    await app.prisma.user.update({ where: { id }, data: { tokenVersion: { increment: 1 } } });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "user", entityId: id, payload: { forceLogout: true } });
+    return { success: true };
   });
 
   app.delete("/:id", { preHandler: guard }, async (request, reply) => {

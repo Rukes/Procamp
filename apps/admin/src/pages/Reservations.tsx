@@ -1,5 +1,6 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState, useRef, useCallback } from "react";
+import HelpModal from "../components/HelpModal";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { Reservation, Camp, Language } from "@procamp/shared";
@@ -83,6 +84,7 @@ export default function ReservationsPage() {
   useTitle("Rezervace");
   const { can } = useAuth();
   const navigate = useNavigate();
+  const [helpOpen, setHelpOpen] = useState(false);
   const [reservations, setReservations] = useState<(Reservation & { camp: Camp })[]>([]);
   const [camps, setCamps] = useState<Camp[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -220,7 +222,11 @@ export default function ReservationsPage() {
     <div className="p-4 md:p-8">
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Rezervace</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900">Rezervace</h1>
+            <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
+          </div>
+          {helpOpen && <HelpModal topic="rezervace" onClose={() => setHelpOpen(false)} />}
           <div className="flex flex-wrap gap-2 mt-2">
             <div className="flex border border-gray-300 rounded-lg overflow-hidden">
               <button onClick={() => setView("list")} className={`px-3 py-1.5 text-sm ${view === "list" ? "bg-blue-600 text-white" : "bg-white text-gray-600"}`}><i className="fa-regular fa-list mr-1.5" />Seznam</button>

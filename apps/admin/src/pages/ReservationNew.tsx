@@ -1,5 +1,6 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState, useMemo } from "react";
+import HelpModal from "../components/HelpModal";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { Camp, AccommodationType, Language, Surcharge, formatPrice } from "@procamp/shared";
@@ -14,6 +15,7 @@ export default function ReservationNewPage() {
   useTitle("Nová rezervace");
   const navigate = useNavigate();
   const toast = useToast();
+  const [helpOpen, setHelpOpen] = useState(false);
   const [camps, setCamps] = useState<Camp[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [campId, setCampId] = useState("");
@@ -158,7 +160,11 @@ export default function ReservationNewPage() {
         <button onClick={() => navigate("/reservations")} className="text-gray-400 hover:text-gray-600 transition-colors">
           <i className="fa-regular fa-arrow-left text-lg" />
         </button>
-        <h1 className="text-2xl font-bold text-gray-900">Nová rezervace</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-900">Nová rezervace</h1>
+          <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
+        </div>
+        {helpOpen && <HelpModal topic="rezervace" onClose={() => setHelpOpen(false)} />}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">

@@ -24,6 +24,8 @@ export interface PublicSurcharge {
 interface CampPublic extends Omit<Camp, "surcharges" | "accommodationTypes"> {
   surcharges: PublicSurcharge[];
   accommodationTypes: PublicAccommodationType[];
+  hideAdults?: boolean;
+  hideChildren?: boolean;
 }
 
 interface CampData {

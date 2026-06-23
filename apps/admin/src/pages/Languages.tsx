@@ -1,5 +1,6 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
+import HelpModal from "../components/HelpModal";
 import { api } from "../api/client";
 import { Language } from "@procamp/shared";
 import { useAuth } from "../contexts/AuthContext";
@@ -29,6 +30,7 @@ export default function LanguagesPage() {
   useTitle("Jazyky");
   const { can } = useAuth();
   const toast = useToast();
+  const [helpOpen, setHelpOpen] = useState(false);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [addOpen, setAddOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -181,7 +183,11 @@ export default function LanguagesPage() {
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Jazyky formuláře</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-gray-900">Jazyky formuláře</h1>
+            <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
+          </div>
+          {helpOpen && <HelpModal topic="jazyky" onClose={() => setHelpOpen(false)} />}
           <p className="text-sm text-gray-500 mt-1">Každý jazyk má vlastní měnu — zákazník vidí ceny v měně svého jazyka.</p>
         </div>
         {can("org_admin") && available.length > 0 && (

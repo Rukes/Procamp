@@ -20,6 +20,16 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 
 ---
 
+## Co je nového (červen 2026 — aktualizace 5)
+
+- **SA: Všichni uživatelé** — nová stránka `/all-users` v SA sekci; tabulka všech uživatelů napříč organizacemi se sloupci Jméno, E-mail, Organizace, Role; tlačítka Upravit, Odhlásit (force-logout), Smazat; vyhledávání
+- **SA: Ověření systémového SMTP** — na stránce Systém nová sekce s tlačítkem „Ověřit systémový SMTP"; zobrazí zelené/červené stavy pro konfiguraci (env proměnné) i připojení (nodemailer verify)
+- **Oprávnění blokací** — nová samostatná oprávnění `blockings_view`, `blockings_edit`, `blockings_delete` oddělená od rezervací; existující uživatelé migrováni skriptem (`migrate-blockings-perms.ts`) dle aktuálních rezervačních oprávnění
+- **Skrýt osoby v formuláři** — v nastavení objektu nové checkboxy „Skrýt volbu a cenu dospělého" a „Skrýt volbu a cenu dítěte"; skryje výběr v rezervačním formuláři i ceny v administraci
+- **Kontextová nápověda** — tlačítko `?` vedle nadpisu na každé stránce otevře modal s příslušnou nápovědou; sdílí obsah se stránkou /help — úprava `.md` souboru se projeví na obou místech
+- **Logování rezervací** — při vytvoření rezervace se do logu aktivit zapíše kompletní záznam včetně organizace, objektu, kontaktních údajů, termínu, ceny a příplatků
+- **Cascade smazání uživatelů** — při smazání organizace se automaticky smažou i všichni uživatelé v ní
+
 ## Co je nového (červen 2026 — aktualizace 4)
 
 - **Ověření SMTP před uložením** — tlačítko „Ověřit připojení před uložením" testuje přihlášení k SMTP serveru přes nodemailer `verify()`; tlačítko Uložit SMTP se zobrazí až po úspěšném testu; pokud uživatel změní jakékoliv pole, test se resetuje a musí proběhnout znovu

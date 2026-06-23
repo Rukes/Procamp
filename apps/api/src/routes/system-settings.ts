@@ -29,6 +29,28 @@ export async function systemSettingsRoutes(app: FastifyInstance) {
     });
   });
 
+  app.get("/smtp-status", { preHandler: requireSuperAdmin }, async () => {
+    const vars = ["SYSTEM_SMTP_HOST", "SYSTEM_SMTP_PORT", "SYSTEM_SMTP_USER", "SYSTEM_SMTP_PASS", "SYSTEM_SMTP_FROM"];
+    const missing = vars.filter((v) => !process.env[v]);
+    const configured = missing.length === 0;
+    let verified = false;
+    if (configured) {
+      try {
+        const nodemailer = await import("nodemailer");
+        const transport = nodemailer.default.createTransport({
+          host: process.env.SYSTEM_SMTP_HOST,
+          port: parseInt(process.env.SYSTEM_SMTP_PORT ?? "587"),
+          auth: { user: process.env.SYSTEM_SMTP_USER, pass: process.env.SYSTEM_SMTP_PASS },
+        } as any);
+        await transport.verify();
+        verified = true;
+      } catch {
+        verified = false;
+      }
+    }
+    return { configured, verified, missing };
+  });
+
   app.post("/logout-all", { preHandler: requireSuperAdmin }, async () => {
     const settings = await app.prisma.systemSettings.upsert({
       where: { id: "singleton" },

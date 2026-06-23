@@ -104,7 +104,35 @@ export async function reservationRoutes(app: FastifyInstance) {
       include: INCLUDE,
     });
 
-    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "CREATE", entity: "reservation", entityId: reservation.id, payload: reservation });
+    const org = await app.prisma.organization.findUnique({ where: { id: camp.organizationId ?? "" }, select: { id: true, name: true } });
+    await logActivity(app.prisma, {
+      userId: request.user.sub,
+      userEmail: request.user.email,
+      action: "CREATE",
+      entity: "reservation",
+      entityId: reservation.id,
+      payload: {
+        organization: org ? { id: org.id, name: org.name } : null,
+        camp: { id: camp.id, name: camp.name },
+        firstName: reservation.firstName,
+        lastName: reservation.lastName,
+        email: reservation.email,
+        phone: reservation.phone,
+        checkIn: reservation.checkIn,
+        checkOut: reservation.checkOut,
+        nights,
+        adults: reservation.adults,
+        children: reservation.children,
+        accommodationType: accType.translations,
+        totalPrice: reservation.totalPrice,
+        languageCode: reservation.languageCode,
+        status: reservation.status,
+        licensePlate: reservation.licensePlate,
+        expectedArrival: reservation.expectedArrival,
+        note: reservation.note,
+        surcharges: selectedSurcharges.map((s) => s.translations),
+      },
+    });
     if (body.sendCustomerEmail || body.sendAdminEmail) {
       sendReservationEmails(app.prisma, reservation as never, nights, { sendCustomer: body.sendCustomerEmail ?? false, sendAdmin: body.sendAdminEmail ?? false }).catch(() => {});
     }

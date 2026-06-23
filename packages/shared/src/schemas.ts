@@ -54,6 +54,8 @@ export const updateCampSchema = z.object({
   smtpFrom: z.string().optional(),
   smtpReplyTo: z.string().optional(),
   requiresConfirmation: z.boolean().optional(),
+  hideAdults: z.boolean().optional(),
+  hideChildren: z.boolean().optional(),
   useCustomSmtp: z.boolean().optional(),
 });
 

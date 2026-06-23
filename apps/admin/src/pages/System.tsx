@@ -7,6 +7,12 @@ interface SystemSettings {
   smtpEnabled: boolean;
 }
 
+interface SmtpStatus {
+  configured: boolean;
+  verified: boolean;
+  missing: string[];
+}
+
 export default function SystemPage() {
   useTitle("Systém");
   const toast = useToast();
@@ -14,10 +20,25 @@ export default function SystemPage() {
   const [saving, setSaving] = useState(false);
   const [logoutConfirm, setLogoutConfirm] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [smtpStatus, setSmtpStatus] = useState<SmtpStatus | null>(null);
+  const [checkingSmtp, setCheckingSmtp] = useState(false);
 
   useEffect(() => {
     api.get("/system-settings").then((r) => setSettings(r.data)).catch(() => {});
   }, []);
+
+  const handleCheckSmtp = async () => {
+    setCheckingSmtp(true);
+    setSmtpStatus(null);
+    try {
+      const res = await api.get("/system-settings/smtp-status");
+      setSmtpStatus(res.data);
+    } catch {
+      toast.error("Nepodařilo se ověřit SMTP.");
+    } finally {
+      setCheckingSmtp(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!settings) return;
@@ -82,6 +103,29 @@ export default function SystemPage() {
             {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</>}
           </button>
         </div>
+      </div>
+
+      {/* Systémový SMTP */}
+      <div className="card p-6 mb-6">
+        <h2 className="font-semibold text-gray-900 mb-1">Systémový SMTP</h2>
+        <p className="text-sm text-gray-500 mb-4">Ověření zda jsou nastaveny env proměnné systémového SMTP a zda se lze připojit k serveru.</p>
+        <button className="btn-secondary" onClick={handleCheckSmtp} disabled={checkingSmtp}>
+          {checkingSmtp ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ověřuji…</> : <><i className="fa-regular fa-plug mr-1.5" />Ověřit systémový SMTP</>}
+        </button>
+        {smtpStatus && (
+          <div className="mt-4 space-y-2">
+            <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg border ${smtpStatus.configured ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-700"}`}>
+              <i className={`fa-regular ${smtpStatus.configured ? "fa-check" : "fa-xmark"}`} />
+              {smtpStatus.configured ? "Env proměnné jsou vyplněny" : `Chybí env proměnné: ${smtpStatus.missing.join(", ")}`}
+            </div>
+            {smtpStatus.configured && (
+              <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg border ${smtpStatus.verified ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-700"}`}>
+                <i className={`fa-regular ${smtpStatus.verified ? "fa-check" : "fa-xmark"}`} />
+                {smtpStatus.verified ? "Připojení k SMTP serveru bylo úspěšné" : "Připojení k SMTP serveru selhalo — zkontrolujte přihlašovací údaje"}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Správa sessions */}

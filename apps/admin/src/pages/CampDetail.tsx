@@ -1,5 +1,6 @@
 import { useTitle } from "../hooks/useTitle";
 import Tooltip from "../components/Tooltip";
+import HelpModal from "../components/HelpModal";
 import { useEffect, useRef, useState } from "react";
 import RichTextEditor from "../components/RichTextEditor";
 import { useParams, useNavigate } from "react-router-dom";
@@ -350,11 +351,13 @@ interface TypeEditorProps {
   type: AccommodationType | null;
   languages: Language[];
   campId: string;
+  hideAdults: boolean;
+  hideChildren: boolean;
   onSave: () => void;
   onClose: () => void;
 }
 
-function AccommodationTypeEditor({ type, languages, campId, onSave, onClose }: TypeEditorProps) {
+function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChildren, onSave, onClose }: TypeEditorProps) {
   const toast = useToast();
   const [activeLang, setActiveLang] = useState(languages[0]?.code ?? "cs");
   const [names, setNames] = useState<Record<string, string>>(() => {
@@ -481,14 +484,18 @@ function AccommodationTypeEditor({ type, languages, campId, onSave, onClose }: T
                   <label className="label">Cena / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
                   <input className="input" type="number" min="0" step="0.01" value={p.pricePerNight} onChange={(e) => setPrice(activeLang, "pricePerNight", e.target.value)} />
                 </div>
-                <div>
-                  <label className="label">Dospělý / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
-                  <input className="input" type="number" min="0" step="0.01" value={p.adultPricePerNight} onChange={(e) => setPrice(activeLang, "adultPricePerNight", e.target.value)} />
-                </div>
-                <div>
-                  <label className="label">Dítě / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
-                  <input className="input" type="number" min="0" step="0.01" value={p.childPricePerNight} onChange={(e) => setPrice(activeLang, "childPricePerNight", e.target.value)} />
-                </div>
+                {!hideAdults && (
+                  <div>
+                    <label className="label">Dospělý / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
+                    <input className="input" type="number" min="0" step="0.01" value={p.adultPricePerNight} onChange={(e) => setPrice(activeLang, "adultPricePerNight", e.target.value)} />
+                  </div>
+                )}
+                {!hideChildren && (
+                  <div>
+                    <label className="label">Dítě / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
+                    <input className="input" type="number" min="0" step="0.01" value={p.childPricePerNight} onChange={(e) => setPrice(activeLang, "childPricePerNight", e.target.value)} />
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -519,12 +526,15 @@ export default function CampDetailPage() {
   const [testingSmtp, setTestingSmtp] = useState(false);
   const [smtpTested, setSmtpTested] = useState(false);
   const [useCustomSmtp, setUseCustomSmtp] = useState(false);
+  const [hideAdults, setHideAdults] = useState(false);
+  const [hideChildren, setHideChildren] = useState(false);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [templates, setTemplates] = useState<EmailTemplate[]>([]);
   const [editTpl, setEditTpl] = useState<EmailTemplate | null>(null);
   const [tplBody, setTplBody] = useState("");
   const [tplSubject, setTplSubject] = useState("");
   const [tplKey, setTplKey] = useState(0);
+  const [helpOpen, setHelpOpen] = useState(false);
 
   // Accommodation type editor
   const [editType, setEditType] = useState<AccommodationType | null | "new">(null);
@@ -540,6 +550,8 @@ export default function CampDetailPage() {
     ]);
     setCamp(campRes.data);
     setUseCustomSmtp(campRes.data.useCustomSmtp ?? false);
+    setHideAdults(campRes.data.hideAdults ?? false);
+    setHideChildren(campRes.data.hideChildren ?? false);
     setLanguages(langRes.data);
     setTemplates(tplRes.data);
     setOrgSlug(campRes.data.organization?.slug ?? null);
@@ -559,6 +571,8 @@ export default function CampDetailPage() {
       else data[k] = v;
     });
     checkboxFields.forEach((k) => { if (!(k in data)) data[k] = false; });
+    data.hideAdults = hideAdults;
+    data.hideChildren = hideChildren;
     try {
       const res = await api.put(`/camps/${id}`, data);
       setCamp(res.data);
@@ -591,6 +605,8 @@ export default function CampDetailPage() {
       const res = await api.put(`/camps/${id}`, data);
       setCamp(res.data);
       setUseCustomSmtp(res.data.useCustomSmtp ?? false);
+      setHideAdults(res.data.hideAdults ?? false);
+      setHideChildren(res.data.hideChildren ?? false);
       toast.success("SMTP nastavení bylo uloženo.");
     } catch {
       toast.error("Nepodařilo se uložit SMTP nastavení.");
@@ -687,7 +703,11 @@ export default function CampDetailPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">{camp.name}</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-900">{camp.name}</h1>
+          <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
+        </div>
+        {helpOpen && <HelpModal topic="objekty" onClose={() => setHelpOpen(false)} />}
         <a href={embedUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary">
           <i className="fa-regular fa-arrow-up-right-from-square mr-1.5" />Otevřít formulář
         </a>
@@ -725,6 +745,22 @@ export default function CampDetailPage() {
               <p className="text-xs text-gray-500">Pokud vypnuto, rezervace jsou automaticky potvrzeny ihned po odeslání.</p>
             </div>
           </label>
+          <hr />
+          <h3 className="font-semibold text-gray-700">Formulář — osoby</h3>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input type="checkbox" name="hideAdults" checked={hideAdults} onChange={(e) => setHideAdults(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+            <div>
+              <p className="text-sm font-medium text-gray-900">Skrýt volbu a cenu dospělého</p>
+              <p className="text-xs text-gray-500">Zákazník v rezervačním formuláři neuvidí výběr počtu dospělých. Cena za dospělého nebude zobrazena v nastavení cen.</p>
+            </div>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input type="checkbox" name="hideChildren" checked={hideChildren} onChange={(e) => setHideChildren(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+            <div>
+              <p className="text-sm font-medium text-gray-900">Skrýt volbu a cenu dítěte</p>
+              <p className="text-xs text-gray-500">Zákazník v rezervačním formuláři neuvidí výběr počtu dětí. Cena za dítě nebude zobrazena v nastavení cen.</p>
+            </div>
+          </label>
           <div className="flex items-center justify-between pt-2">
             {can("camps_edit") && (
               <button className="btn-primary" type="submit" disabled={saving}>
@@ -747,6 +783,8 @@ export default function CampDetailPage() {
               type={editType === "new" ? null : editType}
               languages={languages}
               campId={id!}
+              hideAdults={hideAdults}
+              hideChildren={hideChildren}
               onSave={() => { setEditType(null); load(); }}
               onClose={() => setEditType(null)}
             />
@@ -880,30 +918,32 @@ export default function CampDetailPage() {
         <div className="space-y-4">
           {editTpl ? (
             <form onSubmit={handleSaveTpl} className="space-y-4">
-              <div className="flex items-center gap-3 mb-2">
-                <button type="button" className="text-gray-400 hover:text-gray-600" onClick={() => setEditTpl(null)}><i className="fa-regular fa-arrow-left mr-1" />Zpět</button>
-                <h3 className="font-semibold">{editTpl.type === "ADMIN_NOTIFICATION" ? "Notifikace správci" : `Potvrzení zákazníkovi — ${FLAGS[editTpl.languageCode] ?? ""} ${editTpl.languageCode.toUpperCase()}`}</h3>
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3">
+                  <button type="button" className="text-gray-400 hover:text-gray-600" onClick={() => setEditTpl(null)}><i className="fa-regular fa-arrow-left mr-1" />Zpět</button>
+                  <h3 className="font-semibold">{editTpl.type === "ADMIN_NOTIFICATION" ? "Notifikace správci" : `Potvrzení zákazníkovi — ${FLAGS[editTpl.languageCode] ?? ""} ${editTpl.languageCode.toUpperCase()}`}</h3>
+                </div>
+                <div className="flex gap-2">
+                  <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit šablonu</button>
+                  <button className="btn-secondary" type="button" onClick={() => setEditTpl(null)}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
+                </div>
+              </div>
+              <div className="flex justify-end">
+              <button className="btn-secondary text-xs" type="button" onClick={() => {
+                if (!editTpl) return;
+                const def = DEFAULT_TEMPLATES[editTpl.type];
+                if (!def) return;
+                if (!confirm("Obnovit výchozí šablonu? Současný obsah bude nahrazen. Změna se uloží až po kliknutí na Uložit šablonu.")) return;
+                setTplSubject(def.subject);
+                setTplBody(def.body);
+                setTplKey((k) => k + 1);
+              }}><i className="fa-regular fa-rotate-left mr-1.5" />Obnovit výchozí šablonu</button>
               </div>
               <div className="max-w-2xl">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="label mb-0">Předmět</label>
-                  <button className="btn-secondary text-amber-700 border-amber-200 hover:bg-amber-50 text-xs py-1" type="button" onClick={() => {
-                    if (!editTpl) return;
-                    const def = DEFAULT_TEMPLATES[editTpl.type];
-                    if (!def) return;
-                    if (!confirm("Obnovit výchozí šablonu? Současný obsah bude nahrazen. Změna se uloží až po kliknutí na Uložit šablonu.")) return;
-                    setTplSubject(def.subject);
-                    setTplBody(def.body);
-                    setTplKey((k) => k + 1);
-                  }}><i className="fa-regular fa-rotate-left mr-1.5" />Obnovit výchozí šablonu</button>
-                </div>
+                <label className="label">Předmět</label>
                 <input className="input w-full" value={tplSubject} onChange={(e) => setTplSubject(e.target.value)} required />
               </div>
               <div><label className="label">Tělo e-mailu</label><WysiwygEditor key={tplKey} value={tplBody} onChange={setTplBody} /></div>
-              <div className="flex gap-2 pt-2">
-                <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit šablonu</button>
-                <button className="btn-secondary" type="button" onClick={() => setEditTpl(null)}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
-              </div>
             </form>
           ) : (
             <>

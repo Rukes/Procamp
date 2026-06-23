@@ -9,6 +9,9 @@ export interface Permission {
   reservations_create: boolean;
   reservations_edit: boolean;
   reservations_delete: boolean;
+  blockings_view: boolean;
+  blockings_edit: boolean;
+  blockings_delete: boolean;
   users_manage: boolean;
   templates_edit: boolean;
   settings_edit: boolean;

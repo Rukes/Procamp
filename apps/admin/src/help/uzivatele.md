@@ -20,6 +20,11 @@ Každému uživateli lze nastavit přesně ta oprávnění která potřebuje. Op
 - **Úprava** — může upravit nastavení objektu, ceny, příplatky a e-mailové šablony
 - **Smazání** — může trvale smazat objekt
 
+### Blokace
+- **Zobrazení** — vidí seznam blokací termínů
+- **Vytvoření a úprava** — může přidávat a upravovat blokace
+- **Smazání** — může trvale smazat blokaci
+
 ### Správa
 - **Správa uživatelů** — může přidávat a upravovat ostatní uživatele
 - **Nastavení organizace** — přístup k nastavení organizace, fakturačním údajům a jazykům

@@ -1,5 +1,6 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useRef, useState } from "react";
+import HelpModal from "../components/HelpModal";
 import { api } from "../api/client";
 import { User, Permission } from "@procamp/shared";
 import { useAuth } from "../contexts/AuthContext";
@@ -17,6 +18,9 @@ const PERM_LABELS: { key: keyof Permission; label: string; group: string }[] = [
   { key: "reservations_create", label: "Vytvářet rezervace", group: "Rezervace" },
   { key: "reservations_edit", label: "Upravovat rezervace", group: "Rezervace" },
   { key: "reservations_delete", label: "Mazat rezervace", group: "Rezervace" },
+  { key: "blockings_view", label: "Zobrazit blokace", group: "Blokace" },
+  { key: "blockings_edit", label: "Vytvářet a upravovat blokace", group: "Blokace" },
+  { key: "blockings_delete", label: "Mazat blokace", group: "Blokace" },
   { key: "users_manage", label: "Spravovat uživatele", group: "Správce" },
   { key: "org_admin", label: "Nastavení organizace", group: "Správce" },
 ];
@@ -24,6 +28,7 @@ const PERM_LABELS: { key: keyof Permission; label: string; group: string }[] = [
 const DEFAULT_PERMS: Permission = {
   camps_view: false, camps_create: false, camps_edit: false, camps_delete: false,
   reservations_view: false, reservations_create: false, reservations_edit: false, reservations_delete: false,
+  blockings_view: false, blockings_edit: false, blockings_delete: false,
   users_manage: false, templates_edit: false, settings_edit: false, org_admin: false,
 };
 
@@ -52,6 +57,7 @@ export default function UsersPage() {
   useTitle("Uživatelé");
   const { can, user: me } = useAuth();
   const toast = useToast();
+  const [helpOpen, setHelpOpen] = useState(false);
   const [users, setUsers] = useState<User[]>([]);
   const [camps, setCamps] = useState<{ id: string; name: string }[]>([]);
   const [editUser, setEditUser] = useState<User | null>(null);
@@ -142,7 +148,11 @@ export default function UsersPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Uživatelé</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-900">Uživatelé</h1>
+          <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
+        </div>
+        {helpOpen && <HelpModal topic="uzivatele" onClose={() => setHelpOpen(false)} />}
         <button className="btn-primary text-sm" onClick={() => { setCreating(true); setEditUser(null); }}><i className="fa-regular fa-plus mr-1.5" /><span className="hidden sm:inline">Nový uživatel</span><span className="sm:hidden">Nový</span></button>
       </div>
 

@@ -34,6 +34,8 @@ Volitelné nebo povinné položky připočítané k ceně rezervace. Příklady:
 
 - **Notifikační e-mail** — na tuto adresu přijde e-mail při každé nové rezervaci; slouží také jako Reply-To při systémovém SMTP
 - **Vyžadovat potvrzení rezervace** — pokud je zapnuto, nové rezervace čekají na vaše ruční potvrzení v sekci Rezervace; pokud je vypnuto, rezervace se potvrdí automaticky okamžitě po odeslání
+- **Skrýt volbu a cenu dospělého** — zákazník v rezervačním formuláři neuvidí výběr počtu dospělých; cena za dospělého se nezobrazí ani v nastavení cen
+- **Skrýt volbu a cenu dítěte** — stejné jako výše, ale pro děti
 - **Použít vlastní SMTP nastavení** — zaškrtněte pokud chcete odesílat e-maily z vlastního serveru místo systémového; po zaškrtnutí vyplňte: SMTP host, port, uživatel, heslo, odesílatel (From) a Reply-To; všechna pole jsou povinná; klikněte na **Ověřit připojení před uložením** — systém otestuje přihlášení k SMTP serveru a po úspěchu se zobrazí tlačítko Uložit; bez systémového ani vlastního SMTP se e-maily neodesílají
 
 ### E-mailové šablony

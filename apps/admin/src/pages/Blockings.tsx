@@ -1,5 +1,6 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
+import HelpModal from "../components/HelpModal";
 import { api } from "../api/client";
 import { Camp } from "@procamp/shared";
 import { format } from "date-fns";
@@ -28,6 +29,7 @@ const EMPTY = { campId: "", accommodationTypeId: "", dateFrom: "", dateTo: "", r
 export default function BlockingsPage() {
   useTitle("Blokace termínů");
   const toast = useToast();
+  const [helpOpen, setHelpOpen] = useState(false);
   const [periods, setPeriods] = useState<BlockedPeriod[]>([]);
   const [camps, setCamps] = useState<(Camp & { accommodationTypes: AccommodationType[] })[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
@@ -123,7 +125,11 @@ export default function BlockingsPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Blokace termínů</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-gray-900">Blokace termínů</h1>
+          <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
+        </div>
+        {helpOpen && <HelpModal topic="blokace" onClose={() => setHelpOpen(false)} />}
         <button className="btn-primary" onClick={openNew}>
           <i className="fa-regular fa-plus mr-1.5" />Nová blokace
         </button>
