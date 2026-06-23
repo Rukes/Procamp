@@ -32,6 +32,10 @@ Chcete-li zákazníkům z jiné země nabídnout formulář v jejich jazyce, př
 
 Zákazník pak uvidí formulář ve svém jazyce a ceny v příslušné měně.
 
+## Tlačítko Informace
+
+Pokud máte v nastavení objektu vyplněny **Informace o objektu**, zobrazí se zákazníkovi vedle názvu objektu tlačítko „Info". Po kliknutí se otevře modal s textem který jste nastavili — kontakt, mapa, popis. Tlačítko se zobrazí pouze pokud je obsah pro daný jazyk vyplněn.
+
 ## Co zákazník v formuláři vyplňuje
 
 1. **Termín** — výběr příjezdu a odjezdu z kalendáře (obsazené dny jsou automaticky šedé)

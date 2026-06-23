@@ -79,7 +79,7 @@ export default function TypeStep({ camp, selected, onSelect, lang }: Props) {
                 <span className="text-xs text-gray-400">{t.typePerNight}</span>
               </div>
               {type.shortDescription && (
-                <div className="text-xs text-gray-400 mt-2 leading-snug">{type.shortDescription}</div>
+                <div className={`text-xs text-gray-400 mt-2 leading-snug ${type.longDescription ? "pr-6" : ""}`}>{type.shortDescription}</div>
               )}
               {!available && <div className="text-xs text-red-500 mt-1">{t.typeSoldOut}</div>}
             </div>

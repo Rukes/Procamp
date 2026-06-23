@@ -20,6 +20,12 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 
 ---
 
+## Co je nového (červen 2026 — aktualizace 6)
+
+- **Logo a favicon** — logo zobrazeno v postranním menu (desktop i mobilní drawer) a v mobilním top baru; logo na přihlašovací stránce; favicon pro všechna zařízení a prohlížeče (admin i formulář); loga jsou servována přes API ze složky `apps/api/public/logos/`
+- **Informace o objektu** — v nastavení objektu nová sekce „Informace o objektu"; WYSIWYG editor per-jazyk; obsah se zobrazí zákazníkovi v rezervačním formuláři v modalu přes tlačítko „Info" vedle názvu objektu; tlačítko se zobrazí pouze pokud je obsah vyplněn
+- **Oprava přihlášení** — špatné přihlašovací údaje zobrazí chybovou hlášku místo reloadu stránky; pole heslo se po neúspěšném přihlášení vymaže
+
 ## Co je nového (červen 2026 — aktualizace 5)
 
 - **SA: Všichni uživatelé** — nová stránka `/all-users` v SA sekci; tabulka všech uživatelů napříč organizacemi se sloupci Jméno, E-mail, Organizace, Role; tlačítka Upravit, Odhlásit (force-logout), Smazat; vyhledávání

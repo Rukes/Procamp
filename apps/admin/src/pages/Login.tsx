@@ -26,6 +26,7 @@ export default function LoginPage() {
       navigate("/dashboard");
     } catch {
       setError("Nesprávný e-mail nebo heslo.");
+      setPassword("");
     } finally {
       setLoading(false);
     }
@@ -34,8 +35,8 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="card p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-900 mb-1">MůjKemp.cz</h1>
-        <p className="text-sm text-gray-500 mb-6">Přihlaste se do administrace</p>
+        <img src="/logos/logo-color.png" alt="Logo" className="h-28 w-auto mb-4 mx-auto" />
+        <p className="text-sm text-gray-500 mb-6 text-center">Přihlášení jako správce</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="label">E-mail</label>

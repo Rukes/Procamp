@@ -56,6 +56,7 @@ export const sk: Translations = {
   confirmTotal: "Celková cena",
   confirmFooter: "Platba prebieha na mieste. Tešíme sa na vás!",
 
+  campInfo: "Informácie",
   errorNoAvailability: "Žiaľ, kapacita je pre vybraný dátum obsadená.",
   errorGeneral: "Nastala chyba, skúste to prosím znova.",
   errorFormNotFound: "Formulár nebol nájdený.",

@@ -56,6 +56,7 @@ export const ru: Translations = {
   confirmTotal: "Общая стоимость",
   confirmFooter: "Оплата при заезде. Ждём вас!",
 
+  campInfo: "Инфо",
   errorNoAvailability: "К сожалению, на выбранные даты мест нет.",
   errorGeneral: "Произошла ошибка. Пожалуйста, попробуйте ещё раз.",
   errorFormNotFound: "Форма бронирования не найдена.",

@@ -56,6 +56,7 @@ export const en: Translations = {
   confirmTotal: "Total price",
   confirmFooter: "Payment is due on arrival. We look forward to seeing you!",
 
+  campInfo: "Info",
   errorNoAvailability: "Sorry, there is no availability for the selected dates.",
   errorGeneral: "An error occurred, please try again.",
   errorFormNotFound: "Reservation form not found.",

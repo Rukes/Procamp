@@ -57,6 +57,7 @@ export const updateCampSchema = z.object({
   hideAdults: z.boolean().optional(),
   hideChildren: z.boolean().optional(),
   useCustomSmtp: z.boolean().optional(),
+  info: z.record(z.string()).optional(),
 });
 
 export const createSurchargeSchema = z.object({

@@ -26,6 +26,7 @@ interface CampPublic extends Omit<Camp, "surcharges" | "accommodationTypes"> {
   accommodationTypes: PublicAccommodationType[];
   hideAdults?: boolean;
   hideChildren?: boolean;
+  info?: Record<string, string>;
 }
 
 interface CampData {

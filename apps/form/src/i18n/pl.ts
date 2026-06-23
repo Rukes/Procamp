@@ -56,6 +56,7 @@ export const pl: Translations = {
   confirmTotal: "Łączna cena",
   confirmFooter: "Płatność na miejscu. Do zobaczenia!",
 
+  campInfo: "Informacje",
   errorNoAvailability: "Niestety, brak dostępności w wybranym terminie.",
   errorGeneral: "Wystąpił błąd, spróbuj ponownie.",
   errorFormNotFound: "Formularz rezerwacji nie został znaleziony.",

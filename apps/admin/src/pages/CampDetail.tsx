@@ -99,7 +99,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
 
 type Popup = { type: "link"; url: string } | { type: "image"; url: string; linkUrl: string };
 
-function WysiwygEditor({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function WysiwygEditor({ value, onChange, showVars = true }: { value: string; onChange: (v: string) => void; showVars?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const isInit = useRef(false);
   const savedRange = useRef<Range | null>(null);
@@ -214,17 +214,19 @@ function WysiwygEditor({ value, onChange }: { value: string; onChange: (v: strin
         ? <textarea className="w-full min-h-64 max-h-96 p-4 text-xs font-mono focus:outline-none resize-none" value={value} onChange={(e) => onChange(e.target.value)} spellCheck={false} />
         : <div ref={ref} contentEditable suppressContentEditableWarning onInput={() => { if (ref.current) onChange(ref.current.innerHTML); }} className="min-h-[32rem] max-h-[48rem] overflow-y-auto p-4 text-sm focus:outline-none prose prose-sm max-w-none" style={{ lineHeight: 1.6 }} />
       }
-      <div className="border-t-2 border-gray-300 bg-gray-50 p-3">
-        <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Proměnné — kliknutím vložíte do textu</p>
-        <div className="space-y-1">
-          {TEMPLATE_VARS.map((v) => (
-            <button key={v.key} type="button" onClick={() => insertVar(v.key)} className="flex items-center gap-3 w-full text-left px-2 py-1 rounded hover:bg-gray-200 transition-colors">
-              <code className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-mono">{v.key}</code>
-              <span className="text-xs text-gray-500">{v.desc}</span>
-            </button>
-          ))}
+      {showVars && (
+        <div className="border-t-2 border-gray-300 bg-gray-50 p-3">
+          <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-2">Proměnné — kliknutím vložíte do textu</p>
+          <div className="space-y-1">
+            {TEMPLATE_VARS.map((v) => (
+              <button key={v.key} type="button" onClick={() => insertVar(v.key)} className="flex items-center gap-3 w-full text-left px-2 py-1 rounded hover:bg-gray-200 transition-colors">
+                <code className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-mono">{v.key}</code>
+                <span className="text-xs text-gray-500">{v.desc}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
@@ -535,6 +537,10 @@ export default function CampDetailPage() {
   const [tplSubject, setTplSubject] = useState("");
   const [tplKey, setTplKey] = useState(0);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const [infoLang, setInfoLang] = useState("");
+  const [infoValues, setInfoValues] = useState<Record<string, string>>({});
+  const [savingInfo, setSavingInfo] = useState(false);
 
   // Accommodation type editor
   const [editType, setEditType] = useState<AccommodationType | null | "new">(null);
@@ -552,12 +558,27 @@ export default function CampDetailPage() {
     setUseCustomSmtp(campRes.data.useCustomSmtp ?? false);
     setHideAdults(campRes.data.hideAdults ?? false);
     setHideChildren(campRes.data.hideChildren ?? false);
+    setInfoValues(campRes.data.info ?? {});
+    setInfoLang(langRes.data[0]?.code ?? "cs");
     setLanguages(langRes.data);
     setTemplates(tplRes.data);
     setOrgSlug(campRes.data.organization?.slug ?? null);
   };
 
   useEffect(() => { load(); }, [id]);
+
+  const handleSaveInfo = async () => {
+    setSavingInfo(true);
+    try {
+      const res = await api.put(`/camps/${id}`, { info: infoValues });
+      setCamp(res.data);
+      toast.success("Informace byly uloženy.");
+    } catch {
+      toast.error("Nepodařilo se uložit.");
+    } finally {
+      setSavingInfo(false);
+    }
+  };
 
   const handleSaveSettings = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -723,6 +744,7 @@ export default function CampDetailPage() {
 
       {/* Settings */}
       {tab === "settings" && (
+        <>
         <form onSubmit={handleSaveSettings} className="card p-6 space-y-6 max-w-2xl">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="col-span-2">
@@ -772,6 +794,54 @@ export default function CampDetailPage() {
             )}
           </div>
         </form>
+
+        {/* Informace o objektu — modal */}
+        {infoOpen && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-8" onClick={() => setInfoOpen(false)}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90dvh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+                <h3 className="font-semibold text-gray-900">{FLAGS[infoLang] ?? "🌐"} {languages.find((l) => l.code === infoLang)?.name ?? infoLang.toUpperCase()} — Informace o objektu</h3>
+                <button type="button" onClick={() => setInfoOpen(false)} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
+              </div>
+              <div className="flex-1 overflow-y-auto px-6 py-4">
+                <WysiwygEditor
+                  key={`info-${infoLang}`}
+                  value={infoValues[infoLang] ?? ""}
+                  onChange={(html) => setInfoValues((prev) => ({ ...prev, [infoLang]: html }))}
+                  showVars={false}
+                />
+              </div>
+              {can("camps_edit") && (
+                <div className="flex justify-end gap-2 px-6 py-4 border-t border-gray-100">
+                  <button type="button" className="btn-secondary" onClick={() => setInfoOpen(false)}>Zrušit</button>
+                  <button type="button" className="btn-primary" onClick={handleSaveInfo} disabled={savingInfo}>
+                    {savingInfo ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</>}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        {/* Informace o objektu — karta */}
+        <div className="card p-5 max-w-2xl mt-4">
+          <h3 className="font-semibold mb-3"><i className="fa-regular fa-circle-info mr-2" />Informace o objektu</h3>
+          <div className="space-y-2">
+            {languages.map((l) => (
+              <div key={l.code} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                <span className="text-sm font-medium">{FLAGS[l.code] ?? "🌐"} {l.name}</span>
+                <div className="flex gap-2 items-center">
+                  {infoValues[l.code] ? <span className="text-xs text-green-600"><i className="fa-regular fa-check mr-1" />nastaveno</span> : <span className="text-xs text-gray-400">prázdné</span>}
+                  {can("camps_edit") && (
+                    <button className="btn-secondary text-xs py-1" onClick={() => { setInfoLang(l.code); setInfoOpen(true); }}>
+                      <i className="fa-regular fa-pen mr-1" />Upravit
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        </>
       )}
 
       {/* Typy ubytování */}

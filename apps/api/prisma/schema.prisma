@@ -89,6 +89,7 @@ model Camp {
   hideAdults            Boolean             @default(false)
   hideChildren          Boolean             @default(false)
   useCustomSmtp         Boolean             @default(false)
+  info                  Json                @default("{}")
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
   accommodationTypes    AccommodationType[]

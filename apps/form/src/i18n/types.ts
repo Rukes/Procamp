@@ -61,6 +61,9 @@ export interface Translations {
   confirmTotal: string;
   confirmFooter: string;
 
+  // Info modal
+  campInfo: string;
+
   // Chyby
   errorNoAvailability: string;
   errorGeneral: string;

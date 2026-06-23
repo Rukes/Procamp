@@ -56,6 +56,7 @@ export const uk: Translations = {
   confirmTotal: "Загальна вартість",
   confirmFooter: "Оплата при заїзді. Чекаємо на вас!",
 
+  campInfo: "Інфо",
   errorNoAvailability: "На жаль, на вибрані дати місць немає.",
   errorGeneral: "Сталася помилка. Будь ласка, спробуйте ще раз.",
   errorFormNotFound: "Форму бронювання не знайдено.",

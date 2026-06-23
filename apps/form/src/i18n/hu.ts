@@ -56,6 +56,7 @@ export const hu: Translations = {
   confirmTotal: "Teljes ár",
   confirmFooter: "Fizetés érkezéskor. Várjuk Önt!",
 
+  campInfo: "Infó",
   errorNoAvailability: "Sajnos a kiválasztott időpontban nincs szabad hely.",
   errorGeneral: "Hiba történt, kérjük próbálja újra.",
   errorFormNotFound: "A foglalási űrlap nem található.",
