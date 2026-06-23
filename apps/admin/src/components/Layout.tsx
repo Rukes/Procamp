@@ -6,7 +6,6 @@ import { api } from "../api/client";
 import { Permission } from "@procamp/shared";
 import Tooltip from "./Tooltip";
 import { marked } from "marked";
-import changelogRaw from "../../../../CHANGELOG.md?raw";
 
 const nav: { to: string; label: string; icon: string; perm?: keyof Permission; newLink?: string }[] = [
   { to: "/dashboard", label: "Dashboard", icon: "fa-chart-bar" },
@@ -31,6 +30,7 @@ export default function Layout() {
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const [changelogHtml, setChangelogHtml] = useState("");
 
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
@@ -137,7 +137,7 @@ export default function Layout() {
           <Link to="/author" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
             <i className="fa-regular fa-id-card" /> Autor
           </Link>
-          <button onClick={() => setChangelogOpen(true)} className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
+          <button onClick={() => { if (!changelogHtml) fetch("/changelog.md").then(r => r.text()).then(t => setChangelogHtml(marked(t) as string)); setChangelogOpen(true); }} className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
             <i className="fa-regular fa-clock-rotate-left" /> Changelog
           </button>
         </div>
@@ -152,7 +152,7 @@ export default function Layout() {
             </div>
             <div
               className="overflow-y-auto px-6 py-5 prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: marked(changelogRaw) as string }}
+              dangerouslySetInnerHTML={{ __html: changelogHtml }}
             />
           </div>
         </div>
