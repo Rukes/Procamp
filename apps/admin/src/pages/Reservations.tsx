@@ -124,7 +124,7 @@ export default function ReservationsPage() {
 
   const handleConfirm = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!confirm("Opravdu chcete potvrdit tuto rezervaci?")) return;
+    if (!confirm("Opravdu chcete potvrdit tuto rezervaci včetně odeslání potvrzení?")) return;
     await api.patch(`/reservations/${id}/status`, { status: "CONFIRMED" });
     load();
   };

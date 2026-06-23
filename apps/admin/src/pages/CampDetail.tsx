@@ -95,6 +95,35 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
   </div>
 </div>`,
   },
+  PENDING_CONFIRMATION: {
+    subject: "Vaše rezervace čeká na potvrzení – {{campName}}",
+    body: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a1a1a">
+  <div style="background:#92400e;padding:24px 32px;border-radius:8px 8px 0 0">
+    <h1 style="margin:0;color:#ffffff;font-size:20px">🏕️ Rezervace přijata – čeká na potvrzení</h1>
+    <p style="margin:4px 0 0;color:#fde68a;font-size:14px">{{campName}}</p>
+  </div>
+  <div style="background:#f8fafc;padding:24px 32px;border-radius:0 0 8px 8px;border:1px solid #e2e8f0;border-top:none">
+    <p style="font-size:15px;margin:0 0 24px">Dobrý den, <strong>{{firstName}}</strong>,<br>obdrželi jsme vaši žádost o rezervaci. Rezervace bude aktivní po ručním potvrzení ze strany správce — budeme vás informovat e-mailem.</p>
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Přehled rezervace</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr><td style="padding:6px 0;color:#6b7280;width:180px">Rezervace ubytování</td><td style="padding:6px 0;font-weight:600">{{accommodationType}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Příjezd</td><td style="padding:6px 8px;font-weight:600">{{checkIn}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Odjezd</td><td style="padding:6px 0;font-weight:600">{{checkOut}}</td></tr>
+      <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Počet nocí</td><td style="padding:6px 8px">{{nights}}</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280">Dospělí / Děti</td><td style="padding:6px 0">{{adults}} / {{children}}</td></tr>
+    </table>
+    <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Předběžná cena</h2>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr style="background:#fef3c7"><td style="padding:10px 8px;color:#92400e;font-weight:700;font-size:15px;width:180px">Celková cena</td><td style="padding:10px 8px;font-weight:700;font-size:15px;color:#92400e">{{totalPrice}} Kč</td></tr>
+      <tr><td style="padding:6px 0;color:#6b7280;font-size:13px" colspan="2">Cena je předběžná a bude potvrzena spolu s rezervací.</td></tr>
+    </table>
+    <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:6px;padding:16px;margin-bottom:24px">
+      <p style="margin:0;font-size:14px;color:#92400e">⏳ Vaše rezervace čeká na potvrzení. Jakmile ji potvrdíme, obdržíte další e-mail. Máte-li dotazy, odpovězte na tento e-mail.</p>
+    </div>
+    <p style="margin:0;font-size:12px;color:#9ca3af;border-top:1px solid #e2e8f0;padding-top:12px">ID rezervace: {{reservationId}}</p>
+  </div>
+</div>`,
+  },
 };
 
 type Popup = { type: "link"; url: string } | { type: "image"; url: string; linkUrl: string };
@@ -1018,12 +1047,10 @@ export default function CampDetailPage() {
           ) : (
             <>
               <div className="card p-5">
-                <h3 className="font-semibold mb-3"><i className="fa-regular fa-envelope-open-text mr-2" />Notifikace správci</h3>
+                <h3 className="font-semibold mb-1"><i className="fa-regular fa-envelope-open-text mr-2" />Notifikace správci</h3>
+                <p className="text-xs text-gray-400 mb-3">Odesílá se vždy při každé nové rezervaci na notifikační e-mail objektu, bez ohledu na ruční potvrzení.</p>
                 <div className="flex items-center justify-between py-2">
-                  <div>
-                    <span className="text-sm font-medium">Česky (výchozí)</span>
-                    <p className="text-xs text-gray-400 mt-0.5">Odesílá se vždy v češtině na notifikační e-mail objektu.</p>
-                  </div>
+                  <span className="text-sm font-medium">Česky (výchozí)</span>
                   <div className="flex gap-2 items-center">
                     {(() => {
                       const tpl = templates.find((t) => t.type === "ADMIN_NOTIFICATION" && t.languageCode === "cs");
@@ -1039,8 +1066,33 @@ export default function CampDetailPage() {
                   </div>
                 </div>
               </div>
+              {(camp as unknown as Record<string, unknown>).requiresConfirmation && (
+                <div className="card p-5">
+                  <h3 className="font-semibold mb-1"><i className="fa-regular fa-clock mr-2" />Nepotvrzená rezervace</h3>
+                  <p className="text-xs text-gray-400 mb-3">Odesílá se zákazníkovi po odeslání rezervace a zákazník je informován, že rezervace čeká na potvrzení správcem.</p>
+                  <div className="space-y-2">
+                    {languages.map((lang) => {
+                      const tpl = templates.find((t) => t.type === "PENDING_CONFIRMATION" && t.languageCode === lang.code);
+                      return (
+                        <div key={lang.code} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                          <span className="text-sm font-medium">{FLAGS[lang.code] ?? "🌐"} {lang.name}</span>
+                          <div className="flex gap-2 items-center">
+                            {tpl ? <span className="text-xs text-green-600"><i className="fa-regular fa-check mr-1" />nastavena</span> : <span className="text-xs text-gray-400">chybí</span>}
+                            {can("templates_edit") && (
+                              <button className="btn-secondary text-xs py-1" onClick={() => openEditTpl(tpl ?? { id: "", campId: id!, type: "PENDING_CONFIRMATION", languageCode: lang.code, subject: "", body: "" })}>
+                                {tpl ? <><i className="fa-regular fa-pen mr-1" />Upravit</> : <><i className="fa-regular fa-plus mr-1" />Vytvořit</>}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
               <div className="card p-5">
-                <h3 className="font-semibold mb-3"><i className="fa-regular fa-envelope mr-2" />Potvrzení zákazníkovi</h3>
+                <h3 className="font-semibold mb-1"><i className="fa-regular fa-envelope mr-2" />Potvrzení o rezervaci zákazníkovi</h3>
+                <p className="text-xs text-gray-400 mb-3">Odesílá se zákazníkovi ihned po rezervaci, protože není vyžadováno potvrzení rezervace.</p>
                 <div className="space-y-2">
                   {languages.map((lang) => {
                     const tpl = templates.find((t) => t.type === "CUSTOMER_CONFIRMATION" && t.languageCode === lang.code);

@@ -1,10 +1,17 @@
 # E-mailové šablony
 
-Po každé nové rezervaci systém automaticky odešle dva e-maily:
-- **Potvrzení zákazníkovi** — zákazník dostane shrnutí rezervace
-- **Oznámení správci** — přijde na notifikační e-mail nastavený v objektu
+Po každé nové rezervaci systém automaticky odešle e-maily. Které šablony se použijí závisí na nastavení objektu:
 
-Texty obou e-mailů si můžete libovolně upravit.
+**Objekt bez ručního potvrzení:**
+- **Oznámení správci** — přijde na notifikační e-mail objektu
+- **Potvrzení o rezervaci zákazníkovi** — zákazník dostane shrnutí a potvrzení rezervace
+
+**Objekt s ručním potvrzením:**
+- **Oznámení správci** — přijde na notifikační e-mail objektu
+- **Nepotvrzená rezervace** — zákazník je informován, že rezervace čeká na potvrzení správcem
+- Po ručním potvrzení správcem se zákazníkovi automaticky odešle **Potvrzení o rezervaci zákazníkovi**
+
+Texty všech e-mailů si můžete libovolně upravit. Šablona **Nepotvrzená rezervace** se zobrazuje v nastavení pouze pokud má objekt zapnuté ruční potvrzení rezervací.
 
 ## Úprava šablon
 
@@ -55,6 +62,3 @@ E-maily se odesílají přes SMTP server. Systém podporuje dva způsoby:
 
 **Vlastní SMTP objektu** — v detailu objektu → záložka **Nastavení** → zaškrtněte „Použít vlastní SMTP nastavení" a vyplňte přihlašovací údaje. Pole Reply-To určuje adresu, na kterou zákazník odpoví — typicky shodná s notifikačním e-mailem objektu. Po vyplnění klikněte na **Ověřit připojení před uložením** — systém otestuje přihlášení k SMTP serveru a teprve po úspěchu se zobrazí tlačítko Uložit SMTP.
 
-## Kill switch
-
-Super admin může na stránce **Systém** jedním přepínačem vypnout veškerý mailing. Pokud je mailing vypnut, neodesílají se žádné e-maily bez ohledu na nastavení SMTP objektu ani systémového SMTP. V administraci se zobrazí varování.

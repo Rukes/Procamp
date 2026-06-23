@@ -26,6 +26,15 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 - **Informace o objektu** — v nastavení objektu nová sekce „Informace o objektu"; WYSIWYG editor per-jazyk; obsah se zobrazí zákazníkovi v rezervačním formuláři v modalu přes tlačítko „Info" vedle názvu objektu; tlačítko se zobrazí pouze pokud je obsah vyplněn
 - **Oprava přihlášení** — špatné přihlašovací údaje zobrazí chybovou hlášku místo reloadu stránky; pole heslo se po neúspěšném přihlášení vymaže
 
+## Co je nového (červen 2026 — aktualizace 6)
+
+- **Šablona Nepotvrzená rezervace** — nová e-mailová šablona odesílaná zákazníkovi při odeslání rezervace, pokud objekt vyžaduje ruční potvrzení; zákazník je informován, že rezervace čeká na schválení; šablona se zobrazuje v nastavení pouze u objektů s ručním potvrzením
+- **Potvrzení rezervace správcem odesílá e-mail** — při ručním potvrzení rezervace (změna stavu PENDING → CONFIRMED) se zákazníkovi automaticky odešle šablona „Potvrzení o rezervaci zákazníkovi"
+- **Přejmenování šablony** — šablona „Potvrzení zákazníkovi" přejmenována na „Potvrzení o rezervaci zákazníkovi"
+- **Informační texty u šablon** — každá šablona v nastavení objektu zobrazuje popis kdy a za jakých podmínek se odesílá
+- **Stránkování — přepínač počtu záznamů** — na všech tabulkách (rezervace, blokace, objekty, uživatelé, jazyky, logy, SA uživatelé) přibyl přepínač 20 / 50 / 100 / Vše; default 50; formát „X až Y z Z"
+- **Fulltext vyhledávání v lozích** — nový input hledá napříč e-mailem uživatele, ID entity a obsahem payloadu (server-side)
+
 ## Co je nového (červen 2026 — aktualizace 5)
 
 - **SA: Všichni uživatelé** — nová stránka `/all-users` v SA sekci; tabulka všech uživatelů napříč organizacemi se sloupci Jméno, E-mail, Organizace, Role; tlačítka Upravit, Odhlásit (force-logout), Smazat; vyhledávání

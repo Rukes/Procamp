@@ -52,7 +52,7 @@ export async function sendReservationEmails(
   prisma: PrismaClient,
   reservation: Reservation & { camp: Camp },
   nights: number,
-  only?: { sendCustomer?: boolean; sendAdmin?: boolean },
+  only?: { sendCustomer?: boolean; sendAdmin?: boolean; customerTplType?: string },
   triggeredBy?: string,
 ) {
   // Kill switch — pokud je SMTP vypnuté v nastavení systému, neodesílat nic
@@ -95,10 +95,13 @@ export async function sendReservationEmails(
     where: { campId_type_languageCode: { campId: camp.id, type: "ADMIN_NOTIFICATION", languageCode: "cs" } },
   });
 
+  const requiresConfirmation = (camp as any).requiresConfirmation === true;
+  const customerTplType = only?.customerTplType ?? (requiresConfirmation ? "PENDING_CONFIRMATION" : "CUSTOMER_CONFIRMATION");
+
   const customerTpl = await prisma.emailTemplate.findUnique({
-    where: { campId_type_languageCode: { campId: camp.id, type: "CUSTOMER_CONFIRMATION", languageCode: lang } },
+    where: { campId_type_languageCode: { campId: camp.id, type: customerTplType, languageCode: lang } },
   }) ?? await prisma.emailTemplate.findUnique({
-    where: { campId_type_languageCode: { campId: camp.id, type: "CUSTOMER_CONFIRMATION", languageCode: "cs" } },
+    where: { campId_type_languageCode: { campId: camp.id, type: customerTplType, languageCode: "cs" } },
   });
 
   const logBase = { userEmail: triggeredBy ?? "system", entity: "reservation", entityId: reservation.id };
@@ -120,9 +123,9 @@ export async function sendReservationEmails(
     const to = reservation.email;
     try {
       await transport.sendMail({ from: smtpConfig.from, replyTo: smtpConfig.replyTo, to, subject: renderTemplate(customerTpl.subject, vars), html: renderTemplate(customerTpl.body, vars) });
-      await logActivity(prisma, { ...logBase, action: "EMAIL_SENT", payload: { type: "CUSTOMER_CONFIRMATION", to } });
+      await logActivity(prisma, { ...logBase, action: "EMAIL_SENT", payload: { type: customerTplType, to } });
     } catch (err: unknown) {
-      await logActivity(prisma, { ...logBase, action: "EMAIL_FAILED", payload: { type: "CUSTOMER_CONFIRMATION", to, error: String(err) } });
+      await logActivity(prisma, { ...logBase, action: "EMAIL_FAILED", payload: { type: customerTplType, to, error: String(err) } });
     }
   }
 }

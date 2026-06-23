@@ -172,6 +172,12 @@ export async function reservationRoutes(app: FastifyInstance) {
     const before = await app.prisma.reservation.findUnique({ where: { id }, select: { status: true } });
     const updated = await app.prisma.reservation.update({ where: { id }, data: { status }, include: INCLUDE });
     await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "reservation", entityId: id, payload: { status: { before: before?.status, after: status } } });
+    if (before?.status === "PENDING" && status === "CONFIRMED") {
+      const checkIn = new Date(updated.checkIn);
+      const checkOut = new Date(updated.checkOut);
+      const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
+      sendReservationEmails(app.prisma, updated as never, nights, { sendCustomer: true, sendAdmin: false, customerTplType: "CUSTOMER_CONFIRMATION" }, request.user.email).catch(() => {});
+    }
     return updated;
   });
 
