@@ -445,6 +445,7 @@ export default function CampDetailPage() {
   // Accommodation type editor
   const [editType, setEditType] = useState<AccommodationType | null | "new">(null);
   const [typeOrder, setTypeOrder] = useState<string[]>([]);
+  const [surchargeOrder, setSurchargeOrder] = useState<string[]>([]);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const dragId = useRef<string | null>(null);
 
@@ -459,6 +460,7 @@ export default function CampDetailPage() {
     ]);
     setCamp(campRes.data);
     setTypeOrder(campRes.data.accommodationTypes?.map((t: AccommodationType) => t.id) ?? []);
+    setSurchargeOrder(campRes.data.surcharges?.map((s: Surcharge) => s.id) ?? []);
     setUseCustomSmtp(campRes.data.useCustomSmtp ?? false);
     setHideAdults(campRes.data.hideAdults ?? false);
     setHideChildren(campRes.data.hideChildren ?? false);
@@ -890,16 +892,46 @@ export default function CampDetailPage() {
             </div>
           )}
 
-          {camp.surcharges.map((s: Surcharge) => {
+          {[...camp.surcharges].sort((a: Surcharge, b: Surcharge) => {
+            const ai = surchargeOrder.indexOf(a.id);
+            const bi = surchargeOrder.indexOf(b.id);
+            return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+          }).map((s: Surcharge) => {
             const t = s.translations as Record<string, { name: string }>;
             const csPrice = s.prices.find((p) => p.languageCode === "cs") ?? s.prices[0];
             return (
-              <div key={s.id} className="card p-5 flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-gray-900">{t.cs?.name ?? t[Object.keys(t)[0]]?.name ?? "—"}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">
-                    {csPrice ? `${csPrice.pricePerNight} Kč / noc` : ""}
-                  </p>
+              <div
+                key={s.id}
+                className={`card p-5 flex items-center justify-between transition-all ${dragOverId === s.id && dragId.current !== s.id ? "ring-2 ring-blue-400 ring-offset-1" : ""}`}
+                draggable={can("camps_edit")}
+                onDragStart={() => { dragId.current = s.id; }}
+                onDragOver={(e) => { e.preventDefault(); setDragOverId(s.id); }}
+                onDragLeave={() => setDragOverId(null)}
+                onDrop={() => {
+                  if (!dragId.current || dragId.current === s.id) return;
+                  setSurchargeOrder((prev) => {
+                    const next = [...prev];
+                    const from = next.indexOf(dragId.current!);
+                    const to = next.indexOf(s.id);
+                    next.splice(from, 1);
+                    next.splice(to, 0, dragId.current!);
+                    api.put(`/camps/${id}/surcharges/reorder`, { order: next }).then(() => toast.success("Pořadí uloženo.")).catch(() => toast.error("Nepodařilo se uložit pořadí."));
+                    return next;
+                  });
+                  dragId.current = null;
+                  setDragOverId(null);
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  {can("camps_edit") && (
+                    <i className="fa-regular fa-grip-dots-vertical text-gray-300 cursor-grab text-lg" />
+                  )}
+                  <div>
+                    <p className="font-semibold text-gray-900">{t.cs?.name ?? t[Object.keys(t)[0]]?.name ?? "—"}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {csPrice ? `${csPrice.pricePerNight} Kč / noc` : ""}
+                    </p>
+                  </div>
                 </div>
                 {can("camps_edit") && (
                   <div className="flex gap-2">

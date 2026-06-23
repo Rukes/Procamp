@@ -136,6 +136,7 @@ model Surcharge {
   camp          Camp                 @relation(fields: [campId], references: [id], onDelete: Cascade)
   isOptional    Boolean              @default(true)
   translations  Json                 @default("{}")
+  sortOrder     Int                  @default(0)
   createdAt     DateTime             @default(now())
   prices        SurchargePrice[]
   reservationSurcharges ReservationSurcharge[]

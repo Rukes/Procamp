@@ -17,7 +17,7 @@ export async function publicFormRoutes(app: FastifyInstance) {
     const camp = await app.prisma.camp.findUnique({
       where: { organizationId_slug: { organizationId: org.id, slug: campSlug } },
       include: {
-        surcharges: { include: { prices: true } },
+        surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } },
         accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } },
         organization: { select: { termsText: true, requireTermsAcceptance: true, gaTrackingId: true } },
       },
@@ -90,7 +90,7 @@ return { id: s.id, name, pricePerNight: price?.pricePerNight ?? 0, isOptional: s
     const camp = await app.prisma.camp.findUnique({
       where: { organizationId_slug: { organizationId: org.id, slug: campSlug } },
       include: {
-        surcharges: { include: { prices: true } },
+        surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } },
         accommodationTypes: { include: { prices: true } },
       },
     });

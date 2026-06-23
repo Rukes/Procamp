@@ -26,7 +26,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
       orderBy: { createdAt: "asc" },
     });
   });
@@ -41,7 +41,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
     });
   });
 
@@ -51,7 +51,7 @@ export async function campRoutes(app: FastifyInstance) {
     if (!orgId) return reply.status(400).send({ error: "Nejprve vyberte organizaci." });
     const camp = await app.prisma.camp.create({
       data: { name, slug, notificationEmail: notificationEmail ?? "", ...(orgId ? { organizationId: orgId } : {}) },
-      include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true } } },
     });
 
     await app.prisma.emailTemplate.createMany({
@@ -150,7 +150,7 @@ export async function campRoutes(app: FastifyInstance) {
     const camp = await app.prisma.camp.update({
       where: { id },
       data,
-      include: { surcharges: { include: { prices: true } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } } },
     });
     if (before) {
       const afterSnap = { name: camp.name, slug: camp.slug, notificationEmail: camp.notificationEmail, smtpHost: camp.smtpHost, smtpPort: camp.smtpPort, smtpUser: camp.smtpUser, smtpFrom: camp.smtpFrom, requiresConfirmation: camp.requiresConfirmation };
@@ -194,7 +194,7 @@ export async function campRoutes(app: FastifyInstance) {
   // Surcharges
   app.get("/:campId/surcharges", { preHandler: requireAuth }, async (request) => {
     const { campId } = request.params as { campId: string };
-    return app.prisma.surcharge.findMany({ where: { campId }, include: { prices: true } });
+    return app.prisma.surcharge.findMany({ where: { campId }, include: { prices: true }, orderBy: { sortOrder: "asc" } });
   });
 
   app.post("/:campId/surcharges", { preHandler: requirePermission("camps_edit") }, async (request, reply) => {
@@ -206,6 +206,14 @@ export async function campRoutes(app: FastifyInstance) {
     });
     await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "CREATE", entity: "surcharge", entityId: s.id, payload: { campId, translations } });
     return reply.status(201).send(s);
+  });
+
+  app.put("/:campId/surcharges/reorder", { preHandler: requirePermission("camps_edit") }, async (request) => {
+    const body = request.body as { order: string[] };
+    await Promise.all(body.order.map((id, index) =>
+      app.prisma.surcharge.update({ where: { id }, data: { sortOrder: index } })
+    ));
+    return { success: true };
   });
 
   app.put("/:campId/surcharges/:id", { preHandler: requirePermission("camps_edit") }, async (request) => {
