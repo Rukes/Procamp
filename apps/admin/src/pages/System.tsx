@@ -13,11 +13,6 @@ interface SmtpStatus {
   missing: string[];
 }
 
-interface GaStatus {
-  configured: boolean;
-  id: string | null;
-}
-
 export default function SystemPage() {
   useTitle("Systém");
   const toast = useToast();
@@ -27,8 +22,6 @@ export default function SystemPage() {
   const [loggingOut, setLoggingOut] = useState(false);
   const [smtpStatus, setSmtpStatus] = useState<SmtpStatus | null>(null);
   const [checkingSmtp, setCheckingSmtp] = useState(false);
-  const [gaStatus, setGaStatus] = useState<GaStatus | null>(null);
-  const [checkingGa, setCheckingGa] = useState(false);
 
   useEffect(() => {
     api.get("/system-settings").then((r) => setSettings(r.data)).catch(() => {});
@@ -44,19 +37,6 @@ export default function SystemPage() {
       toast.error("Nepodařilo se ověřit SMTP.");
     } finally {
       setCheckingSmtp(false);
-    }
-  };
-
-  const handleCheckGa = async () => {
-    setCheckingGa(true);
-    setGaStatus(null);
-    try {
-      const res = await api.get("/system-settings/ga-status");
-      setGaStatus(res.data);
-    } catch {
-      toast.error("Nepodařilo se ověřit GA.");
-    } finally {
-      setCheckingGa(false);
     }
   };
 
@@ -144,23 +124,6 @@ export default function SystemPage() {
                 {smtpStatus.verified ? "Připojení k SMTP serveru bylo úspěšné" : "Připojení k SMTP serveru selhalo — zkontrolujte přihlašovací údaje"}
               </div>
             )}
-          </div>
-        )}
-      </div>
-
-      {/* Google Analytics */}
-      <div className="card p-6 mb-6">
-        <h2 className="font-semibold text-gray-900 mb-1">Google Analytics (systémový tracking)</h2>
-        <p className="text-sm text-gray-500 mb-4">Ověření zda je nastavena env proměnná <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">VITE_GA_ID</code> pro systémový GA tracking ve formuláři. Toto ID sbírá agregovaná data přes všechny klienty — klienti si mohou nastavit vlastní GA ID v nastavení organizace.</p>
-        <button className="btn-secondary" onClick={handleCheckGa} disabled={checkingGa}>
-          {checkingGa ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ověřuji…</> : <><i className="fa-brands fa-google mr-1.5" />Ověřit GA nastavení</>}
-        </button>
-        {gaStatus && (
-          <div className="mt-4">
-            <div className={`flex items-center gap-2 text-sm px-3 py-2 rounded-lg border ${gaStatus.configured ? "bg-green-50 border-green-200 text-green-800" : "bg-red-50 border-red-200 text-red-700"}`}>
-              <i className={`fa-regular ${gaStatus.configured ? "fa-check" : "fa-xmark"}`} />
-              {gaStatus.configured ? <>Systémové GA ID je nastaveno: <code className="font-mono ml-1">{gaStatus.id}</code></> : "Env proměnná VITE_GA_ID není nastavena — systémový GA tracking je neaktivní"}
-            </div>
           </div>
         )}
       </div>

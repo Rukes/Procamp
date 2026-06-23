@@ -51,11 +51,6 @@ export async function systemSettingsRoutes(app: FastifyInstance) {
     return { configured, verified, missing };
   });
 
-  app.get("/ga-status", { preHandler: requireSuperAdmin }, async () => {
-    const configured = !!process.env.VITE_GA_ID;
-    return { configured, id: configured ? process.env.VITE_GA_ID : null };
-  });
-
   app.post("/logout-all", { preHandler: requireSuperAdmin }, async () => {
     const settings = await app.prisma.systemSettings.upsert({
       where: { id: "singleton" },

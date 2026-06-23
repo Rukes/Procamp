@@ -24,7 +24,7 @@ export function initAnalytics(clientId: string | null) {
 
   gtag("js", new Date());
   for (const id of ids) {
-    gtag("config", id, { send_page_view: false });
+    gtag("config", id);
   }
 }
 
