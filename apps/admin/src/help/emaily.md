@@ -53,7 +53,12 @@ Do textu šablony vložte proměnné ve složených závorkách — systém je p
 
 ## Opakované odeslání e-mailu
 
-V detailu rezervace klikněte na tlačítko **E-maily** → **Znovu odeslat potvrzovací e-mail zákazníkovi**. Systém zobrazí potvrzovací dialog a po odsouhlasení odešle e-mail znovu. Každé odeslání se zaznamená do logu aktivit.
+V detailu rezervace klikněte na tlačítko **E-maily**:
+
+- **Znovu odeslat potvrzovací e-mail zákazníkovi** — odešle na e-mail zadaný v rezervaci
+- **Odeslat na jiný e-mail…** — zobrazí pole pro zadání libovolné e-mailové adresy; užitečné pro přeposlání na alternativní kontakt nebo při opravě chybně zadaného e-mailu
+
+Každé odeslání se zaznamená do logu aktivit.
 
 ## Nastavení SMTP
 

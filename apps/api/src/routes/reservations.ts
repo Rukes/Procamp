@@ -191,16 +191,22 @@ export async function reservationRoutes(app: FastifyInstance) {
 
   app.post("/:id/resend-email", { preHandler: requirePermission("reservations_edit") }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { type } = request.body as { type: "customer" | "admin" };
+    const { type, overrideEmail } = request.body as { type: "customer" | "admin"; overrideEmail?: string };
     const reservation = await app.prisma.reservation.findUnique({ where: { id }, include: { ...INCLUDE, camp: true } });
     if (!reservation) return reply.status(404).send({ error: "Not found" });
     const checkIn = new Date(reservation.checkIn);
     const checkOut = new Date(reservation.checkOut);
     const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
-    await sendReservationEmails(app.prisma, reservation as never, nights, {
-      sendCustomer: type === "customer",
-      sendAdmin: type === "admin",
-    }, request.user.email);
+    try {
+      await sendReservationEmails(app.prisma, reservation as never, nights, {
+        sendCustomer: type === "customer",
+        sendAdmin: type === "admin",
+        overrideEmail,
+      }, request.user.email);
+    } catch (err) {
+      request.log.error(err);
+      return reply.status(500).send({ error: "Email se nepodařilo odeslat." });
+    }
     return { success: true };
   });
 

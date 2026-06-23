@@ -58,7 +58,7 @@ export async function sendReservationEmails(
   prisma: PrismaClient,
   reservation: Reservation & { camp: Camp },
   nights: number,
-  only?: { sendCustomer?: boolean; sendAdmin?: boolean; customerTplType?: string },
+  only?: { sendCustomer?: boolean; sendAdmin?: boolean; customerTplType?: string; overrideEmail?: string },
   triggeredBy?: string,
 ) {
   // Kill switch — pokud je SMTP vypnuté v nastavení systému, neodesílat nic
@@ -92,8 +92,8 @@ export async function sendReservationEmails(
     auth: { user: smtpConfig.user, pass: smtpConfig.pass },
   } as nodemailer.TransportOptions);
 
-  const lang = reservation.languageCode;
-  const language = await prisma.language.findUnique({ where: { code: lang }, select: { currencySymbol: true, currencyPosition: true } })
+  const lang = reservation.languageCode ?? "cs";
+  const language = await prisma.language.findFirst({ where: { code: lang }, select: { currencySymbol: true, currencyPosition: true } })
     ?? await prisma.language.findFirst({ where: { isDefault: true }, select: { currencySymbol: true, currencyPosition: true } });
   const vars = buildVars(reservation, nights, language);
 
@@ -128,7 +128,7 @@ export async function sendReservationEmails(
   }
 
   if (sendCustomer && customerTpl) {
-    const to = reservation.email;
+    const to = only?.overrideEmail ?? reservation.email;
     try {
       await transport.sendMail({ from: smtpConfig.from, replyTo: smtpConfig.replyTo, to, subject: renderTemplate(customerTpl.subject, vars), html: renderTemplate(customerTpl.body, vars) });
       await logActivity(prisma, { ...logBase, action: "EMAIL_SENT", payload: { type: customerTplType, to } });

@@ -26,6 +26,8 @@ export default function ReservationDetailPage() {
   const [noteValue, setNoteValue] = useState("");
   const [emailMenuOpen, setEmailMenuOpen] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
+  const [customEmailOpen, setCustomEmailOpen] = useState(false);
+  const [customEmail, setCustomEmail] = useState("");
 
   useEffect(() => {
     if (!editing) return;
@@ -65,6 +67,22 @@ export default function ReservationDetailPage() {
     try {
       await api.post(`/reservations/${id}/resend-email`, { type });
       toast.success(type === "customer" ? "Potvrzení zákazníkovi bylo odesláno." : "Potvrzení správci bylo odesláno.");
+    } catch {
+      toast.error("Nepodařilo se odeslat e-mail.");
+    } finally {
+      setEmailSending(false);
+    }
+  };
+
+  const handleResendCustomEmail = async () => {
+    if (!customEmail.trim()) return;
+    setEmailSending(true);
+    setEmailMenuOpen(false);
+    setCustomEmailOpen(false);
+    try {
+      await api.post(`/reservations/${id}/resend-email`, { type: "customer", overrideEmail: customEmail.trim() });
+      toast.success(`Potvrzení odesláno na ${customEmail.trim()}.`);
+      setCustomEmail("");
     } catch {
       toast.error("Nepodařilo se odeslat e-mail.");
     } finally {
@@ -202,6 +220,25 @@ export default function ReservationDetailPage() {
                 <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2" onClick={() => { if (confirm("Znovu odeslat potvrzovací e-mail zákazníkovi?")) handleResendEmail("customer"); else setEmailMenuOpen(false); }}>
                   <i className="fa-regular fa-user text-gray-400" />Znovu odeslat potvrzovací e-mail zákazníkovi
                 </button>
+                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2" onClick={() => { setCustomEmailOpen((v) => !v); }}>
+                  <i className="fa-regular fa-paper-plane text-gray-400" />Odeslat na jiný e-mail…
+                </button>
+                {customEmailOpen && (
+                  <div className="px-4 pb-3 pt-1 border-t border-gray-100 flex items-center gap-2">
+                    <input
+                      autoFocus
+                      type="email"
+                      className="input py-1 text-sm flex-1 min-w-[200px]"
+                      placeholder="jiny@email.cz"
+                      value={customEmail}
+                      onChange={(e) => setCustomEmail(e.target.value)}
+                      onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleResendCustomEmail(); } if (e.key === "Escape") { setCustomEmailOpen(false); setCustomEmail(""); } }}
+                    />
+                    <button className="btn-primary py-1 text-xs shrink-0" onClick={handleResendCustomEmail} disabled={!customEmail.trim()}>
+                      <i className="fa-regular fa-paper-plane mr-1" />Odeslat
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
