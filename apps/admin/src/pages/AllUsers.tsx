@@ -164,16 +164,24 @@ export default function AllUsersPage() {
             )}
             {paged.map((u) => (
               <tr key={u.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-4 py-3 font-medium">{u.name}</td>
+                <td className="px-4 py-3 font-medium">
+                  <span>{u.name}</span>
+                  {u.id === me?.id && <span className="badge bg-red-100 text-red-700 ml-2">Ty</span>}
+                </td>
                 <td className="px-4 py-3 text-gray-500">{u.email}</td>
                 <td className="px-4 py-3 text-gray-500">{u.organization?.name ?? <span className="italic text-gray-300">bez organizace</span>}</td>
                 <td className="px-4 py-3">
-                  {u.isSuperAdmin
-                    ? <span className="badge bg-purple-100 text-purple-800">Super Admin</span>
-                    : <span className="badge bg-gray-100 text-gray-600">Uživatel</span>}
+                  <div className="flex flex-wrap gap-1">
+                    {u.isSuperAdmin
+                      ? <span className="badge bg-red-100 text-red-700">Super Admin</span>
+                      : (u.permissions as any)?.org_admin
+                        ? <span className="badge bg-orange-100 text-orange-700">Správce</span>
+                        : <span className="badge bg-gray-100 text-gray-600">Uživatel</span>}
+                  </div>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2 justify-end">
+                    {!u.isSuperAdmin && (<>
                     <Tooltip text="Upravit" position="left">
                       <button className="btn-secondary text-sm px-2.5 py-1.5" onClick={() => { setEditUser(u); setEditPassword(""); setFormError(""); }}>
                         <i className="fa-regular fa-pen" />
@@ -193,6 +201,7 @@ export default function AllUsersPage() {
                         </button>
                       </Tooltip>
                     )}
+                    </>)}
                   </div>
                 </td>
               </tr>
