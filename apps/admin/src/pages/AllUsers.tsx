@@ -71,7 +71,7 @@ export default function AllUsersPage() {
   useEffect(() => { load(); }, []);
 
   const genPassword = () => {
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    const chars = "abcdefghjkmnpqrstuvwxyz23456789";
     let pw = "";
     for (let i = 0; i < 10; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
     setEditPassword(pw);

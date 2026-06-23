@@ -69,7 +69,7 @@ export default function UsersPage() {
   const pwInputRef = useRef<HTMLInputElement>(null);
 
   const genPassword = () => {
-    const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    const chars = "abcdefghjkmnpqrstuvwxyz23456789";
     let pw = "";
     for (let i = 0; i < 10; i++) pw += chars.charAt(Math.floor(Math.random() * chars.length));
     if (creating) setForm((f) => ({ ...f, password: pw }));
