@@ -2,7 +2,7 @@ import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useToast } from "../contexts/ToastContext";
-import RichTextEditor from "../components/RichTextEditor";
+import WysiwygEditor from "../components/WysiwygEditor";
 import Tooltip from "../components/Tooltip";
 import CountrySelect from "../components/CountrySelect";
 
@@ -198,7 +198,7 @@ export default function MyOrganizationPage() {
           <>
             <div>
               <label className="label">Text podmínek a GDPR</label>
-              <RichTextEditor value={form.termsText ?? ""} onChange={(v) => set("termsText", v)} />
+              <WysiwygEditor value={form.termsText ?? ""} onChange={(v) => set("termsText", v)} />
             </div>
             <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
               <input

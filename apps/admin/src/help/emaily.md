@@ -47,7 +47,8 @@ Do textu šablony vložte proměnné ve složených závorkách — systém je p
 | `{{licensePlate}}` | SPZ vozidla |
 | `{{expectedArrival}}` | Předpokládaný čas příjezdu |
 | `{{note}}` | Poznámka zákazníka |
-| `{{totalPrice}}` | Celková cena |
+| `{{totalPrice}}` | Celková cena (číslo) |
+| `{{totalPriceFormatted}}` | Celková cena včetně symbolu měny (např. `€ 89` nebo `1 800 Kč`) — doporučeno pro vícejazyčné šablony |
 | `{{reservationId}}` | ID rezervace |
 
 ## Opakované odeslání e-mailu

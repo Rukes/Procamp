@@ -5,7 +5,7 @@ import { api } from "../api/client";
 import { useToast } from "../contexts/ToastContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useOrg } from "../contexts/OrgContext";
-import RichTextEditor from "../components/RichTextEditor";
+import WysiwygEditor from "../components/WysiwygEditor";
 import Tooltip from "../components/Tooltip";
 import CountrySelect from "../components/CountrySelect";
 
@@ -240,7 +240,7 @@ export default function OrganizationDetailPage() {
           <>
             <div>
               <label className="label mb-2">Text podmínek & GDPR</label>
-              <RichTextEditor
+              <WysiwygEditor
                 value={form.termsText ?? ""}
                 onChange={(html) => set("termsText", html)}
               />

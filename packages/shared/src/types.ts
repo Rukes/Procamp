@@ -123,7 +123,7 @@ export interface Reservation {
 export interface EmailTemplate {
   id: string;
   campId: string;
-  type: "ADMIN_NOTIFICATION" | "CUSTOMER_CONFIRMATION";
+  type: "ADMIN_NOTIFICATION" | "CUSTOMER_CONFIRMATION" | "PENDING_CONFIRMATION";
   languageCode: string;
   subject: string;
   body: string;

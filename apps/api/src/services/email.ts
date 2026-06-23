@@ -12,11 +12,16 @@ function formatDate(val: string | Date): string {
   return `${d.getDate()}. ${d.getMonth() + 1}. ${d.getFullYear()}`;
 }
 
-function buildVars(reservation: Reservation & { camp: Camp }, nights: number): Record<string, string> {
+function buildVars(reservation: Reservation & { camp: Camp }, nights: number, language?: { currencySymbol: string; currencyPosition: string } | null): Record<string, string> {
   const at = reservation.accommodationType as unknown as Record<string, unknown> | null;
   const lang = reservation.languageCode ?? "cs";
   const trans = at?.translations as Record<string, { name?: string }> | undefined;
   const accommodationName = trans?.[lang]?.name ?? trans?.["cs"]?.name ?? "-";
+
+  const price = String(reservation.totalPrice);
+  const sym = language?.currencySymbol ?? "Kč";
+  const pos = language?.currencyPosition ?? "after";
+  const totalPriceFormatted = pos === "before" ? `${sym} ${price}` : `${price} ${sym}`;
 
   return {
     firstName: reservation.firstName,
@@ -32,7 +37,8 @@ function buildVars(reservation: Reservation & { camp: Camp }, nights: number): R
     accommodationType: accommodationName,
     adults: String(reservation.adults),
     children: String(reservation.children),
-    totalPrice: String(reservation.totalPrice),
+    totalPrice: price,
+    totalPriceFormatted,
     campName: reservation.camp.name,
     reservationId: reservation.id,
     status: reservation.status,
@@ -87,7 +93,9 @@ export async function sendReservationEmails(
   } as nodemailer.TransportOptions);
 
   const lang = reservation.languageCode;
-  const vars = buildVars(reservation, nights);
+  const language = await prisma.language.findUnique({ where: { code: lang }, select: { currencySymbol: true, currencyPosition: true } })
+    ?? await prisma.language.findFirst({ where: { isDefault: true }, select: { currencySymbol: true, currencyPosition: true } });
+  const vars = buildVars(reservation, nights, language);
 
   const adminTpl = await prisma.emailTemplate.findUnique({
     where: { campId_type_languageCode: { campId: camp.id, type: "ADMIN_NOTIFICATION", languageCode: lang } },
