@@ -35,7 +35,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="card p-8 w-full max-w-sm">
-        <img src="/logos/logo-color.png" alt="Logo" className="h-28 w-auto mb-4 mx-auto" />
+        <img src={`${import.meta.env.VITE_API_URL ?? ""}/logos/logo-color.png`} alt="Logo" className="h-28 w-auto mb-4 mx-auto" />
         <p className="text-sm text-gray-500 mb-6 text-center">Přihlášení jako správce</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
