@@ -2,6 +2,8 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import jwt from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
+import fastifyStatic from "@fastify/static";
+import path from "path";
 import { prismaPlugin } from "./plugins/prisma";
 import { authRoutes } from "./routes/auth";
 import { campRoutes } from "./routes/camps";
@@ -33,6 +35,12 @@ const start = async () => {
   });
 
   await app.register(prismaPlugin);
+
+  await app.register(fastifyStatic, {
+    root: path.join(__dirname, "../public"),
+    prefix: "/",
+    wildcard: false,
+  });
 
   // Public routes (no auth)
   await app.register(publicFormRoutes, { prefix: "/api/public" });

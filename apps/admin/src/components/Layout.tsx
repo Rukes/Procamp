@@ -50,8 +50,11 @@ export default function Layout() {
   const sidebarContent = (
     <>
       <div className="px-4 py-4 border-b border-gray-700">
-        <span className="text-lg font-bold text-blue-400">MůjKemp.cz</span>
-          <p className="text-xs text-gray-400 mt-0.5">Administrace</p>
+        <img
+          src={`${import.meta.env.VITE_API_URL ?? ""}/logos/logo-navbar.png`}
+          alt="Logo"
+          className="h-[52px] w-auto md:h-[58px]"
+        />
       </div>
 
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
@@ -143,7 +146,7 @@ export default function Layout() {
 
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-gray-900 text-white flex items-center justify-between px-4 z-20">
-        <span className="text-base font-bold text-blue-400">MůjKemp.cz</span>
+        <img src={`${import.meta.env.VITE_API_URL ?? ""}/logos/logo-navbar.png`} alt="Logo" className="w-auto" style={{ height: "2.5rem" }} />
         <button onClick={() => setSidebarOpen((v) => !v)} className="text-gray-300 hover:text-white p-2">
           <i className={`fa-regular ${sidebarOpen ? "fa-xmark" : "fa-bars"} text-xl`} />
         </button>
