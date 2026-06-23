@@ -37,3 +37,4 @@ V záložce **Vložení na web** zkopírujte připravený kód a vložte ho na s
 | **Jazyky** | Jazyky formuláře a měny |
 | **Moje organizace** | Fakturační údaje, podmínky, GDPR |
 | **Nastavení** | Změna hesla a přihlašovacího e-mailu |
+| **Changelog** | Přehled všech změn a novinek v systému podle data |

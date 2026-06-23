@@ -5,6 +5,8 @@ import { useOrg } from "../contexts/OrgContext";
 import { api } from "../api/client";
 import { Permission } from "@procamp/shared";
 import Tooltip from "./Tooltip";
+import { marked } from "marked";
+import changelogRaw from "../../../../CHANGELOG.md?raw";
 
 const nav: { to: string; label: string; icon: string; perm?: keyof Permission; newLink?: string }[] = [
   { to: "/dashboard", label: "Dashboard", icon: "fa-chart-bar" },
@@ -28,6 +30,7 @@ export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
 
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
@@ -130,10 +133,30 @@ export default function Layout() {
         <Link to="/help" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
           <i className="fa-regular fa-circle-question" /> Nápověda
         </Link>
-        <Link to="/author" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
-          <i className="fa-regular fa-id-card" /> Autor
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link to="/author" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
+            <i className="fa-regular fa-id-card" /> Autor
+          </Link>
+          <button onClick={() => setChangelogOpen(true)} className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
+            <i className="fa-regular fa-clock-rotate-left" /> Changelog
+          </button>
+        </div>
       </div>
+
+      {changelogOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-8 px-4" onClick={() => setChangelogOpen(false)}>
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b">
+              <h2 className="text-lg font-semibold">Changelog</h2>
+              <button onClick={() => setChangelogOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
+            </div>
+            <div
+              className="overflow-y-auto px-6 py-5 prose prose-sm max-w-none"
+              dangerouslySetInnerHTML={{ __html: marked(changelogRaw) as string }}
+            />
+          </div>
+        </div>
+      )}
     </>
   );
 

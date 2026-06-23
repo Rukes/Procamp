@@ -56,6 +56,9 @@ Volitelné nebo povinné položky připočítané k ceně rezervace. Příklady:
 - **Poznámka** — doplňující text zobrazený zákazníkovi u příplatku
 - **Volitelný / povinný** — volitelné zákazník zaškrtne sám, povinné jsou vždy součástí ceny
 - **Cena za noc** — pro každý jazyk (měnu) zvlášť
+- **Nezobrazovat ve formuláři** — příplatek se skryje zákazníkům v rezervačním formuláři; v administraci zůstane viditelný (hodí se např. pro interní položky nebo dočasně deaktivované příplatky)
+- **Zobrazit pro typy ubytování** — lze vybrat konkrétní typy, pro které se příplatek zobrazí; pokud nevyberete žádný, příplatek se zobrazí pro všechny typy
+- **Pořadí** — přetáhněte příplatek za ikonu ⠿ vlevo a pusťte na požadované místo; pořadí se uloží automaticky
 
 ---
 
