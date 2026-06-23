@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "predev": "cp ../../CHANGELOG.md public/changelog.md",
     "dev": "vite --port 3000",
     "build": "vite build",
     "preview": "vite preview"

@@ -18,6 +18,7 @@ ENV VITE_HCAPTCHA_SITE_KEY=$VITE_HCAPTCHA_SITE_KEY
 COPY packages/shared ./packages/shared
 RUN node_modules/.bin/tsc -p packages/shared/tsconfig.json
 COPY apps/admin ./apps/admin
+COPY CHANGELOG.md ./apps/admin/public/changelog.md
 RUN pnpm --filter=admin build
 
 FROM nginx:alpine AS runner
