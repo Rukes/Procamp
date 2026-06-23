@@ -7,7 +7,7 @@ api.interceptors.request.use((config) => {
   if (token) config.headers.Authorization = `Bearer ${token}`;
 
   const orgId = localStorage.getItem("mujkemp_selected_org");
-  if (orgId) config.headers["X-Org-Id"] = orgId;
+  if (orgId && config.headers["X-Org-Id"] === undefined) config.headers["X-Org-Id"] = orgId;
 
   return config;
 });
