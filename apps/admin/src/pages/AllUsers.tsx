@@ -64,7 +64,7 @@ export default function AllUsersPage() {
   const [formError, setFormError] = useState("");
   const pwInputRef = useRef<HTMLInputElement>(null);
 
-  const load = () => api.get("/users").then((r) => setUsers(r.data)).catch(() => {});
+  const load = () => api.get("/users", { headers: { "X-Org-Id": "" } }).then((r) => setUsers(r.data)).catch(() => {});
   useEffect(() => { load(); }, []);
 
   const genPassword = () => {
