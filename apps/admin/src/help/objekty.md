@@ -38,7 +38,7 @@ Každý objekt může mít více typů ubytování (např. Karavan, Stan, Chatka
 - **Krátký popis** — zobrazí se na kartičce výběru typu ve formuláři
 - **Dlouhý popis** — zobrazí se v modalu po kliknutí na `?` u dané kartičky
 - **Kapacita** — maximální počet míst tohoto typu; systém hlídá obsazenost a neumožní rezervaci přes kapacitu
-- **Pořadí** — určuje v jakém pořadí se typy zobrazí ve formuláři
+- **Pořadí** — přetáhněte typ za ikonu ⠿ vlevo a pusťte na požadované místo; pořadí se uloží automaticky a projeví se i ve formuláři
 - **Ceny** — pro každý jazyk (měnu) zvlášť:
   - Cena za noc (základní cena za ubytovací místo)
   - Příplatek za dospělého na noc

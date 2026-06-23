@@ -26,6 +26,7 @@ Webová aplikace pro správu rezervací kempů. Obsahuje:
 - **Odeslání potvrzení na jiný e-mail** — v detailu rezervace nová možnost odeslat potvrzovací e-mail na libovolnou adresu (např. zákazník zadal špatný e-mail)
 - **Trim textových polí** — všechna textová pole (jméno, e-mail, telefon, SPZ, poznámka) jsou při vytvoření rezervace automaticky ořezána o mezery na začátku a konci
 - **Sjednocení WYSIWYG editorů** — všechny textové editory v adminu (popis ubytování, informace o objektu, e-mailové šablony, podmínky) mají stejný toolbar
+- **Řazení typů ubytování** — drag & drop přetažením za úchyt; pořadí se uloží automaticky a projeví se i ve formuláři
 
 ## Co je nového (červen 2026 — aktualizace 6)
 

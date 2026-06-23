@@ -444,6 +444,9 @@ export default function CampDetailPage() {
 
   // Accommodation type editor
   const [editType, setEditType] = useState<AccommodationType | null | "new">(null);
+  const [typeOrder, setTypeOrder] = useState<string[]>([]);
+  const [dragOverId, setDragOverId] = useState<string | null>(null);
+  const dragId = useRef<string | null>(null);
 
   // Surcharge editor
   const [editSurcharge, setEditSurcharge] = useState<Surcharge | null | "new">(null);
@@ -455,6 +458,7 @@ export default function CampDetailPage() {
       api.get(`/email-templates/${id}`),
     ]);
     setCamp(campRes.data);
+    setTypeOrder(campRes.data.accommodationTypes?.map((t: AccommodationType) => t.id) ?? []);
     setUseCustomSmtp(campRes.data.useCustomSmtp ?? false);
     setHideAdults(campRes.data.hideAdults ?? false);
     setHideChildren(campRes.data.hideChildren ?? false);
@@ -767,19 +771,49 @@ export default function CampDetailPage() {
             </div>
           )}
 
-          {camp.accommodationTypes?.map((t) => {
+          {[...(camp.accommodationTypes ?? [])].sort((a, b) => {
+            const ai = typeOrder.indexOf(a.id);
+            const bi = typeOrder.indexOf(b.id);
+            return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+          }).map((t) => {
             const cs = languages.find((l) => l.code === "cs");
             const csPrice = t.prices.find((p) => p.languageCode === "cs") ?? t.prices[0];
             return (
-              <div key={t.id} className="card p-5 flex items-center justify-between">
-                <div>
-                  <p className="font-semibold text-gray-900">{getTypeName(t)}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Kapacita: {t.capacity} míst</p>
-                  {csPrice && (
-                    <p className="text-xs text-gray-400">
-                      {csPrice.pricePerNight} {cs?.currencySymbol ?? "Kč"} / noc · dospělý {csPrice.adultPricePerNight} · dítě {csPrice.childPricePerNight}
-                    </p>
+              <div
+                key={t.id}
+                className={`card p-5 flex items-center justify-between transition-all ${dragOverId === t.id && dragId.current !== t.id ? "ring-2 ring-blue-400 ring-offset-1" : ""}`}
+                draggable={can("camps_edit")}
+                onDragStart={() => { dragId.current = t.id; }}
+                onDragOver={(e) => { e.preventDefault(); setDragOverId(t.id); }}
+                onDragLeave={() => setDragOverId(null)}
+                onDrop={() => {
+                  if (!dragId.current || dragId.current === t.id) return;
+                  setTypeOrder((prev) => {
+                    const next = [...prev];
+                    const from = next.indexOf(dragId.current!);
+                    const to = next.indexOf(t.id);
+                    next.splice(from, 1);
+                    next.splice(to, 0, dragId.current!);
+                    api.put(`/camps/${id}/accommodation-types/reorder`, { order: next }).then(() => toast.success("Pořadí uloženo.")).catch(() => toast.error("Nepodařilo se uložit pořadí."));
+                    return next;
+                  });
+                  dragId.current = null;
+                  setDragOverId(null);
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  {can("camps_edit") && (
+                    <i className="fa-regular fa-grip-dots-vertical text-gray-300 cursor-grab text-lg" />
                   )}
+                  <div>
+                    <p className="font-semibold text-gray-900">{getTypeName(t)}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Kapacita: {t.capacity} míst</p>
+                    {csPrice && (
+                      <p className="text-xs text-gray-400">
+                        {csPrice.pricePerNight} {cs?.currencySymbol ?? "Kč"} / noc · dospělý {csPrice.adultPricePerNight} · dítě {csPrice.childPricePerNight}
+                      </p>
+                    )}
+                  </div>
                 </div>
                 {can("camps_edit") && (
                   <div className="flex gap-2">

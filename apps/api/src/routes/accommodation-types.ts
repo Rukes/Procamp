@@ -43,6 +43,15 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
     return { success: true };
   });
 
+  // Reorder types
+  app.put("/:campId/accommodation-types/reorder", { preHandler: requirePermission("camps_edit") }, async (request) => {
+    const body = request.body as { order: string[] };
+    await Promise.all(body.order.map((id, index) =>
+      app.prisma.accommodationType.update({ where: { id }, data: { sortOrder: index } })
+    ));
+    return { success: true };
+  });
+
   // Upsert price for type + language
   app.put("/:campId/accommodation-types/:typeId/prices/:langCode", { preHandler: requirePermission("camps_edit") }, async (request) => {
     const { typeId, langCode } = request.params as { campId: string; typeId: string; langCode: string };
