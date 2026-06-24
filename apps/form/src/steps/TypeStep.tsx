@@ -86,7 +86,7 @@ export default function TypeStep({ camp, selected, onSelect, lang }: Props) {
       )}
 
       <h2 className="text-lg font-semibold text-gray-900 mb-5">{t.typeTitle}</h2>
-      <div className="grid grid-cols-2 gap-3">
+      <div className={`grid gap-3 ${types.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
         {types.map((type) => {
           const available = type.capacity > 0;
           const isSelected = selected?.id === type.id;
@@ -105,48 +105,52 @@ export default function TypeStep({ camp, selected, onSelect, lang }: Props) {
                   : "border-gray-200 hover:border-blue-300 hover:bg-blue-50/30 cursor-pointer"
               }`}
             >
-              {isSelected && (
-                <span className="absolute top-3 right-3 w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs">✓</span>
-              )}
-              {type.longDescription && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setDetailType(type); }}
-                  className={`absolute bottom-3 right-3 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isSelected ? "bg-blue-200 text-blue-700 hover:bg-blue-300" : "bg-gray-200 text-gray-500 hover:bg-gray-300"}`}
-                >
-                  ?
-                </button>
-              )}
-              <div className="font-semibold text-gray-900">{type.name}</div>
-              <div className="mt-2 flex items-baseline justify-between gap-1.5">
-                <div className="flex items-baseline gap-1.5">
-                  {type.useDynamicPricing && type.nightTiers.length > 0 ? (
-                    <>
-                      <span className="text-xs text-gray-400">od</span>
-                      <span className="text-base font-semibold text-gray-800">{formatPrice(Math.min(...type.nightTiers.map((tier) => tier.pricePerNight)), lang)}</span>
-                      <span className="text-xs text-gray-400">{t.typePerNight}</span>
-                    </>
-                  ) : (
-                    <>
-                      <span className="text-base font-semibold text-gray-800">{formatPrice(type.pricePerNight, lang)}</span>
-                      <span className="text-xs text-gray-400">{t.typePerNight}</span>
-                    </>
+              <div className="flex justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-semibold text-gray-900">{type.name}</div>
+                  <div className="mt-2 flex items-baseline gap-1.5">
+                    {type.useDynamicPricing && type.nightTiers.length > 0 ? (
+                      <>
+                        <span className="text-xs text-gray-400">od</span>
+                        <span className="text-base font-semibold text-gray-800">{formatPrice(Math.min(...type.nightTiers.map((tier) => tier.pricePerNight)), lang)}</span>
+                        <span className="text-xs text-gray-400">{t.typePerNight}</span>
+                      </>
+                    ) : (
+                      <>
+                        <span className="text-base font-semibold text-gray-800">{formatPrice(type.pricePerNight, lang)}</span>
+                        <span className="text-xs text-gray-400">{t.typePerNight}</span>
+                      </>
+                    )}
+                  </div>
+                  {type.shortDescription && (
+                    <div className="text-xs text-gray-400 mt-2 leading-snug">{type.shortDescription}</div>
                   )}
                 </div>
-                {type.useDynamicPricing && type.nightTiers.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setPriceType(type); }}
-                    className="text-blue-500 hover:text-blue-700 transition-colors"
-                    title="Zobrazit cenové hladiny"
-                  >
-                    <i className="fa-regular fa-circle-dollar text-lg" />
-                  </button>
-                )}
+                <div className="flex flex-col items-center gap-3 flex-shrink-0">
+                  {type.longDescription && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setDetailType(type); }}
+                      className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${isSelected ? "bg-blue-200 text-blue-700 hover:bg-blue-300" : "bg-gray-200 text-gray-500 hover:bg-gray-300"}`}
+                    >
+                      ?
+                    </button>
+                  )}
+                  {type.useDynamicPricing && type.nightTiers.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setPriceType(type); }}
+                      className="text-blue-500 hover:text-blue-700 transition-colors"
+                      title="Zobrazit cenové hladiny"
+                    >
+                      <i className="fa-regular fa-circle-dollar text-lg" />
+                    </button>
+                  )}
+                  {isSelected && (
+                    <span className="w-5 h-5 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs">✓</span>
+                  )}
+                </div>
               </div>
-              {type.shortDescription && (
-                <div className={`text-xs text-gray-400 mt-2 leading-snug ${type.longDescription ? "pr-6" : ""}`}>{type.shortDescription}</div>
-              )}
               {!available && <div className="text-xs text-red-500 mt-1">{t.typeSoldOut}</div>}
             </div>
           );
