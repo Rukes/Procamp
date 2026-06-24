@@ -1,5 +1,5 @@
 import { FastifyInstance } from "fastify";
-import { createReservationSchema } from "@procamp/shared";
+import { createReservationSchema, getEffectivePricePerNight } from "@procamp/shared";
 import { verifyCaptcha } from "../../plugins/auth";
 import { checkAvailability, getOccupiedDates } from "../../services/availability";
 import { sendReservationEmails } from "../../services/email";
@@ -18,7 +18,7 @@ export async function publicFormRoutes(app: FastifyInstance) {
       where: { organizationId_slug: { organizationId: org.id, slug: campSlug } },
       include: {
         surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } },
-        accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } },
+        accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } },
         organization: { select: { termsText: true, requireTermsAcceptance: true, gaTrackingId: true } },
       },
     });
@@ -40,6 +40,12 @@ export async function publicFormRoutes(app: FastifyInstance) {
       const tr = translations[lang] ?? translations["cs"] ?? {};
       const name = tr.name ?? "";
       const price = t.prices.find((p) => p.languageCode === lang) ?? t.prices[0];
+      const nightTiers = t.useDynamicPricing
+        ? t.nightTiers.map((tier) => {
+            const tp = tier.prices.find((p) => p.languageCode === lang) ?? tier.prices[0];
+            return { fromNight: tier.fromNight, pricePerNight: tp?.pricePerNight ?? 0 };
+          })
+        : [];
       return {
         id: t.id,
         name,
@@ -50,6 +56,8 @@ export async function publicFormRoutes(app: FastifyInstance) {
         pricePerNight: price?.pricePerNight ?? 0,
         adultPricePerNight: price?.adultPricePerNight ?? 0,
         childPricePerNight: price?.childPricePerNight ?? 0,
+        useDynamicPricing: t.useDynamicPricing,
+        nightTiers,
       };
     });
 
@@ -92,7 +100,7 @@ export async function publicFormRoutes(app: FastifyInstance) {
       where: { organizationId_slug: { organizationId: org.id, slug: campSlug } },
       include: {
         surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } },
-        accommodationTypes: { include: { prices: true } },
+        accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } } },
       },
     });
     if (!camp) return reply.status(404).send({ error: "Camp not found" });
@@ -114,7 +122,7 @@ export async function publicFormRoutes(app: FastifyInstance) {
 
     const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
     const langPrice = accommodationType.prices.find((p) => p.languageCode === body.languageCode) ?? accommodationType.prices[0];
-    const pricePerNight = langPrice?.pricePerNight ?? 0;
+    const pricePerNight = getEffectivePricePerNight(accommodationType as never, body.languageCode, nights);
     const adultPrice = langPrice?.adultPricePerNight ?? 0;
     const childPrice = langPrice?.childPricePerNight ?? 0;
     const personsPrice = body.adults * adultPrice + body.children * childPrice;
@@ -163,7 +171,7 @@ export async function publicFormRoutes(app: FastifyInstance) {
       action: "CREATE",
       entity: "reservation",
       entityId: reservation.id,
-      payload: { firstName: body.firstName, lastName: body.lastName, email: body.email, phone: body.phone, checkIn: body.checkIn, checkOut: body.checkOut, totalPrice, source: "form" },
+      payload: { firstName: body.firstName, lastName: body.lastName, email: body.email, phone: body.phone, checkIn: body.checkIn, checkOut: body.checkOut, totalPrice, pricePerNight, source: "form" },
     });
 
     return reply.status(201).send({

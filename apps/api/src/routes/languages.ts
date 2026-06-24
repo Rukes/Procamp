@@ -38,7 +38,7 @@ export async function languageRoutes(app: FastifyInstance) {
       const camps = await app.prisma.camp.findMany({
         where: { organizationId: orgId },
         include: {
-          accommodationTypes: { include: { prices: { where: { languageCode: defaultLang.code } } } },
+          accommodationTypes: { include: { prices: { where: { languageCode: defaultLang.code } }, nightTiers: { include: { prices: { where: { languageCode: defaultLang.code } } } } } },
           surcharges: { include: { prices: { where: { languageCode: defaultLang.code } } } },
           emailTemplates: { where: { languageCode: defaultLang.code } },
         },
@@ -68,6 +68,17 @@ export async function languageRoutes(app: FastifyInstance) {
               },
               update: {},
             });
+          }
+          // Night tiers — ceny per hladina
+          for (const tier of at.nightTiers ?? []) {
+            const srcTierPrice = tier.prices[0];
+            if (srcTierPrice) {
+              await app.prisma.nightTierPrice.upsert({
+                where: { tierId_languageCode: { tierId: tier.id, languageCode: code } },
+                create: { tierId: tier.id, languageCode: code, pricePerNight: Math.round(srcTierPrice.pricePerNight * coeff) },
+                update: {},
+              });
+            }
           }
           copiedTypes++;
         }

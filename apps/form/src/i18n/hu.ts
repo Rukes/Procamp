@@ -20,6 +20,9 @@ export const hu: Translations = {
   typeNoTypes: "Nincsenek konfigurált szálláshely típusok.",
   typeSoldOut: "Telt ház",
   typePerNight: "/ éj",
+  typeNightSingle: (n) => `${n} éj`,
+  typeNightRange: (from, to) => `${from}–${to} éj`,
+  typeNightPlus: (from) => `${from}+ éj`,
 
   dateTitle: "Tartózkodás időpontja",
   dateSubtitle: "Válassza ki az érkezés és távozás dátumát.",

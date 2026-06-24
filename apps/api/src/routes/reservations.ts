@@ -3,10 +3,11 @@ import { requirePermission, orgFilter, campFilter } from "../plugins/auth";
 import { checkAvailability } from "../services/availability";
 import { logActivity, diffObjects } from "../services/activityLog";
 import { sendReservationEmails } from "../services/email";
+import { getEffectivePricePerNight } from "@procamp/shared";
 
 const INCLUDE = {
   camp: true,
-  accommodationType: { include: { prices: true } },
+  accommodationType: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } } },
   surcharges: { include: { surcharge: true } },
 };
 
@@ -63,13 +64,13 @@ export async function reservationRoutes(app: FastifyInstance) {
     const camp = await app.prisma.camp.findUniqueOrThrow({ where: { id: body.campId }, include: { surcharges: { include: { prices: true } }, organization: { select: { languages: true } } } });
     const accType = await app.prisma.accommodationType.findUniqueOrThrow({
       where: { id: body.accommodationTypeId },
-      include: { prices: true },
+      include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } },
     });
 
     const lang = body.languageCode ?? "cs";
     const langPrice = accType.prices.find((p) => p.languageCode === lang) ?? accType.prices[0];
     const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
-    const pricePerNight = langPrice?.pricePerNight ?? 0;
+    const pricePerNight = getEffectivePricePerNight(accType as never, lang, nights);
     const adultPrice = langPrice?.adultPricePerNight ?? 0;
     const childPrice = langPrice?.childPricePerNight ?? 0;
     const personsPrice = body.adults * adultPrice + body.children * childPrice;

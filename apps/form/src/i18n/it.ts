@@ -20,6 +20,9 @@ export const it: Translations = {
   typeNoTypes: "Nessun tipo di alloggio configurato.",
   typeSoldOut: "Esaurito",
   typePerNight: "/ notte",
+  typeNightSingle: (n) => `${n} ${n === 1 ? "notte" : "notti"}`,
+  typeNightRange: (from, to) => `${from}–${to} notti`,
+  typeNightPlus: (from) => `${from}+ notti`,
 
   dateTitle: "Date del soggiorno",
   dateSubtitle: "Seleziona le date di arrivo e partenza.",

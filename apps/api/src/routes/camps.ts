@@ -26,7 +26,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
       orderBy: { createdAt: "asc" },
     });
   });
@@ -41,7 +41,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
     });
   });
 
@@ -51,7 +51,7 @@ export async function campRoutes(app: FastifyInstance) {
     if (!orgId) return reply.status(400).send({ error: "Nejprve vyberte organizaci." });
     const camp = await app.prisma.camp.create({
       data: { name, slug, notificationEmail: notificationEmail ?? "", ...(orgId ? { organizationId: orgId } : {}) },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } } } },
     });
 
     await app.prisma.emailTemplate.createMany({
@@ -150,7 +150,7 @@ export async function campRoutes(app: FastifyInstance) {
     const camp = await app.prisma.camp.update({
       where: { id },
       data,
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true }, orderBy: { sortOrder: "asc" } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } } },
     });
     if (before) {
       const afterSnap = { name: camp.name, slug: camp.slug, notificationEmail: camp.notificationEmail, smtpHost: camp.smtpHost, smtpPort: camp.smtpPort, smtpUser: camp.smtpUser, smtpFrom: camp.smtpFrom, requiresConfirmation: camp.requiresConfirmation };

@@ -1,5 +1,5 @@
 import { Language, formatPrice, PriceBreakdown } from "@procamp/shared";
-import { CampPublic, PublicAccommodationType } from "../hooks/useCamp";
+import { CampPublic, PublicAccommodationType, getEffectivePricePerNight } from "../hooks/useCamp";
 import { format } from "date-fns";
 import PriceBreakdownBlock from "../components/PriceBreakdown";
 import { useT } from "../i18n";
@@ -20,7 +20,7 @@ interface Props {
 
 function calcBreakdown(camp: CampPublic, type: PublicAccommodationType, checkIn: Date, checkOut: Date, adults: number, children: number, selectedIds: string[], lang: Language): PriceBreakdown {
   const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
-  const basePrice = type.pricePerNight;
+  const basePrice = getEffectivePricePerNight(type, nights);
   const personsPrice = adults * type.adultPricePerNight + children * type.childPricePerNight;
   const selectedSurcharges = camp.surcharges.filter((s) => selectedIds.includes(s.id));
   const surchargesPrice = selectedSurcharges.reduce((sum, s) => sum + s.pricePerNight, 0);

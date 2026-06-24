@@ -7,7 +7,7 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
     const { campId } = request.params as { campId: string };
     return app.prisma.accommodationType.findMany({
       where: { campId },
-      include: { prices: true },
+      include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } },
       orderBy: { sortOrder: "asc" },
     });
   });
@@ -18,7 +18,7 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
     const body = request.body as { translations: Record<string, { name: string; shortDescription?: string; longDescription?: string }>; capacity: number; sortOrder?: number };
     const type = await app.prisma.accommodationType.create({
       data: { campId, translations: body.translations, capacity: body.capacity, sortOrder: body.sortOrder ?? 0 },
-      include: { prices: true },
+      include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } },
     });
     return reply.status(201).send(type);
   });
@@ -30,7 +30,7 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
     return app.prisma.accommodationType.update({
       where: { id },
       data: body,
-      include: { prices: true },
+      include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } },
     });
   });
 
@@ -60,6 +60,57 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
       where: { accommodationTypeId_languageCode: { accommodationTypeId: typeId, languageCode: langCode } },
       create: { accommodationTypeId: typeId, languageCode: langCode, ...body },
       update: body,
+    });
+  });
+
+  // Toggle dynamic pricing + save tier definitions (fromNight values)
+  app.put("/:campId/accommodation-types/:typeId/night-tiers", { preHandler: requirePermission("camps_edit") }, async (request, reply) => {
+    const { typeId } = request.params as { campId: string; typeId: string };
+    const body = request.body as { useDynamicPricing: boolean; fromNights: number[] };
+
+    // Validate: must start with 1, no gaps, no duplicates
+    if (body.useDynamicPricing) {
+      if (!body.fromNights.length) return reply.status(400).send({ error: "Musí být alespoň jedna hladina." });
+      const sorted = [...body.fromNights].sort((a, b) => a - b);
+      if (sorted[0] !== 1) return reply.status(400).send({ error: "První hladina musí začínat od 1 noci." });
+      for (let i = 1; i < sorted.length; i++) {
+        if (sorted[i] <= sorted[i - 1]) return reply.status(400).send({ error: "Hladiny musí být unikátní a vzestupné." });
+      }
+    }
+
+    await app.prisma.$transaction(async (tx) => {
+      await tx.accommodationType.update({ where: { id: typeId }, data: { useDynamicPricing: body.useDynamicPricing } });
+      if (!body.useDynamicPricing) return;
+
+      // Remove tiers not in new list
+      const existing = await tx.nightTier.findMany({ where: { accommodationTypeId: typeId } });
+      const toDelete = existing.filter((t) => !body.fromNights.includes(t.fromNight));
+      if (toDelete.length) await tx.nightTier.deleteMany({ where: { id: { in: toDelete.map((t) => t.id) } } });
+
+      // Create new tiers
+      for (const fromNight of body.fromNights) {
+        await tx.nightTier.upsert({
+          where: { accommodationTypeId_fromNight: { accommodationTypeId: typeId, fromNight } },
+          create: { accommodationTypeId: typeId, fromNight },
+          update: {},
+        });
+      }
+    });
+
+    return app.prisma.accommodationType.findUnique({
+      where: { id: typeId },
+      include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } },
+    });
+  });
+
+  // Upsert night tier prices for a language
+  app.put("/:campId/accommodation-types/:typeId/night-tiers/:tierId/prices/:langCode", { preHandler: requirePermission("camps_edit") }, async (request) => {
+    const { tierId, langCode } = request.params as { campId: string; typeId: string; tierId: string; langCode: string };
+    const { pricePerNight } = request.body as { pricePerNight: number };
+    return app.prisma.nightTierPrice.upsert({
+      where: { tierId_languageCode: { tierId, languageCode: langCode } },
+      create: { tierId, languageCode: langCode, pricePerNight },
+      update: { pricePerNight },
     });
   });
 }

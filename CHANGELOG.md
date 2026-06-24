@@ -1,5 +1,15 @@
 # Changelog
 
+## 24. 6. 2026
+
+- **Dynamická cena typů ubytování** — místo jedné pevné ceny lze nastavit cenové hladiny podle počtu nocí (např. 1–3 noci = 800 Kč/noc, 4–6 nocí = 700 Kč/noc, 7+ nocí = 600 Kč/noc); zákazník ve formuláři vidí minimální cenu a ikonu pro otevření tabulky hladin; cena se přepočítává automaticky při výběru termínu
+- **Dynamická cena v nové rezervaci (admin)** — cena při ručním vytváření rezervace se počítá dynamicky podle počtu nocí
+- **Dynamická cena v logu** — cena za noc (vypočtená z hladiny) se ukládá do záznamu při vytvoření rezervace
+- **Cena za noc v detailu rezervace** — pokud má typ ubytování dynamické ceny, zobrazí se v detailu rezervace efektivní cena za noc
+- **Přidání jazyka kopíruje dynamické ceny** — při přidání nového jazyka s koeficientem se přepočítají i ceny všech hladin dynamické ceny
+- **Zvýraznění aktivní organizace** — vybraná organizace v seznamu organizací má zelené podbarvení
+- **Zvýraznění „Dynamická cena" v seznamu typů** — text je modrý a tučný pro lepší přehlednost
+
 ## 23. 6. 2026
 
 - **Filtrování příplatků dle typu ubytování** — v editoru příplatku lze vybrat pro které typy ubytování se příplatek zobrazí; prázdný výběr = zobrazit pro všechny typy

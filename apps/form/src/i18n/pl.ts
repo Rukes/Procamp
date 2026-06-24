@@ -20,6 +20,9 @@ export const pl: Translations = {
   typeNoTypes: "Brak skonfigurowanych typów zakwaterowania.",
   typeSoldOut: "Brak miejsc",
   typePerNight: "/ noc",
+  typeNightSingle: (n) => `${n} ${n === 1 ? "noc" : n < 5 ? "noce" : "nocy"}`,
+  typeNightRange: (from, to) => `${from}–${to} nocy`,
+  typeNightPlus: (from) => `${from}+ nocy`,
 
   dateTitle: "Termin pobytu",
   dateSubtitle: "Wybierz datę przyjazdu i wyjazdu.",

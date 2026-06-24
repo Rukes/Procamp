@@ -202,6 +202,17 @@ export default function OrganizationDetailPage() {
                 <input className="input" type="email" value={form.billingEmail ?? ""} onChange={(e) => set("billingEmail", e.target.value)} />
               </div>
             </div>
+            {user?.isSuperAdmin && (
+              <div className="border-t border-red-200 pt-5 mt-2">
+                <label className="label text-red-600">Interní poznámka <span className="text-xs font-normal text-red-400">(vidí pouze SA)</span></label>
+                <textarea
+                  className="w-full rounded-lg border-2 border-red-400 px-3 py-2 text-sm text-gray-800 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-400 resize-y min-h-[100px]"
+                  value={form.internalNote ?? ""}
+                  onChange={(e) => setForm((f) => ({ ...f, internalNote: e.target.value }))}
+                  placeholder="Soukromá poznámka k organizaci…"
+                />
+              </div>
+            )}
           </>
         )}
 
@@ -266,17 +277,6 @@ export default function OrganizationDetailPage() {
                 <p className="text-xs text-gray-500">Neaktivní: text podmínek se zobrazí pouze jako informace.</p>
               </div>
             </div>
-            {user?.isSuperAdmin && (
-              <div className="border-t border-red-200 pt-5 mt-2">
-                <label className="label text-red-600">Interní poznámka <span className="text-xs font-normal text-red-400">(vidí pouze SA)</span></label>
-                <textarea
-                  className="w-full rounded-lg border-2 border-red-400 px-3 py-2 text-sm text-gray-800 focus:border-red-500 focus:outline-none focus:ring-1 focus:ring-red-400 resize-y min-h-[100px]"
-                  value={form.internalNote ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, internalNote: e.target.value }))}
-                  placeholder="Soukromá poznámka k organizaci…"
-                />
-              </div>
-            )}
           </>
         )}
 

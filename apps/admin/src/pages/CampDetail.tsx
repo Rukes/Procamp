@@ -319,11 +319,59 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
     if (!type) return {};
     return Object.fromEntries(type.prices.map((p) => [p.languageCode, { pricePerNight: String(p.pricePerNight), adultPricePerNight: String(p.adultPricePerNight), childPricePerNight: String(p.childPricePerNight) }]));
   });
+  const [useDynamicPricing, setUseDynamicPricing] = useState(type?.useDynamicPricing ?? false);
+  // fromNights: sorted list of "od noci" values (e.g. [1, 3, 5])
+  const [fromNights, setFromNights] = useState<number[]>(() => {
+    if (!type?.nightTiers?.length) return [1];
+    return type.nightTiers.map((t) => t.fromNight);
+  });
+  // tierPrices: tierId → lang → price string (for existing tiers)
+  // For new/unsaved tiers we key by fromNight
+  const [tierPrices, setTierPrices] = useState<Record<string, Record<string, string>>>(() => {
+    if (!type?.nightTiers?.length) return {};
+    return Object.fromEntries(type.nightTiers.map((t) => [
+      String(t.fromNight),
+      Object.fromEntries(t.prices.map((p) => [p.languageCode, String(p.pricePerNight)])),
+    ]));
+  });
   const [saving, setSaving] = useState(false);
 
   const getPrice = (lang: string) => prices[lang] ?? { pricePerNight: "0", adultPricePerNight: "0", childPricePerNight: "0" };
   const setPrice = (lang: string, field: "pricePerNight" | "adultPricePerNight" | "childPricePerNight", val: string) => {
     setPrices((prev) => ({ ...prev, [lang]: { ...getPrice(lang), [field]: val } }));
+  };
+  const getTierPrice = (fromNight: number, lang: string) => tierPrices[String(fromNight)]?.[lang] ?? "0";
+  const setTierPrice = (fromNight: number, lang: string, val: string) => {
+    setTierPrices((prev) => ({ ...prev, [String(fromNight)]: { ...(prev[String(fromNight)] ?? {}), [lang]: val } }));
+  };
+
+  const addTier = () => {
+    const last = fromNights[fromNights.length - 1] ?? 0;
+    setFromNights((prev) => [...prev, last + 1]);
+  };
+  const removeTier = (idx: number) => {
+    if (fromNights.length <= 1) return;
+    const removed = fromNights[idx];
+    setFromNights((prev) => prev.filter((_, i) => i !== idx));
+    setTierPrices((prev) => { const n = { ...prev }; delete n[String(removed)]; return n; });
+  };
+  const updateFromNight = (idx: number, val: number) => {
+    setFromNights((prev) => prev.map((v, i) => i === idx ? val : v));
+  };
+
+  const tiersValid = () => {
+    if (!useDynamicPricing) return true;
+    const sorted = [...fromNights].sort((a, b) => a - b);
+    if (sorted[0] !== 1) return false;
+    for (let i = 1; i < sorted.length; i++) if (sorted[i] <= sorted[i - 1]) return false;
+    // All tier prices filled for all languages
+    for (const fn of fromNights) {
+      for (const l of languages) {
+        const v = parseFloat(getTierPrice(fn, l.code));
+        if (isNaN(v) || v < 0) return false;
+      }
+    }
+    return true;
   };
 
   const handleSave = async (e: React.FormEvent) => {
@@ -344,16 +392,20 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
           childPricePerNight: parseFloat(p.childPricePerNight) || 0,
         }])
       );
-      if (type) {
-        await api.put(`/camps/${campId}/accommodation-types/${type.id}`, { translations, capacity });
-        for (const [lang, p] of Object.entries(numericPrices)) {
-          await api.put(`/camps/${campId}/accommodation-types/${type.id}/prices/${lang}`, p);
-        }
-      } else {
-        const res = await api.post(`/camps/${campId}/accommodation-types`, { translations, capacity });
-        const newId = res.data.id;
-        for (const [lang, p] of Object.entries(numericPrices)) {
-          await api.put(`/camps/${campId}/accommodation-types/${newId}/prices/${lang}`, p);
+      const typeId = type ? type.id : (await api.post(`/camps/${campId}/accommodation-types`, { translations, capacity })).data.id;
+      if (type) await api.put(`/camps/${campId}/accommodation-types/${type.id}`, { translations, capacity });
+      for (const [lang, p] of Object.entries(numericPrices)) {
+        await api.put(`/camps/${campId}/accommodation-types/${typeId}/prices/${lang}`, p);
+      }
+      // Save dynamic pricing tiers
+      const tiersRes = await api.put(`/camps/${campId}/accommodation-types/${typeId}/night-tiers`, { useDynamicPricing, fromNights: useDynamicPricing ? fromNights : [] });
+      if (useDynamicPricing) {
+        const savedTiers: { id: string; fromNight: number }[] = tiersRes.data.nightTiers ?? [];
+        for (const tier of savedTiers) {
+          for (const l of languages) {
+            const priceVal = parseFloat(getTierPrice(tier.fromNight, l.code)) || 0;
+            await api.put(`/camps/${campId}/accommodation-types/${typeId}/night-tiers/${tier.id}/prices/${l.code}`, { pricePerNight: priceVal });
+          }
         }
       }
       toast.success("Typ ubytování uložen.");
@@ -390,6 +442,52 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
             </div>
           </div>
 
+          {/* Typ ceny */}
+          <div>
+            <label className="label">Typ ceny</label>
+            <div className="flex gap-2">
+              <button type="button" onClick={() => setUseDynamicPricing(false)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${!useDynamicPricing ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"}`}>
+                Cena za noc
+              </button>
+              <button type="button" onClick={() => setUseDynamicPricing(true)}
+                className={`px-4 py-2 rounded-lg text-sm font-medium border transition-colors ${useDynamicPricing ? "bg-blue-600 text-white border-blue-600" : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"}`}>
+                Dynamická cena
+              </button>
+            </div>
+          </div>
+
+          {/* Hladiny — pouze Od noci, mimo jazyk */}
+          {useDynamicPricing && (
+            <div className="border border-blue-200 rounded-xl p-4 space-y-3 bg-blue-50">
+              <p className="text-sm font-medium text-blue-800">Cenové hladiny <span className="text-xs font-normal text-blue-600">(první hladina musí být od 1 noci)</span></p>
+              {fromNights.map((fn, idx) => (
+                <div key={idx} className="flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500 w-16">Od noci</span>
+                    <input
+                      className="input w-20 text-center"
+                      type="number" min="1"
+                      value={fn}
+                      onChange={(e) => updateFromNight(idx, parseInt(e.target.value) || 1)}
+                      disabled={idx === 0}
+                    />
+                  </div>
+                  {idx > 0 && (
+                    <button type="button" onClick={() => removeTier(idx)} className="text-red-400 hover:text-red-600 text-sm">
+                      <i className="fa-regular fa-trash" />
+                    </button>
+                  )}
+                  {idx === fromNights.length - 1 && <span className="text-xs text-gray-400 ml-auto">a více nocí</span>}
+                </div>
+              ))}
+              <button type="button" onClick={addTier} className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1.5">
+                <i className="fa-regular fa-plus" /> Přidat hladinu
+              </button>
+              {fromNights[0] !== 1 && <p className="text-xs text-red-500">První hladina musí začínat od 1 noci.</p>}
+            </div>
+          )}
+
           {/* Záložky per jazyk — název + ceny dohromady */}
           <div>
             <div className="flex gap-1 border-b border-gray-200 mb-4">
@@ -418,29 +516,49 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
                 <label className="label">Podrobný popis <span className="text-gray-400 font-normal">(nepovinné — zobrazí se po kliknutí na <code>i</code>)</span></label>
                 <WysiwygEditor value={longDescriptions[activeLang] ?? ""} onChange={(v) => setLongDescriptions({ ...longDescriptions, [activeLang]: v })} showVars={false} />
               </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="label">Cena / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
-                  <input className="input" type="number" min="0" step="0.01" value={p.pricePerNight} onChange={(e) => setPrice(activeLang, "pricePerNight", e.target.value)} />
+              {useDynamicPricing ? (
+                <div className="space-y-2">
+                  <label className="label">Ceny dle počtu nocí {sym && <span className="text-gray-400">({sym})</span>}</label>
+                  {fromNights.map((fn, idx) => (
+                    <div key={fn} className="flex items-center gap-3">
+                      <span className="text-sm text-gray-500 w-32 shrink-0">
+                        {idx < fromNights.length - 1 ? `Od ${fn} ${fn === 1 ? "noci" : fn < 5 ? "nocí" : "nocí"}` : `Od ${fn} nocí a více`}
+                      </span>
+                      <input
+                        className="input w-32"
+                        type="number" min="0" step="0.01"
+                        value={getTierPrice(fn, activeLang)}
+                        onChange={(e) => setTierPrice(fn, activeLang, e.target.value)}
+                      />
+                      <span className="text-sm text-gray-400">{sym} / noc</span>
+                    </div>
+                  ))}
                 </div>
-                {!hideAdults && (
+              ) : (
+                <div className="grid grid-cols-3 gap-3">
                   <div>
-                    <label className="label">Dospělý / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
-                    <input className="input" type="number" min="0" step="0.01" value={p.adultPricePerNight} onChange={(e) => setPrice(activeLang, "adultPricePerNight", e.target.value)} />
+                    <label className="label">Cena / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
+                    <input className="input" type="number" min="0" step="0.01" value={p.pricePerNight} onChange={(e) => setPrice(activeLang, "pricePerNight", e.target.value)} />
                   </div>
-                )}
-                {!hideChildren && (
-                  <div>
-                    <label className="label">Dítě / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
-                    <input className="input" type="number" min="0" step="0.01" value={p.childPricePerNight} onChange={(e) => setPrice(activeLang, "childPricePerNight", e.target.value)} />
-                  </div>
-                )}
-              </div>
+                  {!hideAdults && (
+                    <div>
+                      <label className="label">Dospělý / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
+                      <input className="input" type="number" min="0" step="0.01" value={p.adultPricePerNight} onChange={(e) => setPrice(activeLang, "adultPricePerNight", e.target.value)} />
+                    </div>
+                  )}
+                  {!hideChildren && (
+                    <div>
+                      <label className="label">Dítě / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
+                      <input className="input" type="number" min="0" step="0.01" value={p.childPricePerNight} onChange={(e) => setPrice(activeLang, "childPricePerNight", e.target.value)} />
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="flex gap-2 pt-1">
-            <button className="btn-primary" type="submit" disabled={saving || !allNamesFilled} title={!allNamesFilled ? "Vyplňte název ve všech jazycích" : undefined}>
+            <button className="btn-primary" type="submit" disabled={saving || !allNamesFilled || !tiersValid()} title={!allNamesFilled ? "Vyplňte název ve všech jazycích" : !tiersValid() ? "Opravte cenové hladiny" : undefined}>
               {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</>}
             </button>
             <button className="btn-secondary" type="button" onClick={onClose}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
@@ -847,7 +965,13 @@ export default function CampDetailPage() {
                   <div>
                     <p className="font-semibold text-gray-900">{getTypeName(t)}</p>
                     <p className="text-xs text-gray-400 mt-0.5">Kapacita: {t.capacity} míst</p>
-                    {csPrice && (
+                    {t.useDynamicPricing && t.nightTiers?.length ? (
+                      <p className="text-xs text-gray-400">
+                        <span className="text-blue-600 font-medium">Dynamická cena</span> · od {Math.min(...t.nightTiers.flatMap((tier) => tier.prices.filter((p) => p.languageCode === "cs").map((p) => p.pricePerNight)))} {cs?.currencySymbol ?? "Kč"} / noc
+                        {!hideAdults && csPrice && <> · dospělý {csPrice.adultPricePerNight}</>}
+                        {!hideChildren && csPrice && <> · dítě {csPrice.childPricePerNight}</>}
+                      </p>
+                    ) : csPrice && (
                       <p className="text-xs text-gray-400">
                         {csPrice.pricePerNight} {cs?.currencySymbol ?? "Kč"} / noc · dospělý {csPrice.adultPricePerNight} · dítě {csPrice.childPricePerNight}
                       </p>

@@ -2,7 +2,7 @@ import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../api/client";
-import { Reservation, Camp, AccommodationType } from "@procamp/shared";
+import { Reservation, Camp, AccommodationType, NightTier } from "@procamp/shared";
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths } from "date-fns";
 import { cs } from "date-fns/locale";
 import { useAuth } from "../contexts/AuthContext";
@@ -413,6 +413,15 @@ export default function ReservationDetailPage() {
               <div><dt className="text-gray-500">Příjezd</dt><dd className="font-medium">{format(checkIn, "d. MMMM yyyy", { locale: cs })}</dd></div>
               <div><dt className="text-gray-500">Odjezd</dt><dd className="font-medium">{format(checkOut, "d. MMMM yyyy", { locale: cs })}</dd></div>
               <div><dt className="text-gray-500">Počet nocí</dt><dd className="font-medium">{nights}</dd></div>
+              {(() => {
+                const at = reservation.accommodationType as (AccommodationType & { useDynamicPricing?: boolean; nightTiers?: NightTier[] }) | undefined;
+                if (!at?.useDynamicPricing || !at.nightTiers?.length) return null;
+                const sorted = [...at.nightTiers].sort((a, b) => b.fromNight - a.fromNight);
+                const tier = sorted.find((t) => nights >= t.fromNight) ?? sorted[sorted.length - 1];
+                const tp = tier.prices.find((p) => p.languageCode === reservation.languageCode) ?? tier.prices[0];
+                const pricePer = tp?.pricePerNight ?? 0;
+                return <div><dt className="text-gray-500">Cena za noc</dt><dd className="font-medium">{pricePer > 0 ? `${pricePer} Kč` : "—"}</dd></div>;
+              })()}
               <div><dt className="text-gray-500">Osoby</dt><dd className="font-medium">{reservation.adults} dospělí, {reservation.children} děti</dd></div>
               <div className="col-span-2"><dt className="text-gray-500">Předpokládaný příjezd</dt><dd className={reservation.expectedArrival ? "font-medium" : "text-gray-400 italic"}>{reservation.expectedArrival || "nevyplněno"}</dd></div>
               {reservation.note

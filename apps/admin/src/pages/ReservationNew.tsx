@@ -3,7 +3,7 @@ import { useEffect, useState, useMemo } from "react";
 import HelpModal from "../components/HelpModal";
 import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
-import { Camp, AccommodationType, Language, Surcharge, formatPrice } from "@procamp/shared";
+import { Camp, AccommodationType, Language, Surcharge, formatPrice, getEffectivePricePerNight } from "@procamp/shared";
 import { useToast } from "../contexts/ToastContext";
 import { ARRIVAL_TIMES } from "../utils/arrivalTimes";
 import { DayPicker, DateRange } from "react-day-picker";
@@ -96,7 +96,7 @@ export default function ReservationNewPage() {
 
   const breakdown = useMemo(() => {
     if (!priceRow || nights === 0) return null;
-    const base = priceRow.pricePerNight;
+    const base = getEffectivePricePerNight(selectedType!, form.languageCode, nights);
     const adultPrice = priceRow.adultPricePerNight ?? 0;
     const childPrice = priceRow.childPricePerNight ?? 0;
     const personsTotal = form.adults * adultPrice + form.children * childPrice;
@@ -120,7 +120,7 @@ export default function ReservationNewPage() {
     surchargeLines.forEach((s) => langObj && lines.push({ label: `${s.name} — ${formatPrice(s.pricePerNight, langObj)} × ${nights} nocí`, amount: s.total }));
 
     return { lines, total };
-  }, [priceRow, nights, form.adults, form.children, form.languageCode, selectedSurchargeIds, surcharges, langObj]);
+  }, [priceRow, selectedType, nights, form.adults, form.children, form.languageCode, selectedSurchargeIds, surcharges, langObj]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

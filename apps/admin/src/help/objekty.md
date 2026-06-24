@@ -40,11 +40,22 @@ Každý objekt může mít více typů ubytování (např. Karavan, Stan, Chatka
 - **Kapacita** — maximální počet míst tohoto typu; systém hlídá obsazenost a neumožní rezervaci přes kapacitu
 - **Pořadí** — přetáhněte typ za ikonu ⠿ vlevo a pusťte na požadované místo; pořadí se uloží automaticky a projeví se i ve formuláři
 - **Ceny** — pro každý jazyk (měnu) zvlášť:
-  - Cena za noc (základní cena za ubytovací místo)
+  - Cena za noc (základní cena za ubytovací místo) — nebo dynamická cena podle hladin (viz níže)
   - Příplatek za dospělého na noc
   - Příplatek za dítě na noc
 
 Celková cena = (cena za noc + dospělí × příplatek + děti × příplatek + příplatky) × počet nocí
+
+### Dynamická cena (cenové hladiny)
+
+Místo jedné pevné ceny za noc lze nastavit různé ceny podle délky pobytu. Přepněte typ na **Dynamická cena** a přidejte hladiny:
+
+- Každá hladina je definována číslem **první noci**, od které platí (např. 1, 4, 7)
+- Rozsah hladiny je automaticky určen — hladina platí od své první noci až do první noci následující hladiny minus 1
+- Poslední hladina platí pro všechny delší pobyty bez omezení
+- Pro každou hladinu nastavte cenu za noc pro každý aktivní jazyk
+
+Zákazník ve formuláři vidí na kartičce typu minimální cenu a ikonu 💲 pro zobrazení tabulky všech hladin. Při výběru termínu se cena automaticky přepočítá na správnou hladinu.
 
 ---
 

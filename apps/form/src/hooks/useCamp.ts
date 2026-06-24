@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { Camp, Language } from "@procamp/shared";
 
+export interface PublicNightTier {
+  fromNight: number;
+  pricePerNight: number;
+}
+
 export interface PublicAccommodationType {
   id: string;
   name: string;
@@ -11,6 +16,14 @@ export interface PublicAccommodationType {
   pricePerNight: number;
   adultPricePerNight: number;
   childPricePerNight: number;
+  useDynamicPricing: boolean;
+  nightTiers: PublicNightTier[];
+}
+
+export function getEffectivePricePerNight(type: PublicAccommodationType, nights: number): number {
+  if (!type.useDynamicPricing || !type.nightTiers.length) return type.pricePerNight;
+  const sorted = [...type.nightTiers].sort((a, b) => b.fromNight - a.fromNight);
+  return sorted.find((t) => nights >= t.fromNight)?.pricePerNight ?? sorted[sorted.length - 1].pricePerNight;
 }
 
 export interface PublicSurcharge {

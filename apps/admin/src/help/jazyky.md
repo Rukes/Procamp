@@ -35,6 +35,7 @@ Po přidání nového jazyka systém automaticky zkopíruje z výchozího jazyka
 
 - **Překlady** typů ubytování a příplatků — texty názvů a popisů
 - **Ceny** typů ubytování a příplatků — přepočítané zadaným koeficientem
+- **Dynamické ceny** — pokud má typ ubytování dynamické ceny, přepočítají se koeficientem i ceny všech hladin
 - **E-mailové šablony** — texty šablon pro správce i zákazníka
 
 Po přidání systém zobrazí souhrn kolik položek bylo zkopírováno. Následně si přeložte texty a zkontrolujte ceny v detailu každého objektu.

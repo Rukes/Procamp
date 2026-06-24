@@ -20,6 +20,9 @@ export const uk: Translations = {
   typeNoTypes: "Типи проживання не налаштовано.",
   typeSoldOut: "Зайнято",
   typePerNight: "/ ніч",
+  typeNightSingle: (n) => `${n} ${n === 1 ? "ніч" : n < 5 ? "ночі" : "ночей"}`,
+  typeNightRange: (from, to) => `${from}–${to} ночей`,
+  typeNightPlus: (from) => `${from}+ ночей`,
 
   dateTitle: "Дати перебування",
   dateSubtitle: "Оберіть дату заїзду та виїзду.",

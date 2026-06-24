@@ -61,7 +61,9 @@ Pod polem e-mail jsou dva volitelné checkboxy:
 
 ## Detail rezervace
 
-Klikněte na rezervaci pro otevření detailu. V detailu lze:
+Klikněte na rezervaci pro otevření detailu. Pokud má typ ubytování nastavené dynamické ceny, zobrazí se v sekci Ubytování řádek **Cena za noc** s efektivní cenou odpovídající délce pobytu.
+
+V detailu lze:
 
 - **Potvrdit nebo zrušit** rezervaci tlačítky vpravo nahoře
 - **Znovu odeslat e-mail** — tlačítko **E-maily** → „Znovu odeslat potvrzovací e-mail zákazníkovi" (s potvrzením)

@@ -189,7 +189,7 @@ export default function OrganizationsPage() {
 
       <div className="space-y-3">
         {orgs.map((org) => (
-          <div key={org.id} className="card p-5">
+          <div key={org.id} className={`card p-5 ${selectedOrgId === org.id ? "border-green-300 bg-green-50" : ""}`}>
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">

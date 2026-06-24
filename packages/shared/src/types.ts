@@ -74,13 +74,37 @@ export interface AccommodationTypePrice {
   childPricePerNight: number;
 }
 
+export interface NightTierPrice {
+  languageCode: string;
+  pricePerNight: number;
+}
+
+export interface NightTier {
+  id: string;
+  fromNight: number;
+  prices: NightTierPrice[];
+}
+
 export interface AccommodationType {
   id: string;
   campId: string;
   translations: Record<string, { name: string; shortDescription?: string; longDescription?: string }>;
   capacity: number;
   sortOrder: number;
+  useDynamicPricing: boolean;
   prices: AccommodationTypePrice[];
+  nightTiers: NightTier[];
+}
+
+export function getEffectivePricePerNight(type: AccommodationType, languageCode: string, nights: number): number {
+  if (!type.useDynamicPricing || !type.nightTiers.length) {
+    const p = type.prices.find((p) => p.languageCode === languageCode) ?? type.prices[0];
+    return p?.pricePerNight ?? 0;
+  }
+  const sorted = [...type.nightTiers].sort((a, b) => b.fromNight - a.fromNight);
+  const tier = sorted.find((t) => nights >= t.fromNight) ?? sorted[sorted.length - 1];
+  const tp = tier.prices.find((p) => p.languageCode === languageCode) ?? tier.prices[0];
+  return tp?.pricePerNight ?? 0;
 }
 
 export interface Camp {

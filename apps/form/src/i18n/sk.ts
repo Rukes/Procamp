@@ -20,6 +20,9 @@ export const sk: Translations = {
   typeNoTypes: "Žiadne typy ubytovania nie sú nakonfigurované.",
   typeSoldOut: "Obsadené",
   typePerNight: "/ noc",
+  typeNightSingle: (n) => n === 1 ? "1 noc" : n < 5 ? `${n} noci` : `${n} nocí`,
+  typeNightRange: (from, to) => `${from}–${to} nocí`,
+  typeNightPlus: (from) => `${from}+ nocí`,
 
   dateTitle: "Termín pobytu",
   dateSubtitle: "Vyberte dátum príjazdu a odjazdu.",

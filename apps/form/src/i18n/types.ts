@@ -21,6 +21,9 @@ export interface Translations {
   typeNoTypes: string;
   typeSoldOut: string;
   typePerNight: string;
+  typeNightSingle: (n: number) => string;
+  typeNightRange: (from: number, to: number) => string;
+  typeNightPlus: (from: number) => string;
 
   // DateStep
   dateTitle: string;

@@ -109,11 +109,33 @@ model AccommodationType {
   translations     Json                    @default("{}")
   capacity         Int                     @default(1)
   sortOrder        Int                     @default(0)
+  useDynamicPricing Boolean               @default(false)
   createdAt        DateTime                @default(now())
   updatedAt        DateTime                @updatedAt
   prices           AccommodationTypePrice[]
+  nightTiers       NightTier[]
   reservations     Reservation[]
   blockedPeriods   BlockedPeriod[]
+}
+
+model NightTier {
+  id                  String            @id @default(cuid())
+  accommodationTypeId String
+  accommodationType   AccommodationType @relation(fields: [accommodationTypeId], references: [id], onDelete: Cascade)
+  fromNight           Int
+  prices              NightTierPrice[]
+
+  @@unique([accommodationTypeId, fromNight])
+}
+
+model NightTierPrice {
+  id           String    @id @default(cuid())
+  tierId       String
+  tier         NightTier @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  languageCode String
+  pricePerNight Float    @default(0)
+
+  @@unique([tierId, languageCode])
 }
 
 model AccommodationTypePrice {

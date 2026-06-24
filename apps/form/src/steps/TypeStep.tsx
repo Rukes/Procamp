@@ -1,5 +1,5 @@
 import { Language, formatPrice } from "@procamp/shared";
-import { CampPublic, PublicAccommodationType } from "../hooks/useCamp";
+import { CampPublic, PublicAccommodationType, getEffectivePricePerNight } from "../hooks/useCamp";
 import { useT } from "../i18n";
 import { useState } from "react";
 
@@ -14,6 +14,7 @@ export default function TypeStep({ camp, selected, onSelect, lang }: Props) {
   const t = useT(lang.code);
   const types = camp.accommodationTypes ?? [];
   const [detailType, setDetailType] = useState<PublicAccommodationType | null>(null);
+  const [priceType, setPriceType] = useState<PublicAccommodationType | null>(null);
 
   if (types.length === 0) {
     return (
@@ -25,6 +26,49 @@ export default function TypeStep({ camp, selected, onSelect, lang }: Props) {
 
   return (
     <div className="step-card">
+      {/* Cenové hladiny modal */}
+      {priceType && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-8" onClick={() => setPriceType(null)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <h3 className="font-semibold text-gray-900">{priceType.name}</h3>
+              <button type="button" onClick={() => setPriceType(null)} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
+            </div>
+            <div className="px-6 py-5">
+              <table className="w-full text-sm border-collapse border border-gray-200 rounded-lg overflow-hidden">
+                <thead>
+                  <tr className="bg-gray-50">
+                    {priceType.nightTiers.map((tier, idx) => {
+                      const isLast = idx === priceType.nightTiers.length - 1;
+                      const toNight = isLast ? null : priceType.nightTiers[idx + 1].fromNight - 1;
+                      const label = isLast
+                        ? t.typeNightPlus(tier.fromNight)
+                        : toNight === tier.fromNight
+                          ? t.typeNightSingle(tier.fromNight)
+                          : t.typeNightRange(tier.fromNight, toNight!);
+                      return (
+                        <th key={tier.fromNight} className="text-center font-medium text-gray-500 py-2 px-3 border border-gray-200">
+                          {label}
+                        </th>
+                      );
+                    })}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    {priceType.nightTiers.map((tier) => (
+                      <td key={tier.fromNight} className="text-center font-semibold text-gray-900 py-3 px-3 border border-gray-200">
+                        {formatPrice(tier.pricePerNight, lang)}<span className="text-xs font-normal text-gray-400"> {t.typePerNight}</span>
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Detail modal */}
       {detailType && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-8" onClick={() => setDetailType(null)}>
@@ -74,9 +118,31 @@ export default function TypeStep({ camp, selected, onSelect, lang }: Props) {
                 </button>
               )}
               <div className="font-semibold text-gray-900">{type.name}</div>
-              <div className="mt-2 flex items-baseline gap-1">
-                <span className="text-base font-semibold text-gray-800">{formatPrice(type.pricePerNight, lang)}</span>
-                <span className="text-xs text-gray-400">{t.typePerNight}</span>
+              <div className="mt-2 flex items-baseline justify-between gap-1.5">
+                <div className="flex items-baseline gap-1.5">
+                  {type.useDynamicPricing && type.nightTiers.length > 0 ? (
+                    <>
+                      <span className="text-xs text-gray-400">od</span>
+                      <span className="text-base font-semibold text-gray-800">{formatPrice(Math.min(...type.nightTiers.map((tier) => tier.pricePerNight)), lang)}</span>
+                      <span className="text-xs text-gray-400">{t.typePerNight}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-base font-semibold text-gray-800">{formatPrice(type.pricePerNight, lang)}</span>
+                      <span className="text-xs text-gray-400">{t.typePerNight}</span>
+                    </>
+                  )}
+                </div>
+                {type.useDynamicPricing && type.nightTiers.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setPriceType(type); }}
+                    className="text-blue-500 hover:text-blue-700 transition-colors"
+                    title="Zobrazit cenové hladiny"
+                  >
+                    <i className="fa-regular fa-circle-dollar text-lg" />
+                  </button>
+                )}
               </div>
               {type.shortDescription && (
                 <div className={`text-xs text-gray-400 mt-2 leading-snug ${type.longDescription ? "pr-6" : ""}`}>{type.shortDescription}</div>
