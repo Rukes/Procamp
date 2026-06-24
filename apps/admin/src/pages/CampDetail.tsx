@@ -425,7 +425,7 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
 
   return (
     <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-2 pt-4 sm:p-4 sm:pt-12 overflow-y-auto" onClick={onClose}>
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl" onClick={(e) => e.stopPropagation()}>
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
           <h3 className="font-semibold">{type ? "Upravit typ ubytování" : "Nový typ ubytování"}</h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
@@ -859,7 +859,7 @@ export default function CampDetailPage() {
         {/* Informace o objektu — modal */}
         {infoOpen && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-8" onClick={() => setInfoOpen(false)}>
-            <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90dvh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90dvh] flex flex-col" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <h3 className="font-semibold text-gray-900">{FLAGS[infoLang] ?? "🌐"} {languages.find((l) => l.code === infoLang)?.name ?? infoLang.toUpperCase()} — Informace o objektu</h3>
                 <button type="button" onClick={() => setInfoOpen(false)} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
