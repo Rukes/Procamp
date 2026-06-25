@@ -3,14 +3,11 @@
 ## 25. 6. 2026
 
 - **Globální vyhledávání** — Spotlight-style fulltext search přístupný přes ⌘K / Ctrl+K nebo tlačítko Hledat v postranním menu; prohledává rezervace (jméno, kód, e-mail, telefon, poznámky), objekty, uživatele a blokace; výsledky jsou barevně odlišeny písmenovými odznaky (R/O/U/B), navigace klávesami ↑↓ a Enter, postupné vysouvání při otevření a zavření
+- **Vlajky jazyků** — emoji vlajky nahrazeny SVG vlajkami z knihovny `flag-icons`; zobrazují se správně na všech platformách včetně Windows; vlajky jsou viditelné v přepínači jazyka formuláře, v nastavení objektu (SMS šablony) a na stránce Jazyky
+- **Kód rezervace** — každá rezervace dostane unikátní 5místný alfanumerický kód (např. `A3X7T`); nové rezervace ho získají automaticky, existující rezervace jsou postupně doplněny sekvenčně při startu serveru; kód je viditelný jako druhý sloupec v seznamu rezervací, prominentně v detailu rezervace a v kalendářovém výpisu; dostupný jako proměnná `{{bookingCode}}` ve všech e-mailových šablonách a `{bookingCode}` v SMS šabloně; přidán do fulltextového vyhledávání; výchozí šablony e-mailů aktualizovány
+- **SMS šablona per jazyk** — text SMS zprávy se nyní nastavuje zvlášť pro každý jazyk objektu; zákazník dostane SMS ve svém jazyce (podle jazyka rezervace); chybějící šablony jsou zvýrazněny oranžově s upozorněním
 - **Náhled e-mailové šablony** — tlačítko Náhled u každé jazykové varianty šablony otevře modal s renderovaným obsahem; editor šablony se otevírá na plnou šířku
 - **Náhled informací o objektu** — tlačítko Náhled u každého jazyka v sekci Informace o objektu
-- **SMS šablona per jazyk** — text SMS zprávy se nyní nastavuje zvlášť pro každý jazyk objektu; zákazník dostane SMS ve svém jazyce (podle jazyka rezervace); chybějící šablony jsou zvýrazněny oranžově s upozorněním
-- **Kód rezervace** — každá rezervace dostane unikátní 5místný alfanumerický kód (např. `A3X7T`); nové rezervace ho získají automaticky, existující rezervace jsou postupně doplněny sekvenčně při startu serveru; kód je viditelný jako druhý sloupec v seznamu rezervací, prominentně v detailu rezervace a v kalendářovém výpisu; dostupný jako proměnná `{{bookingCode}}` ve všech e-mailových šablonách a `{bookingCode}` v SMS šabloně; přidán do fulltextového vyhledávání; výchozí šablony e-mailů aktualizovány
-- **Vlajky jazyků** — emoji vlajky nahrazeny SVG vlajkami z knihovny `flag-icons`; zobrazují se správně na všech platformách včetně Windows; vlajky jsou viditelné v přepínači jazyka formuláře, v nastavení objektu (SMS šablony) a na stránce Jazyky
-
-## 25. 6. 2026 (GoSMS)
-
 - **Integrace GoSMS** — SMS notifikace zákazníkovi a/nebo správci při potvrzení rezervace; nastavení API přihlašovacích údajů v detailu organizace (záložka GoSMS), ID kanálu, tlačítko pro načtení kreditu a výpis dostupných kanálů
 - **SMS šablona** — textarea v nastavení objektu s počítadlem znaků, indikátorem kódování (GSM 160 zn. / UCS2 70 zn.) a tlačítkem pro nahrazení diakritiky
 - **SMS notifikace zákazníkovi** — checkbox v nastavení objektu; telefon se bere z rezervace; při ručním vytvoření rezervace v adminu dostupný checkbox „Odeslat zákazníkovi SMS"
