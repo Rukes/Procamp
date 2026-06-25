@@ -18,6 +18,7 @@ import { Flag } from "../utils/langFlag";
 type Tab = "settings" | "types" | "sms" | "smtp" | "surcharges" | "emails" | "embed";
 
 const TEMPLATE_VARS = [
+  { key: "{{bookingCode}}", desc: "Kód rezervace" },
   { key: "{{firstName}}", desc: "Jméno zákazníka" },
   { key: "{{lastName}}", desc: "Příjmení zákazníka" },
   { key: "{{email}}", desc: "E-mail zákazníka" },
