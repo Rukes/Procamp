@@ -59,17 +59,17 @@ export default function UserSettingsPage() {
         <form onSubmit={handlePwSubmit} className="space-y-4">
           <div>
             <label className="label">Současné heslo</label>
-            <input className="input" type="password" value={pwForm.currentPassword}
+            <input className="input" type="password" autoComplete="current-password" value={pwForm.currentPassword}
               onChange={(e) => setPwForm({ ...pwForm, currentPassword: e.target.value })} required />
           </div>
           <div>
             <label className="label">Nové heslo</label>
-            <input className="input" type="password" value={pwForm.newPassword}
+            <input className="input" type="password" autoComplete="new-password" value={pwForm.newPassword}
               onChange={(e) => setPwForm({ ...pwForm, newPassword: e.target.value })} required minLength={8} />
           </div>
           <div>
             <label className="label">Nové heslo znovu</label>
-            <input className="input" type="password" value={pwForm.confirmPassword}
+            <input className="input" type="password" autoComplete="new-password" value={pwForm.confirmPassword}
               onChange={(e) => setPwForm({ ...pwForm, confirmPassword: e.target.value })} required />
           </div>
           <button className="btn-primary px-8" type="submit" disabled={savingPw}>

@@ -219,21 +219,22 @@ export default function AllUsersPage() {
               <button type="button" onClick={() => setEditUser(null)} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
             </div>
             <div className="px-6 py-5">
-              <form onSubmit={handleUpdate} className="space-y-4">
+              <form onSubmit={handleUpdate} className="space-y-4" autoComplete="off">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="label">Jméno</label>
-                    <input className="input" value={editUser.name} onChange={(e) => setEditUser({ ...editUser, name: e.target.value })} required />
+                    <input className="input" autoComplete="off" value={editUser.name} onChange={(e) => setEditUser({ ...editUser, name: e.target.value })} required />
                   </div>
                   <div>
                     <label className="label">E-mail</label>
-                    <input className="input" type="email" value={editUser.email} onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} required />
+                    <input className="input" type="email" autoComplete="off" value={editUser.email} onChange={(e) => setEditUser({ ...editUser, email: e.target.value })} required />
                   </div>
                 </div>
                 <div>
                   <label className="label">Nové heslo (ponechte prázdné pro zachování)</label>
                   <div className="flex gap-2">
                     <input className="input" ref={pwInputRef} type="password"
+                      autoComplete="new-password"
                       onFocus={(e) => e.currentTarget.type = "text"}
                       onBlur={(e) => e.currentTarget.type = "password"}
                       value={editPassword} onChange={(e) => setEditPassword(e.target.value)} minLength={8} />

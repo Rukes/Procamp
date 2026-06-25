@@ -324,7 +324,7 @@ export default function OrganizationDetailPage() {
             </div>
             <div>
               <label className="label">Client Secret</label>
-              <input className="input font-mono" type="password" value={(form as any).goSmsClientSecret ?? ""} onChange={(e) => setForm((f) => ({ ...f, goSmsClientSecret: e.target.value }))} placeholder="váš client_secret z GoSMS" />
+              <input className="input font-mono" type="password" autoComplete="new-password" value={(form as any).goSmsClientSecret ?? ""} onChange={(e) => setForm((f) => ({ ...f, goSmsClientSecret: e.target.value }))} placeholder="váš client_secret z GoSMS" />
             </div>
             <div>
               <label className="label">ID komunikačního kanálu</label>

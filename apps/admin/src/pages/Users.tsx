@@ -170,16 +170,16 @@ export default function UsersPage() {
               <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
             </div>
             <div className="px-6 py-5">
-              <form onSubmit={creating ? handleCreate : handleUpdate} className="space-y-4">
+              <form onSubmit={creating ? handleCreate : handleUpdate} className="space-y-4" autoComplete="off">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="label">Jméno</label>
-                    <input className="input" value={creating ? form.name : editUser?.name ?? ""}
+                    <input className="input" autoComplete="off" value={creating ? form.name : editUser?.name ?? ""}
                       onChange={(e) => creating ? setForm({ ...form, name: e.target.value }) : setEditUser({ ...editUser!, name: e.target.value })} required />
                   </div>
                   <div>
                     <label className="label">E-mail</label>
-                    <input className="input" type="email" value={creating ? form.email : editUser?.email ?? ""}
+                    <input className="input" type="email" autoComplete="off" value={creating ? form.email : editUser?.email ?? ""}
                       onChange={(e) => creating ? setForm({ ...form, email: e.target.value }) : setEditUser({ ...editUser!, email: e.target.value })} required />
                   </div>
                 </div>
@@ -189,6 +189,7 @@ export default function UsersPage() {
                     <input className="input"
                       ref={pwInputRef}
                       type="password"
+                      autoComplete="new-password"
                       onFocus={(e) => e.currentTarget.type = "text"}
                       onBlur={(e) => e.currentTarget.type = "password"}
                       value={creating ? form.password : editPassword}
