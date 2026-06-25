@@ -303,11 +303,19 @@ export default function ReservationNewPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="label">Dospělí</label>
-              <input className="input" type="number" min="1" value={form.adults} onChange={(e) => set("adults", Number(e.target.value))} required />
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => set("adults", Math.max(1, form.adults - 1))} className="btn-secondary px-3 py-2 text-lg leading-none">−</button>
+                <input className="input text-center" type="number" min="1" value={form.adults} onChange={(e) => set("adults", Math.max(1, Number(e.target.value)))} required />
+                <button type="button" onClick={() => set("adults", form.adults + 1)} className="btn-secondary px-3 py-2 text-lg leading-none">+</button>
+              </div>
             </div>
             <div>
               <label className="label">Děti</label>
-              <input className="input" type="number" min="0" value={form.children} onChange={(e) => set("children", Number(e.target.value))} />
+              <div className="flex items-center gap-2">
+                <button type="button" onClick={() => set("children", Math.max(0, form.children - 1))} className="btn-secondary px-3 py-2 text-lg leading-none">−</button>
+                <input className="input text-center" type="number" min="0" value={form.children} onChange={(e) => set("children", Math.max(0, Number(e.target.value)))} />
+                <button type="button" onClick={() => set("children", form.children + 1)} className="btn-secondary px-3 py-2 text-lg leading-none">+</button>
+              </div>
             </div>
             <div>
               <label className="label">Předpokládaný příjezd</label>
