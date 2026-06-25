@@ -36,7 +36,7 @@ export const cs: Translations = {
   configSurchargesTitle: "Příplatky",
   configMandatory: "Povinný",
   configPerNight: "/ noc",
-  configNights: (n) => `× ${n} nocí`,
+  configNights: (n) => n === 1 ? "× 1 noc" : n < 5 ? `× ${n} noci` : `× ${n} nocí`,
 
   contactTitle: "Kontaktní údaje",
   contactFirstName: "Jméno",
@@ -70,6 +70,6 @@ export const cs: Translations = {
   summaryCheckOut: "Odjezd",
   summaryNights: "Počet nocí",
   summaryPersons: "Osoby",
-  summaryAdults: (n) => `${n} dospělí`,
-  summaryChildren: (n) => `${n} děti`,
+  summaryAdults: (n) => n === 1 ? "1 dospělý" : n < 5 ? `${n} dospělí` : `${n} dospělých`,
+  summaryChildren: (n) => n === 1 ? "1 dítě" : n < 5 ? `${n} děti` : `${n} dětí`,
 };

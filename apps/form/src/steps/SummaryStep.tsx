@@ -2,7 +2,7 @@ import { Language, formatPrice, PriceBreakdown } from "@procamp/shared";
 import { CampPublic, PublicAccommodationType, getEffectivePricePerNight } from "../hooks/useCamp";
 import { format } from "date-fns";
 import PriceBreakdownBlock from "../components/PriceBreakdown";
-import { useT } from "../i18n";
+import { useT, Translations } from "../i18n";
 import { getDateLocale } from "../i18n/dateFnsLocale";
 
 interface Props {
@@ -18,7 +18,7 @@ interface Props {
   lang: Language;
 }
 
-function calcBreakdown(camp: CampPublic, type: PublicAccommodationType, checkIn: Date, checkOut: Date, adults: number, children: number, selectedIds: string[], lang: Language): PriceBreakdown {
+function calcBreakdown(camp: CampPublic, type: PublicAccommodationType, checkIn: Date, checkOut: Date, adults: number, children: number, selectedIds: string[], lang: Language, t: Translations): PriceBreakdown {
   const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
   const basePrice = getEffectivePricePerNight(type, nights);
   const personsPrice = adults * type.adultPricePerNight + children * type.childPricePerNight;
@@ -26,11 +26,12 @@ function calcBreakdown(camp: CampPublic, type: PublicAccommodationType, checkIn:
   const surchargesPrice = selectedSurcharges.reduce((sum, s) => sum + s.pricePerNight, 0);
   const total = (basePrice + personsPrice + surchargesPrice) * nights;
 
+  const nightsLabel = t.configNights(nights);
   const lines: { label: string; amount: number }[] = [];
-  if (basePrice > 0) lines.push({ label: `${type.name} (${formatPrice(basePrice, lang)} × ${nights})`, amount: basePrice * nights });
-  if (adults > 0 && type.adultPricePerNight > 0) lines.push({ label: `${adults}× ${formatPrice(type.adultPricePerNight, lang)} × ${nights}`, amount: adults * type.adultPricePerNight * nights });
-  if (children > 0 && type.childPricePerNight > 0) lines.push({ label: `${children}× ${formatPrice(type.childPricePerNight, lang)} × ${nights}`, amount: children * type.childPricePerNight * nights });
-  selectedSurcharges.forEach((s) => lines.push({ label: `${s.name} × ${nights}`, amount: s.pricePerNight * nights }));
+  if (basePrice > 0) lines.push({ label: `${type.name} (${formatPrice(basePrice, lang)} ${nightsLabel})`, amount: basePrice * nights });
+  if (adults > 0 && type.adultPricePerNight > 0) lines.push({ label: `${t.summaryAdults(adults)} × ${formatPrice(type.adultPricePerNight, lang)} ${nightsLabel}`, amount: adults * type.adultPricePerNight * nights });
+  if (children > 0 && type.childPricePerNight > 0) lines.push({ label: `${t.summaryChildren(children)} × ${formatPrice(type.childPricePerNight, lang)} ${nightsLabel}`, amount: children * type.childPricePerNight * nights });
+  selectedSurcharges.forEach((s) => lines.push({ label: `${s.name} ${nightsLabel}`, amount: s.pricePerNight * nights }));
 
   return { nights, accommodationTotal: basePrice * nights, personsTotal: personsPrice * nights, surchargesTotal: surchargesPrice * nights, total, lines };
 }
@@ -39,7 +40,7 @@ export default function SummaryStep({ camp, type, checkIn, checkOut, adults, chi
   const t = useT(lang.code);
   const locale = getDateLocale(lang.code);
   const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
-  const breakdown = calcBreakdown(camp, type, checkIn, checkOut, adults, children, selectedSurchargeIds, lang);
+  const breakdown = calcBreakdown(camp, type, checkIn, checkOut, adults, children, selectedSurchargeIds, lang, t);
 
   return (
     <div className="step-card">

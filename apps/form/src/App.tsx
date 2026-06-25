@@ -102,7 +102,7 @@ function FormApp() {
 
   const breakdown =
     type && checkIn && checkOut
-      ? calcBreakdown(camp, type, checkIn, checkOut, adults, children, selectedSurchargeIds, langObj)
+      ? calcBreakdown(camp, type, checkIn, checkOut, adults, children, selectedSurchargeIds, langObj, t)
       : null;
 
   const handleSubmit = async (contact: ContactData) => {
