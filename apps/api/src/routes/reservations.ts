@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { requirePermission, orgFilter, campFilter } from "../plugins/auth";
 import { checkAvailability } from "../services/availability";
+import { generateUniqueBookingCode } from "../utils/bookingCode";
 import { logActivity, diffObjects } from "../services/activityLog";
 import { sendReservationEmails } from "../services/email";
 import { getEffectivePricePerNight } from "@procamp/shared";
@@ -29,6 +30,7 @@ export async function reservationRoutes(app: FastifyInstance) {
     }
     if (search) {
       where.OR = [
+        { bookingCode: { contains: search, mode: "insensitive" } },
         { firstName: { contains: search, mode: "insensitive" } },
         { lastName: { contains: search, mode: "insensitive" } },
         { email: { contains: search, mode: "insensitive" } },
@@ -95,8 +97,10 @@ export async function reservationRoutes(app: FastifyInstance) {
     }, 0);
     const totalPrice = (pricePerNight + personsPrice + surchargesPrice) * nights;
 
+    const bookingCode = await generateUniqueBookingCode(app.prisma);
     const reservation = await app.prisma.reservation.create({
       data: {
+        bookingCode,
         campId: body.campId,
         accommodationTypeId: body.accommodationTypeId,
         checkIn, checkOut,
@@ -153,7 +157,7 @@ export async function reservationRoutes(app: FastifyInstance) {
     }
     if (body.sendCustomerSms) {
       const campForSms = await app.prisma.camp.findUnique({ where: { id: body.campId } });
-      if (campForSms) sendReservationSms(app.prisma, reservation, campForSms, { sendCustomer: true, sendAdmin: false }).catch(() => {});
+      if (campForSms) sendReservationSms(app.prisma, reservation, campForSms as never, { sendCustomer: true, sendAdmin: false }).catch(() => {});
     }
     return reply.status(201).send(reservation);
   });
@@ -197,7 +201,7 @@ export async function reservationRoutes(app: FastifyInstance) {
       const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
       sendReservationEmails(app.prisma, updated as never, nights, { sendCustomer: true, sendAdmin: false, customerTplType: "CUSTOMER_CONFIRMATION" }, request.user.email).catch(() => {});
       const camp = await app.prisma.camp.findUnique({ where: { id: updated.campId } });
-      if (camp) sendReservationSms(app.prisma, updated, camp, {}).catch(() => {});
+      if (camp) sendReservationSms(app.prisma, updated, camp as never, {}).catch(() => {});
     }
     return updated;
   });
@@ -207,7 +211,7 @@ export async function reservationRoutes(app: FastifyInstance) {
     const { overridePhone } = request.body as { overridePhone?: string };
     const reservation = await app.prisma.reservation.findUnique({ where: { id }, include: { camp: true } });
     if (!reservation || !reservation.camp) return reply.status(404).send({ error: "Not found" });
-    const camp = reservation.camp as typeof reservation.camp & { smsNotifyCustomer: boolean; smsAdminPhones: string[]; smsTemplate: string; organizationId: string | null };
+    const camp = reservation.camp as typeof reservation.camp & { smsNotifyCustomer: boolean; smsAdminPhones: string[]; smsTemplates: Record<string, string>; organizationId: string | null };
     if (!camp.smsNotifyCustomer) return reply.status(400).send({ error: "SMS notifikace zákazníkovi není povolena." });
     try {
       await sendReservationSms(app.prisma, reservation, camp, { sendCustomer: true, sendAdmin: false, customPhone: overridePhone, userEmail: request.user.email });
@@ -258,6 +262,7 @@ export async function reservationRoutes(app: FastifyInstance) {
     if (q.campId) where.campId = q.campId;
     if (q.status) where.status = q.status;
     if (q.search) where.OR = [
+      { bookingCode: { contains: q.search, mode: "insensitive" } },
       { firstName: { contains: q.search, mode: "insensitive" } },
       { lastName: { contains: q.search, mode: "insensitive" } },
       { email: { contains: q.search, mode: "insensitive" } },

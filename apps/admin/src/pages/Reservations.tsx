@@ -7,7 +7,7 @@ import { Reservation, Camp, Language } from "@procamp/shared";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { useAuth } from "../contexts/AuthContext";
-import { langFlag } from "../utils/langFlag";
+import { Flag } from "../utils/langFlag";
 import Pagination from "../components/Pagination";
 import ReservationCalendar from "../components/ReservationCalendar";
 
@@ -290,6 +290,7 @@ export default function ReservationsPage() {
           <table className="w-full text-sm min-w-[700px]">
             <thead>
               <tr className="border-b border-gray-100 text-left text-gray-500 bg-gray-50">
+                <th className="px-4 py-3 font-medium">Kód</th>
                 <Th k="name">Jméno a příjmení</Th>
                 <Th k="camp">Objekt</Th>
                 <th className="px-4 py-3 font-medium">Typ</th>
@@ -310,9 +311,12 @@ export default function ReservationsPage() {
                     onClick={() => navigate(`/reservations/${r.id}`)}
                   >
                     <td className="px-4 py-3">
+                      <code className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{r.bookingCode ?? "—"}</code>
+                    </td>
+                    <td className="px-4 py-3">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <p className="font-medium text-gray-900">{langFlag(r.languageCode)} {r.firstName} {r.lastName}</p>
+                          <p className="font-medium text-gray-900"><Flag code={r.languageCode} className="mr-1" /> {r.firstName} {r.lastName}</p>
                           <p className="text-xs text-gray-400">{r.email}</p>
                         </div>
                         {(r.note || r.internalNote) && (
@@ -345,7 +349,7 @@ export default function ReservationsPage() {
                 );
               })}
               {reservations.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-10 text-center text-gray-400">Žádné rezervace</td></tr>
+                <tr><td colSpan={9} className="px-4 py-10 text-center text-gray-400">Žádné rezervace</td></tr>
               )}
             </tbody>
           </table>

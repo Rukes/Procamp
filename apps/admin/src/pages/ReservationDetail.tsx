@@ -7,7 +7,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMont
 import { cs } from "date-fns/locale";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
-import { langFlag } from "../utils/langFlag";
+import { Flag } from "../utils/langFlag";
 import { ARRIVAL_TIMES } from "../utils/arrivalTimes";
 
 const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká na potvrzení", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
@@ -235,7 +235,7 @@ export default function ReservationDetailPage() {
       <div className="flex flex-wrap items-center gap-2 mb-6">
         <Link to="/reservations" className="flex items-center gap-1.5 text-gray-400 hover:text-gray-600"><i className="fa-regular fa-arrow-left" /> Rezervace</Link>
         <span className="text-gray-300">/</span>
-        <span className="text-gray-900 font-medium">{langFlag(reservation.languageCode)} {reservation.firstName} {reservation.lastName}</span>
+        <span className="text-gray-900 font-medium"><Flag code={reservation.languageCode} className="mr-1" /> {reservation.firstName} {reservation.lastName}</span>
         <span className={STATUS_CLASS[reservation.status]}>{STATUS_LABEL[reservation.status]}</span>
         <span className="text-xs text-gray-400 sm:ml-auto">Vytvořeno {format(new Date(reservation.createdAt), "d. M. yyyy HH:mm", { locale: cs })}</span>
       </div>
@@ -432,6 +432,11 @@ export default function ReservationDetailPage() {
         {/* Levý sloupec: kalendář + cena */}
         <div className="card p-6 flex flex-col gap-4">
           <div>
+            <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-0.5">Kód rezervace</p>
+            <p className="text-2xl font-bold font-mono tracking-widest text-gray-900">{reservation.bookingCode ?? "—"}</p>
+          </div>
+          <hr />
+          <div>
             <p className="text-xs text-gray-500 uppercase tracking-wide font-semibold mb-0.5">Celková cena</p>
             <p className="text-3xl font-bold text-gray-900">{formatPrice(reservation.totalPrice, reservation.languageCode)}</p>
             <p className="text-sm text-gray-400">Platba na místě</p>
@@ -493,7 +498,7 @@ export default function ReservationDetailPage() {
           <div className="card p-6">
             <h2 className="font-semibold mb-4">Kontakt</h2>
             <dl className="grid grid-cols-1 gap-3 text-sm">
-              <div><dt className="text-gray-500">Jméno a příjmení</dt><dd className="font-medium">{langFlag(reservation.languageCode)} {reservation.firstName} {reservation.lastName}</dd></div>
+              <div><dt className="text-gray-500">Jméno a příjmení</dt><dd className="font-medium"><Flag code={reservation.languageCode} className="mr-1" /> {reservation.firstName} {reservation.lastName}</dd></div>
               <div><dt className="text-gray-500">E-mail</dt><dd className="font-medium"><a href={`mailto:${reservation.email}`} className="text-blue-600">{reservation.email}</a></dd></div>
               <div><dt className="text-gray-500">Telefon</dt><dd className="font-medium"><a href={`tel:${reservation.phone}`} className="text-blue-600">{reservation.phone}</a></dd></div>
               <div><dt className="text-gray-500">SPZ</dt><dd className={reservation.licensePlate ? "font-medium" : "text-gray-400 italic"}>{reservation.licensePlate || "nevyplněno"}</dd></div>

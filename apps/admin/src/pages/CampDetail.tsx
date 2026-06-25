@@ -13,6 +13,7 @@ import { Camp, Surcharge, EmailTemplate, Language, AccommodationType, Accommodat
 // SurchargePrice used via Surcharge.prices
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
+import { Flag } from "../utils/langFlag";
 
 type Tab = "settings" | "types" | "sms" | "smtp" | "surcharges" | "emails" | "embed";
 
@@ -35,7 +36,7 @@ const TEMPLATE_VARS = [
   { key: "{{note}}", desc: "Poznámka zákazníka" },
 ];
 
-const FLAGS: Record<string, string> = { cs: "🇨🇿", en: "🇬🇧", de: "🇩🇪", pl: "🇵🇱", it: "🇮🇹", es: "🇪🇸", fr: "🇫🇷", ru: "🇷🇺", uk: "🇺🇦" };
+
 
 const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
   ADMIN_NOTIFICATION: {
@@ -54,6 +55,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
     </table>
     <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Rezervace</h2>
     <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr style="background:#eff6ff"><td style="padding:8px 0;color:#1e40af;font-weight:700;width:180px">Kód rezervace</td><td style="padding:8px 0;font-weight:700;font-size:18px;letter-spacing:0.1em;font-family:monospace;color:#1e40af">{{bookingCode}}</td></tr>
       <tr><td style="padding:6px 0;color:#6b7280;width:180px">Rezervace ubytování</td><td style="padding:6px 0;font-weight:600">{{accommodationType}}</td></tr>
       <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Příjezd</td><td style="padding:6px 8px;font-weight:600">{{checkIn}}</td></tr>
       <tr><td style="padding:6px 0;color:#6b7280">Odjezd</td><td style="padding:6px 0;font-weight:600">{{checkOut}}</td></tr>
@@ -82,6 +84,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
     <p style="font-size:15px;margin:0 0 24px">Dobrý den, <strong>{{firstName}}</strong>,<br>děkujeme za vaši rezervaci. Níže najdete shrnutí.</p>
     <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Vaše rezervace</h2>
     <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr style="background:#eff6ff"><td style="padding:8px 0;color:#1e40af;font-weight:700;width:180px">Kód rezervace</td><td style="padding:8px 0;font-weight:700;font-size:18px;letter-spacing:0.1em;font-family:monospace;color:#1e40af">{{bookingCode}}</td></tr>
       <tr><td style="padding:6px 0;color:#6b7280;width:180px">Rezervace ubytování</td><td style="padding:6px 0;font-weight:600">{{accommodationType}}</td></tr>
       <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Příjezd</td><td style="padding:6px 8px;font-weight:600">{{checkIn}}</td></tr>
       <tr><td style="padding:6px 0;color:#6b7280">Odjezd</td><td style="padding:6px 0;font-weight:600">{{checkOut}}</td></tr>
@@ -111,6 +114,7 @@ const DEFAULT_TEMPLATES: Record<string, { subject: string; body: string }> = {
     <p style="font-size:15px;margin:0 0 24px">Dobrý den, <strong>{{firstName}}</strong>,<br>obdrželi jsme vaši žádost o rezervaci. Rezervace bude aktivní po ručním potvrzení ze strany správce — budeme vás informovat e-mailem.</p>
     <h2 style="margin:0 0 12px;font-size:15px;color:#374151;text-transform:uppercase;letter-spacing:.05em;border-bottom:2px solid #e2e8f0;padding-bottom:6px">Přehled rezervace</h2>
     <table style="width:100%;border-collapse:collapse;margin-bottom:24px;font-size:14px">
+      <tr style="background:#eff6ff"><td style="padding:8px 0;color:#1e40af;font-weight:700;width:180px">Kód rezervace</td><td style="padding:8px 0;font-weight:700;font-size:18px;letter-spacing:0.1em;font-family:monospace;color:#1e40af">{{bookingCode}}</td></tr>
       <tr><td style="padding:6px 0;color:#6b7280;width:180px">Rezervace ubytování</td><td style="padding:6px 0;font-weight:600">{{accommodationType}}</td></tr>
       <tr style="background:#f1f5f9"><td style="padding:6px 8px;color:#6b7280">Příjezd</td><td style="padding:6px 8px;font-weight:600">{{checkIn}}</td></tr>
       <tr><td style="padding:6px 0;color:#6b7280">Odjezd</td><td style="padding:6px 0;font-weight:600">{{checkOut}}</td></tr>
@@ -219,7 +223,7 @@ function SurchargeEditor({ surcharge, languages, campId, accommodationTypes, onS
                 return (
                   <button key={l.code} type="button" onClick={() => setActiveLang(l.code)}
                     className={`px-3 py-1.5 text-sm border-b-2 transition-colors flex items-center gap-1.5 ${activeLang === l.code ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500"}`}>
-                    {FLAGS[l.code] ?? "🌐"} {l.name}
+                    <Flag code={l.code} /> {l.name}
                     {filled && <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />}
                   </button>
                 );
@@ -500,7 +504,7 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
                 return (
                   <button key={l.code} type="button" onClick={() => setActiveLang(l.code)}
                     className={`px-3 py-1.5 text-sm border-b-2 transition-colors flex items-center gap-1.5 ${activeLang === l.code ? "border-blue-600 text-blue-600" : "border-transparent text-gray-500"}`}>
-                    {FLAGS[l.code] ?? "🌐"} {l.name}
+                    <Flag code={l.code} /> {l.name}
                     {filled && <span className="w-1.5 h-1.5 rounded-full bg-green-500 inline-block" />}
                   </button>
                 );
@@ -598,16 +602,20 @@ export default function CampDetailPage() {
   const [helpOpen, setHelpOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [infoLang, setInfoLang] = useState("");
+  const [previewModal, setPreviewModal] = useState<{ title: string; subject?: string; html: string } | null>(null);
   const [infoValues, setInfoValues] = useState<Record<string, string>>({});
   const [savingInfo, setSavingInfo] = useState(false);
   const [smsNotifyCustomer, setSmsNotifyCustomer] = useState(false);
   const [smsNotifyAdmin, setSmsNotifyAdmin] = useState(false);
   const [smsAdminPhones, setSmsAdminPhones] = useState("");
-  const [smsTemplate, setSmsTemplate] = useState("");
+  const [smsTemplates, setSmsTemplates] = useState<Record<string, string>>({});
+  const [smsCredit, setSmsCredit] = useState<{ currentCredit: number; currency: string } | null>(null);
+  const [smsCreditLoading, setSmsCreditLoading] = useState(false);
   const [smsPhoneError, setSmsPhoneError] = useState("");
   const [smsLengthHelpOpen, setSmsLengthHelpOpen] = useState(false);
   const [smsTestOpen, setSmsTestOpen] = useState(false);
   const [smsTestPhone, setSmsTestPhone] = useState("");
+  const [smsTestLang, setSmsTestLang] = useState("");
   const [smsTestSending, setSmsTestSending] = useState(false);
   const [smsTestResult, setSmsTestResult] = useState<{ ok: boolean; message: string; detail?: Record<string, unknown> } | null>(null);
 
@@ -637,7 +645,7 @@ export default function CampDetailPage() {
     setSmsNotifyCustomer(campRes.data.smsNotifyCustomer ?? false);
     setSmsNotifyAdmin(campRes.data.smsNotifyAdmin ?? false);
     setSmsAdminPhones((campRes.data.smsAdminPhones ?? []).join(", "));
-    setSmsTemplate(campRes.data.smsTemplate ?? "");
+    setSmsTemplates((campRes.data.smsTemplates ?? {}) as Record<string, string>);
     setInfoLang(langRes.data[0]?.code ?? "cs");
     setLanguages(langRes.data);
     setTemplates(tplRes.data);
@@ -676,7 +684,7 @@ export default function CampDetailPage() {
     data.hideChildren = hideChildren;
     data.smsNotifyCustomer = smsNotifyCustomer;
     data.smsNotifyAdmin = smsNotifyAdmin;
-    data.smsTemplate = smsTemplate;
+    data.smsTemplates = smsTemplates;
     if (smsNotifyAdmin && smsAdminPhones.trim()) {
       const phones = smsAdminPhones.split(",").map((p: string) => p.trim()).filter(Boolean);
       const invalid = phones.find((p: string) => !/^\+[1-9]\d{6,14}$/.test(p));
@@ -695,7 +703,7 @@ export default function CampDetailPage() {
       setSmsNotifyCustomer(res.data.smsNotifyCustomer ?? false);
       setSmsNotifyAdmin(res.data.smsNotifyAdmin ?? false);
       setSmsAdminPhones((res.data.smsAdminPhones ?? []).join(", "));
-      setSmsTemplate(res.data.smsTemplate ?? "");
+      setSmsTemplates((res.data.smsTemplates ?? {}) as Record<string, string>);
       toast.success("Nastavení bylo uloženo.");
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
@@ -713,7 +721,7 @@ export default function CampDetailPage() {
     setSmsTestSending(true);
     setSmsTestResult(null);
     try {
-      const res = await api.post(`/camps/${id}/test-sms`, { phone: smsTestPhone.trim() });
+      const res = await api.post(`/camps/${id}/test-sms`, { phone: smsTestPhone.trim(), lang: smsTestLang || undefined });
       const r = res.data?.response;
       setSmsTestResult({ ok: true, message: "SMS byla odeslána.", detail: r ?? undefined });
     } catch (err: unknown) {
@@ -928,7 +936,7 @@ export default function CampDetailPage() {
           <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-8" onClick={() => setInfoOpen(false)}>
             <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90dvh] flex flex-col" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-                <h3 className="font-semibold text-gray-900">{FLAGS[infoLang] ?? "🌐"} {languages.find((l) => l.code === infoLang)?.name ?? infoLang.toUpperCase()} — Informace o objektu</h3>
+                <h3 className="font-semibold text-gray-900 flex items-center gap-1.5"><Flag code={infoLang} /> {languages.find((l) => l.code === infoLang)?.name ?? infoLang.toUpperCase()} — Informace o objektu</h3>
                 <button type="button" onClick={() => setInfoOpen(false)} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
               </div>
               <div className="flex-1 overflow-y-auto px-6 py-4">
@@ -956,11 +964,16 @@ export default function CampDetailPage() {
           <div className="space-y-2">
             {languages.map((l) => (
               <div key={l.code} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                <span className="text-sm font-medium">{FLAGS[l.code] ?? "🌐"} {l.name}</span>
+                <span className="text-sm font-medium flex items-center gap-1.5"><Flag code={l.code} /> {l.name}</span>
                 <div className="flex gap-2 items-center">
                   {infoValues[l.code] ? <span className="text-xs text-green-600"><i className="fa-regular fa-check mr-1" />nastaveno</span> : <span className="text-xs text-gray-400">prázdné</span>}
+                  {infoValues[l.code] && (
+                    <button className="btn-secondary text-xs py-1" onClick={() => setPreviewModal({ title: `${l.name} — Informace o objektu`, html: infoValues[l.code] })}>
+                      <i className="fa-regular fa-eye mr-1" />Náhled
+                    </button>
+                  )}
                   {can("camps_edit") && (
-                    <button className="btn-secondary text-xs py-1" onClick={() => { setInfoLang(l.code); setInfoOpen(true); }}>
+                    <button className="text-xs py-1 px-2 rounded-lg border border-yellow-400 text-yellow-700 hover:bg-yellow-50 transition-colors font-medium" onClick={() => { setInfoLang(l.code); setInfoOpen(true); }}>
                       <i className="fa-regular fa-pen mr-1" />Upravit
                     </button>
                   )}
@@ -1103,69 +1116,143 @@ export default function CampDetailPage() {
               {smsPhoneError && <p className="text-xs text-red-600 mt-1">{smsPhoneError}</p>}
             </div>
           )}
+          <hr />
           <div>
-            <label className="label">Text SMS zprávy</label>
-            <textarea
-              className="input min-h-[80px] resize-y"
-              value={smsTemplate}
-              onChange={(e) => setSmsTemplate(e.target.value)}
-              placeholder="Vaše rezervace byla potvrzena."
-              maxLength={1000}
-            />
-            <div className="flex items-start justify-between mt-1">
-              <Tooltip text="Nahradí diakritiku v textu pro správný formát">
-              <button
-                type="button"
-                className="text-xs text-blue-600 hover:underline"
-                onClick={() => setSmsTemplate(smsTemplate
-                  .replace(/á/g,"a").replace(/Á/g,"A").replace(/č/g,"c").replace(/Č/g,"C")
-                  .replace(/ď/g,"d").replace(/Ď/g,"D").replace(/é/g,"e").replace(/É/g,"E")
-                  .replace(/ě/g,"e").replace(/Ě/g,"E").replace(/í/g,"i").replace(/Í/g,"I")
-                  .replace(/ň/g,"n").replace(/Ň/g,"N").replace(/ó/g,"o").replace(/Ó/g,"O")
-                  .replace(/ř/g,"r").replace(/Ř/g,"R").replace(/š/g,"s").replace(/Š/g,"S")
-                  .replace(/ť/g,"t").replace(/Ť/g,"T").replace(/ú/g,"u").replace(/Ú/g,"U")
-                  .replace(/ů/g,"u").replace(/Ů/g,"U").replace(/ý/g,"y").replace(/Ý/g,"Y")
-                  .replace(/ž/g,"z").replace(/Ž/g,"Z")
-                )}
-              >
-                <i className="fa-regular fa-text-slash mr-1" />Nahradit diakritiku
-              </button>
-              </Tooltip>
-              {(() => {
-                const isUcs2 = /[ěščřžýáíéúůóďťňĚŠČŘŽÝÁÍÉÚŮÓĎŤŇ]/.test(smsTemplate);
-                const limit = isUcs2 ? 70 : 160;
-                const smsCount = Math.max(1, Math.ceil(smsTemplate.length / limit));
-                const over = smsCount > 1;
-                return (
-                  <div className="flex flex-col items-end gap-0.5">
-                    <span className={`text-xs font-mono ${over ? "text-amber-600" : "text-gray-400"}`}>
-                      {smsTemplate.length} znaků / {smsCount} SMS
-                    </span>
-                    {isUcs2 ? (
-                      <span className="text-xs text-amber-600">UCS2 — max 70 zn.</span>
-                    ) : (
-                      <span className="text-xs text-gray-400">GSM — max 160 zn.</span>
-                    )}
-                    <button type="button" className="text-xs text-gray-400 hover:text-gray-600 underline" onClick={() => setSmsLengthHelpOpen(true)}>Jak funguje délka SMS?</button>
-                  </div>
-                );
-              })()}
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-base font-semibold text-gray-900">Text SMS zprávy</p>
+              <button type="button" className="text-xs text-gray-400 hover:text-gray-600 underline" onClick={() => setSmsLengthHelpOpen(true)}>Jak funguje délka SMS?</button>
             </div>
+            <div className="text-xs text-gray-400 mb-3 space-y-0.5">
+              <div className="flex flex-col gap-y-0.5">
+                {([
+                  ["{bookingCode}", "kód rezervace"],
+                  ["{fullName}", "celé jméno"],
+                  ["{firstName}", "jméno"],
+                  ["{lastName}", "příjmení"],
+                ] as [string, string][]).map(([key, desc]) => (
+                  <div key={key} className="flex items-center gap-x-3">
+                    <div className="w-[7rem] shrink-0"><code className="bg-gray-100 px-1 rounded">{key}</code></div>
+                    <span>{desc}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="pt-0.5"><i className="fa-regular fa-circle-info mr-1" />Hodnoty proměnných jsou automaticky zbaveny diakritiky</div>
+            </div>
+            {(() => {
+              const missing = languages.filter((l) => !(smsTemplates[l.code] ?? "").trim());
+              const stripDiacritics = (s: string) => s
+                .replace(/á/g,"a").replace(/Á/g,"A").replace(/č/g,"c").replace(/Č/g,"C")
+                .replace(/ď/g,"d").replace(/Ď/g,"D").replace(/é/g,"e").replace(/É/g,"E")
+                .replace(/ě/g,"e").replace(/Ě/g,"E").replace(/í/g,"i").replace(/Í/g,"I")
+                .replace(/ň/g,"n").replace(/Ň/g,"N").replace(/ó/g,"o").replace(/Ó/g,"O")
+                .replace(/ř/g,"r").replace(/Ř/g,"R").replace(/š/g,"s").replace(/Š/g,"S")
+                .replace(/ť/g,"t").replace(/Ť/g,"T").replace(/ú/g,"u").replace(/Ú/g,"U")
+                .replace(/ů/g,"u").replace(/Ů/g,"U").replace(/ý/g,"y").replace(/Ý/g,"Y")
+                .replace(/ž/g,"z").replace(/Ž/g,"Z");
+              return (
+                <div className="space-y-3">
+                  {missing.length > 0 && (
+                    <div className="rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700 flex items-center gap-2">
+                      <i className="fa-regular fa-triangle-exclamation" />
+                      Chybí šablona pro: {missing.map((l) => l.name).join(", ")}
+                    </div>
+                  )}
+                  {languages.map((l) => {
+                    const val = smsTemplates[l.code] ?? "";
+                    const isUcs2 = /[ěščřžýáíéúůóďťňĚŠČŘŽÝÁÍÉÚŮÓĎŤŇ]/.test(val);
+                    const limit = isUcs2 ? 70 : 160;
+                    const smsCount = Math.max(1, Math.ceil(val.length / limit));
+                    const over = smsCount > 1;
+                    const isEmpty = !val.trim();
+                    return (
+                      <div key={l.code} className={`rounded-lg border p-3 space-y-2 ${isEmpty ? "border-amber-300 bg-amber-50" : "border-gray-200"}`}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-700 flex items-center gap-1.5"><Flag code={l.code} /> {l.name}</span>
+                          <span className="text-xs text-gray-400 font-mono">{l.code}</span>
+                          {l.isDefault && <span className="text-xs bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded">výchozí</span>}
+                          {isEmpty && <span className="text-xs text-amber-600 ml-auto"><i className="fa-regular fa-triangle-exclamation mr-1" />Nevyplněno</span>}
+                        </div>
+                        <textarea
+                          className="input min-h-[72px] resize-y w-full"
+                          value={val}
+                          onChange={(e) => setSmsTemplates((prev) => ({ ...prev, [l.code]: e.target.value }))}
+                          placeholder="Vaše rezervace byla potvrzena."
+                          maxLength={1000}
+                        />
+                        <div className="flex items-start justify-between mt-1">
+                          <Tooltip text="Nahradí diakritiku v textu pro správný formát">
+                            <button type="button" className="text-xs text-blue-600 hover:underline" onClick={() => setSmsTemplates((prev) => ({ ...prev, [l.code]: stripDiacritics(val) }))}>
+                              <i className="fa-regular fa-text-slash mr-1" />Nahradit diakritiku
+                            </button>
+                          </Tooltip>
+                          <div className="flex flex-col items-end gap-0.5">
+                            <span className={`text-xs font-mono ${over ? "text-amber-600" : "text-gray-400"}`}>
+                              {val.length} znaků / {smsCount} SMS
+                            </span>
+                            {isUcs2 ? (
+                              <span className="text-xs text-amber-600">UCS2 — max 70 zn.</span>
+                            ) : (
+                              <span className="text-xs text-gray-400">GSM — max 160 zn.</span>
+                            )}
+                            {/\{(bookingCode|fullName|firstName|lastName)\}/.test(val) && (
+                              <span className="text-xs text-amber-600">Délka se může lišit dle hodnot proměnných</span>
+                            )}
+                          </div>
+                        </div>
+                        {val.length > 0 && (() => {
+                          const resolved = val
+                            .replace(/\{bookingCode\}/g, "ABC123")
+                            .replace(/\{fullName\}/g, "Petr Novak")
+                            .replace(/\{firstName\}/g, "Petr")
+                            .replace(/\{lastName\}/g, "Novak");
+                          const isUcs2r = /[ěščřžýáíéúůóďťňĚŠČŘŽÝÁÍÉÚŮÓĎŤŇ]/.test(resolved);
+                          const limitr = isUcs2r ? 70 : 160;
+                          const countr = Math.max(1, Math.ceil(resolved.length / limitr));
+                          return (
+                            <div className="mt-2">
+                              <div className="flex items-center justify-between bg-gray-700 text-gray-300 rounded-t-lg px-3 py-1.5 text-xs">
+                                <span>Náhled</span>
+                              </div>
+                              <pre className="text-xs bg-gray-900 text-gray-100 p-3 whitespace-pre-wrap font-mono">{resolved}</pre>
+                              <div className="flex items-center justify-between bg-gray-800 text-gray-400 rounded-b-lg px-3 py-1.5 text-xs font-mono">
+                                <span>{isUcs2r ? "UCS2" : "GSM"}</span>
+                                <span>{resolved.length} zn. / {countr} SMS</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
           </div>
           {can("camps_edit") && (
-            <div className="flex items-center gap-3 pt-2">
-              <button type="button" className="px-4 py-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium transition-colors" onClick={() => { if (!smsTemplate.trim()) { toast.error("Nejdříve vyplňte text SMS zprávy."); return; } setSmsTestOpen((v) => !v); setSmsTestResult(null); if (!smsTestPhone) setSmsTestPhone(smsAdminPhones.split(",")[0]?.trim() ?? ""); }}>
-                <i className="fa-regular fa-paper-plane mr-1.5" />Testovací SMS
-              </button>
-              <button className="btn-primary ml-auto" type="submit" disabled={saving}>
-                {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit změny</>}
-              </button>
+            <div className="space-y-2 pt-2">
+              <div className="flex items-center gap-3">
+                <button type="button" className="px-4 py-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium transition-colors" onClick={() => { const hasAny = Object.values(smsTemplates).some((v) => v.trim()); if (!hasAny) { toast.error("Nejdříve vyplňte alespoň jednu SMS šablonu."); return; } setSmsTestOpen((v) => !v); setSmsTestResult(null); if (!smsTestPhone) setSmsTestPhone(smsAdminPhones.split(",")[0]?.trim() ?? ""); if (!smsTestLang) setSmsTestLang(languages.find((l) => l.isDefault)?.code ?? languages[0]?.code ?? ""); }}>
+                  <i className="fa-regular fa-paper-plane mr-1.5" />Testovací SMS
+                </button>
+                <button className="btn-primary ml-auto" type="submit" disabled={saving}>
+                  {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit změny</>}
+                </button>
+              </div>
+              <div className="flex items-center gap-3">
+                <button type="button" className="px-4 py-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium transition-colors" disabled={smsCreditLoading} onClick={async () => { const orgId = (camp as any).organization?.id; if (!orgId) return; setSmsCreditLoading(true); try { const r = await api.get(`/organizations/${orgId}/gosms-credit`); setSmsCredit(r.data); } catch { toast.error("Nepodařilo se načíst kredit z GoSMS."); } finally { setSmsCreditLoading(false); } }}>
+                  {smsCreditLoading ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Načítám…</> : <><i className="fa-regular fa-wallet mr-1.5" />Načíst kredit</>}
+                </button>
+                {smsCredit && <span className="text-sm text-gray-700">Kredit: <strong>{smsCredit.currentCredit} {smsCredit.currency}</strong></span>}
+              </div>
             </div>
           )}
           {smsTestOpen && (
             <div className="border border-gray-200 rounded-xl p-4 space-y-3 bg-gray-50">
               <p className="text-sm font-medium text-gray-700">Odeslat testovací SMS</p>
               <div className="flex items-center gap-2">
+                <select className="input w-auto" value={smsTestLang} onChange={(e) => { setSmsTestLang(e.target.value); setSmsTestResult(null); }}>
+                  {languages.map((l) => <option key={l.code} value={l.code}>{l.name}{l.isDefault ? " (výchozí)" : ""}</option>)}
+                </select>
                 <input
                   type="tel"
                   className="input flex-1"
@@ -1178,7 +1265,7 @@ export default function CampDetailPage() {
                   {smsTestSending ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Odesílám…</> : <><i className="fa-regular fa-paper-plane mr-1.5" />Odeslat</>}
                 </button>
               </div>
-              <p className="text-xs text-gray-400">Text zprávy: <em>{smsTemplate || "Vaše rezervace byla potvrzena."}</em></p>
+              <p className="text-xs text-gray-400">Text zprávy: <em>{(smsTemplates[smsTestLang] || Object.values(smsTemplates).find((v) => v.trim()) || "Vaše rezervace byla potvrzena.").replace(/\{bookingCode\}/g, "ABC123").replace(/\{fullName\}/g, "Petr Novak").replace(/\{firstName\}/g, "Petr").replace(/\{lastName\}/g, "Novak")}</em></p>
               {smsTestResult && (
                 <div className={`text-sm rounded-lg p-3 space-y-2 ${smsTestResult.ok ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"}`}>
                   <div className="flex items-center gap-2 font-medium">
@@ -1340,13 +1427,13 @@ export default function CampDetailPage() {
 
       {/* Email templates */}
       {tab === "emails" && (
-        <div className="space-y-4">
+        <div className={`space-y-4 ${editTpl ? "" : "max-w-2xl"}`}>
           {editTpl ? (
             <form onSubmit={handleSaveTpl} className="space-y-4">
               <div className="flex items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <button type="button" className="text-gray-400 hover:text-gray-600" onClick={() => setEditTpl(null)}><i className="fa-regular fa-arrow-left mr-1" />Zpět</button>
-                  <h3 className="font-semibold">{editTpl.type === "ADMIN_NOTIFICATION" ? "Notifikace správci" : `Potvrzení zákazníkovi — ${FLAGS[editTpl.languageCode] ?? ""} ${editTpl.languageCode.toUpperCase()}`}</h3>
+                  <h3 className="font-semibold flex items-center gap-1.5">{editTpl.type === "ADMIN_NOTIFICATION" ? "Notifikace správci" : <><span>Potvrzení zákazníkovi —</span> <Flag code={editTpl.languageCode} /> <span>{editTpl.languageCode.toUpperCase()}</span></>}</h3>
                 </div>
                 <div className="flex gap-2">
                   <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit šablonu</button>
@@ -1382,8 +1469,13 @@ export default function CampDetailPage() {
                       const tpl = templates.find((t) => t.type === "ADMIN_NOTIFICATION" && t.languageCode === "cs");
                       return (<>
                         {tpl ? <span className="text-xs text-green-600"><i className="fa-regular fa-check mr-1" />nastavena</span> : <span className="text-xs text-gray-400">chybí</span>}
+                        {tpl && (
+                          <button className="btn-secondary text-xs py-1" onClick={() => setPreviewModal({ title: "Notifikace správci", subject: tpl.subject, html: tpl.body })}>
+                            <i className="fa-regular fa-eye mr-1" />Náhled
+                          </button>
+                        )}
                         {can("templates_edit") && (
-                          <button className="btn-secondary text-xs py-1" onClick={() => openEditTpl(tpl ?? { id: "", campId: id!, type: "ADMIN_NOTIFICATION", languageCode: "cs", subject: "", body: "" })}>
+                          <button className="text-xs py-1 px-2 rounded-lg border border-yellow-400 text-yellow-700 hover:bg-yellow-50 transition-colors font-medium" onClick={() => openEditTpl(tpl ?? { id: "", campId: id!, type: "ADMIN_NOTIFICATION", languageCode: "cs", subject: "", body: "" })}>
                             {tpl ? <><i className="fa-regular fa-pen mr-1" />Upravit</> : <><i className="fa-regular fa-plus mr-1" />Vytvořit</>}
                           </button>
                         )}
@@ -1401,11 +1493,16 @@ export default function CampDetailPage() {
                       const tpl = templates.find((t) => t.type === "PENDING_CONFIRMATION" && t.languageCode === lang.code);
                       return (
                         <div key={lang.code} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                          <span className="text-sm font-medium">{FLAGS[lang.code] ?? "🌐"} {lang.name}</span>
+                          <span className="text-sm font-medium flex items-center gap-1.5"><Flag code={lang.code} /> {lang.name}</span>
                           <div className="flex gap-2 items-center">
                             {tpl ? <span className="text-xs text-green-600"><i className="fa-regular fa-check mr-1" />nastavena</span> : <span className="text-xs text-gray-400">chybí</span>}
+                            {tpl && (
+                              <button className="btn-secondary text-xs py-1" onClick={() => setPreviewModal({ title: `${lang.name} — Nepotvrzená rezervace`, subject: tpl.subject, html: tpl.body })}>
+                                <i className="fa-regular fa-eye mr-1" />Náhled
+                              </button>
+                            )}
                             {can("templates_edit") && (
-                              <button className="btn-secondary text-xs py-1" onClick={() => openEditTpl(tpl ?? { id: "", campId: id!, type: "PENDING_CONFIRMATION", languageCode: lang.code, subject: "", body: "" })}>
+                              <button className="text-xs py-1 px-2 rounded-lg border border-yellow-400 text-yellow-700 hover:bg-yellow-50 transition-colors font-medium" onClick={() => openEditTpl(tpl ?? { id: "", campId: id!, type: "PENDING_CONFIRMATION", languageCode: lang.code, subject: "", body: "" })}>
                                 {tpl ? <><i className="fa-regular fa-pen mr-1" />Upravit</> : <><i className="fa-regular fa-plus mr-1" />Vytvořit</>}
                               </button>
                             )}
@@ -1424,11 +1521,16 @@ export default function CampDetailPage() {
                     const tpl = templates.find((t) => t.type === "CUSTOMER_CONFIRMATION" && t.languageCode === lang.code);
                     return (
                       <div key={lang.code} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
-                        <span className="text-sm font-medium">{FLAGS[lang.code] ?? "🌐"} {lang.name}</span>
+                        <span className="text-sm font-medium flex items-center gap-1.5"><Flag code={lang.code} /> {lang.name}</span>
                         <div className="flex gap-2 items-center">
                           {tpl ? <span className="text-xs text-green-600"><i className="fa-regular fa-check mr-1" />nastavena</span> : <span className="text-xs text-gray-400">chybí</span>}
+                          {tpl && (
+                            <button className="btn-secondary text-xs py-1" onClick={() => setPreviewModal({ title: `${lang.name} — Potvrzení zákazníkovi`, subject: tpl.subject, html: tpl.body })}>
+                              <i className="fa-regular fa-eye mr-1" />Náhled
+                            </button>
+                          )}
                           {can("templates_edit") && (
-                            <button className="btn-secondary text-xs py-1" onClick={() => openEditTpl(tpl ?? { id: "", campId: id!, type: "CUSTOMER_CONFIRMATION", languageCode: lang.code, subject: "", body: "" })}>
+                            <button className="text-xs py-1 px-2 rounded-lg border border-yellow-400 text-yellow-700 hover:bg-yellow-50 transition-colors font-medium" onClick={() => openEditTpl(tpl ?? { id: "", campId: id!, type: "CUSTOMER_CONFIRMATION", languageCode: lang.code, subject: "", body: "" })}>
                               {tpl ? <><i className="fa-regular fa-pen mr-1" />Upravit</> : <><i className="fa-regular fa-plus mr-1" />Vytvořit</>}
                             </button>
                           )}
@@ -1479,7 +1581,7 @@ export default function CampDetailPage() {
               <div className="space-y-1">
                 {languages.map((l) => (
                   <div key={l.code} className="flex items-center gap-2 text-xs text-gray-600">
-                    <span>{FLAGS[l.code] ?? "🌐"}</span>
+                    <Flag code={l.code} />
                     <span>{l.name}{l.isDefault && <span className="ml-1 text-gray-400">(výchozí)</span>}</span>
                     <code className="bg-gray-100 px-1 py-0.5 rounded text-gray-500">?lang={l.code}</code>
                     <a href={`${embedUrl}?lang=${l.code}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 transition-colors">
@@ -1493,6 +1595,25 @@ export default function CampDetailPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+      {previewModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-8" onClick={() => setPreviewModal(null)}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[90dvh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+              <div>
+                <h3 className="font-semibold text-gray-900">{previewModal.title}</h3>
+                {previewModal.subject && <p className="text-xs text-gray-400 mt-0.5">Předmět: {previewModal.subject}</p>}
+              </div>
+              <button onClick={() => setPreviewModal(null)} className="text-gray-400 hover:text-gray-600"><i className="fa-regular fa-xmark text-lg" /></button>
+            </div>
+            <div className="overflow-y-auto p-6">
+              {previewModal.html
+                ? <div dangerouslySetInnerHTML={{ __html: previewModal.html }} />
+                : <p className="text-gray-400 text-sm">Šablona nemá žádný obsah.</p>
+              }
+            </div>
+          </div>
         </div>
       )}
       {smsLengthHelpOpen && (

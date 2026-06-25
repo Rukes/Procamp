@@ -121,7 +121,7 @@ export interface Camp {
   smsNotifyCustomer: boolean;
   smsNotifyAdmin: boolean;
   smsAdminPhones: string[];
-  smsTemplate: string;
+  smsTemplates: Record<string, string>;
   surcharges: Surcharge[];
   accommodationTypes: AccommodationType[];
   createdAt: string;
@@ -129,6 +129,7 @@ export interface Camp {
 
 export interface Reservation {
   id: string;
+  bookingCode?: string | null;
   campId: string;
   camp?: Camp;
   accommodationTypeId: string;

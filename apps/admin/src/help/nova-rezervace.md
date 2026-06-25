@@ -45,3 +45,7 @@ Pokud máte oprávnění **Vytvářet nedostupné rezervace**, systém vás upoz
 ## Stav nové rezervace
 
 Rezervace se vytvoří jako **Potvrzená** (pokud objekt nevyžaduje ruční potvrzení), nebo jako **Čeká na potvrzení** (pokud je ruční potvrzení zapnuto v nastavení objektu).
+
+## Kód rezervace
+
+Každé nové rezervaci je automaticky přiřazen unikátní **5místný kód** (např. `A3X7T`). Kód je viditelný v detailu rezervace a v seznamu jako druhý sloupec. Zákazník ho dostane v potvrzovacím e-mailu — hodí se pro rychlou identifikaci při telefonické nebo osobní komunikaci.

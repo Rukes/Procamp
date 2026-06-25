@@ -1,5 +1,18 @@
 # Changelog
 
+## 25. 6. 2026 (4)
+
+- **Náhled e-mailové šablony** — tlačítko Náhled u každé jazykové varianty šablony otevře modal s renderovaným obsahem; editor šablony se otevírá na plnou šířku
+- **Náhled informací o objektu** — tlačítko Náhled u každého jazyka v sekci Informace o objektu
+
+## 25. 6. 2026 (3)
+
+- **SMS šablona per jazyk** — text SMS zprávy se nyní nastavuje zvlášť pro každý jazyk objektu; zákazník dostane SMS ve svém jazyce (podle jazyka rezervace); chybějící šablony jsou zvýrazněny oranžově s upozorněním
+
+## 25. 6. 2026 (2)
+
+- **Kód rezervace** — každá rezervace dostane unikátní 5místný alfanumerický kód (např. `A3X7T`); nové rezervace ho získají automaticky, existující rezervace jsou postupně doplněny sekvenčně při startu serveru; kód je viditelný jako druhý sloupec v seznamu rezervací, prominentně v detailu rezervace a v kalendářovém výpisu; dostupný jako proměnná `{{bookingCode}}` ve všech e-mailových šablonách a `{bookingCode}` v SMS šabloně; přidán do fulltextového vyhledávání; výchozí šablony e-mailů aktualizovány
+
 ## 25. 6. 2026
 
 - **Integrace GoSMS** — SMS notifikace zákazníkovi a/nebo správci při potvrzení rezervace; nastavení API přihlašovacích údajů v detailu organizace (záložka GoSMS), ID kanálu, tlačítko pro načtení kreditu a výpis dostupných kanálů

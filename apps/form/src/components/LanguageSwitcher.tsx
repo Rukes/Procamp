@@ -1,8 +1,9 @@
 import { Language } from "@procamp/shared";
 
-const FLAGS: Record<string, string> = {
-  cs: "🇨🇿", en: "🇬🇧", de: "🇩🇪", pl: "🇵🇱",
-  it: "🇮🇹", es: "🇪🇸", fr: "🇫🇷", ru: "🇷🇺", uk: "🇺🇦",
+const LANG_TO_COUNTRY: Record<string, string> = {
+  cs: "cz", en: "gb", de: "de", pl: "pl",
+  it: "it", es: "es", fr: "fr", ru: "ru", uk: "ua",
+  sk: "sk", hu: "hu", nl: "nl",
 };
 
 interface Props {
@@ -16,20 +17,26 @@ export default function LanguageSwitcher({ languages, current, onChange }: Props
 
   return (
     <div className="flex gap-1 justify-end mb-4">
-      {languages.map((lang) => (
-        <button
-          key={lang.code}
-          onClick={() => onChange(lang.code)}
-          className={`px-2.5 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
-            current === lang.code
-              ? "bg-blue-600 text-white"
-              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-          }`}
-        >
-          <span>{FLAGS[lang.code] ?? "🌐"}</span>
-          <span>{lang.code.toUpperCase()}</span>
-        </button>
-      ))}
+      {languages.map((lang) => {
+        const country = LANG_TO_COUNTRY[lang.code];
+        return (
+          <button
+            key={lang.code}
+            onClick={() => onChange(lang.code)}
+            className={`px-2.5 py-1 rounded text-xs font-medium transition-colors flex items-center gap-1 ${
+              current === lang.code
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {country
+              ? <span className={`fi fi-${country}`} style={{ borderRadius: 2 }} />
+              : <span>🌐</span>
+            }
+            <span>{lang.code.toUpperCase()}</span>
+          </button>
+        );
+      })}
     </div>
   );
 }

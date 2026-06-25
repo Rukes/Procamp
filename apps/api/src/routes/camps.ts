@@ -27,7 +27,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true, goSmsClientId: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true } } },
       orderBy: { createdAt: "asc" },
     });
   });
@@ -42,7 +42,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true, goSmsClientId: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true } } },
     });
   });
 
@@ -151,7 +151,7 @@ export async function campRoutes(app: FastifyInstance) {
     const camp = await app.prisma.camp.update({
       where: { id },
       data,
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true, goSmsClientId: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true } } },
     });
     if (before) {
       const afterSnap = { name: camp.name, slug: camp.slug, notificationEmail: camp.notificationEmail, smtpHost: camp.smtpHost, smtpPort: camp.smtpPort, smtpUser: camp.smtpUser, smtpFrom: camp.smtpFrom, requiresConfirmation: camp.requiresConfirmation };
@@ -186,13 +186,13 @@ export async function campRoutes(app: FastifyInstance) {
 
   app.post("/:id/test-sms", { preHandler: requirePermission("camps_edit") }, async (request, reply) => {
     const { id } = request.params as { id: string };
-    const { phone } = request.body as { phone?: string };
+    const { phone, lang } = request.body as { phone?: string; lang?: string };
     if (!phone) return reply.status(400).send({ error: "Telefon je povinný." });
     if (!/^\+[1-9]\d{6,14}$/.test(phone)) return reply.status(400).send({ error: "Neplatný formát čísla (+420…)." });
 
     const camp = await app.prisma.camp.findUnique({
       where: { id },
-      select: { smsTemplate: true, organizationId: true },
+      select: { smsTemplates: true, organizationId: true },
     });
     if (!camp) return reply.status(404).send({ error: "Objekt nenalezen." });
     if (!camp.organizationId) return reply.status(400).send({ error: "Objekt nemá organizaci." });
@@ -205,7 +205,13 @@ export async function campRoutes(app: FastifyInstance) {
       return reply.status(400).send({ error: "GoSMS není nakonfigurováno v nastavení organizace." });
     }
 
-    const message = camp.smsTemplate || "Vaše rezervace byla potvrzena.";
+    const templates = (camp.smsTemplates ?? {}) as Record<string, string>;
+    const rawMessage = (lang && templates[lang]) || templates[Object.keys(templates)[0]] || "Vaše rezervace byla potvrzena.";
+    const message = rawMessage
+      .replace(/\{bookingCode\}/g, "ABC123")
+      .replace(/\{fullName\}/g, "Petr Novak")
+      .replace(/\{firstName\}/g, "Petr")
+      .replace(/\{lastName\}/g, "Novak");
     try {
       const result = await sendSms(
         app.prisma,

@@ -75,8 +75,8 @@ export async function sendSms(
 
 export async function sendReservationSms(
   prisma: PrismaClient,
-  reservation: { id: string; firstName: string; lastName: string; phone: string },
-  camp: { smsNotifyCustomer: boolean; smsNotifyAdmin: boolean; smsAdminPhones: string[]; smsTemplate: string; organizationId: string | null },
+  reservation: { id: string; bookingCode?: string | null; firstName: string; lastName: string; phone: string; languageCode?: string | null },
+  camp: { smsNotifyCustomer: boolean; smsNotifyAdmin: boolean; smsAdminPhones: string[]; smsTemplates: Record<string, string>; organizationId: string | null },
   options: { sendCustomer?: boolean; sendAdmin?: boolean; customPhone?: string; userEmail?: string } = {},
 ) {
   if (!camp.organizationId) return;
@@ -86,7 +86,23 @@ export async function sendReservationSms(
   });
   if (!org?.goSmsClientId || !org.goSmsClientSecret || !org.goSmsChannelId) return;
 
-  const message = camp.smsTemplate || "Vaše rezervace byla potvrzena.";
+  const stripDiacritics = (s: string) => s
+    .replace(/[áÁ]/g, (c) => c === "á" ? "a" : "A").replace(/[čČ]/g, (c) => c === "č" ? "c" : "C")
+    .replace(/[ďĎ]/g, (c) => c === "ď" ? "d" : "D").replace(/[éÉěĚ]/g, (c) => "eEeE"["éÉěĚ".indexOf(c)])
+    .replace(/[íÍ]/g, (c) => c === "í" ? "i" : "I").replace(/[ňŇ]/g, (c) => c === "ň" ? "n" : "N")
+    .replace(/[óÓ]/g, (c) => c === "ó" ? "o" : "O").replace(/[řŘ]/g, (c) => c === "ř" ? "r" : "R")
+    .replace(/[šŠ]/g, (c) => c === "š" ? "s" : "S").replace(/[ťŤ]/g, (c) => c === "ť" ? "t" : "T")
+    .replace(/[úÚůŮ]/g, (c) => "uUuU"["úÚůŮ".indexOf(c)]).replace(/[ýÝ]/g, (c) => c === "ý" ? "y" : "Y")
+    .replace(/[žŽ]/g, (c) => c === "ž" ? "z" : "Z");
+
+  const lang = reservation.languageCode ?? "cs";
+  const templates = camp.smsTemplates ?? {};
+  const rawMessage = templates[lang] || templates[Object.keys(templates)[0]] || "Vaše rezervace byla potvrzena.";
+  const message = rawMessage
+    .replace(/\{bookingCode\}/g, stripDiacritics(reservation.bookingCode ?? "-"))
+    .replace(/\{fullName\}/g, stripDiacritics(`${reservation.firstName} ${reservation.lastName}`))
+    .replace(/\{firstName\}/g, stripDiacritics(reservation.firstName))
+    .replace(/\{lastName\}/g, stripDiacritics(reservation.lastName));
   const context = { userEmail: options.userEmail ?? "system", reservationId: reservation.id };
 
   const sendCustomer = options.sendCustomer ?? camp.smsNotifyCustomer;

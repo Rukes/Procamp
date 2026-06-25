@@ -1,4 +1,5 @@
 import { useTitle } from "../hooks/useTitle";
+import { Flag } from "../utils/langFlag";
 import { useEffect, useState } from "react";
 import HelpModal from "../components/HelpModal";
 import { api } from "../api/client";
@@ -208,7 +209,7 @@ export default function LanguagesPage() {
           <div key={lang.id} className="card p-4">
             {editId === lang.id ? (
               <div className="space-y-3">
-                <p className="font-medium">{lang.name} <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded ml-1">{lang.code}</span></p>
+                <p className="font-medium flex items-center gap-1.5"><Flag code={lang.code} /> {lang.name} <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded ml-1">{lang.code}</span></p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="label">Kód měny</label>
@@ -238,7 +239,7 @@ export default function LanguagesPage() {
               <div className="flex items-center justify-between">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-medium">{lang.name}</span>
+                    <Flag code={lang.code} /><span className="font-medium">{lang.name}</span>
                     <span className="text-xs text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded">{lang.code}</span>
                     {lang.isDefault && <span className="badge bg-blue-100 text-blue-700">Výchozí</span>}
                   </div>

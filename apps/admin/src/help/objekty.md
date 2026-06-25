@@ -26,7 +26,7 @@ Klikněte na **+ Nový objekt**, zadejte název, URL identifikátor (slug) a **e
 
 ### Informace o objektu
 
-Text zobrazený zákazníkovi v rezervačním formuláři po kliknutí na tlačítko „Info". Lze vložit kontaktní údaje, mapku, popis objektu nebo libovolný jiný obsah. Nastavení je per-jazyk — klikněte na **Upravit** vedle příslušného jazyka, upravte obsah v editoru a uložte. Tlačítko „Info" se ve formuláři zobrazí pouze pokud je pro daný jazyk obsah vyplněn.
+Text zobrazený zákazníkovi v rezervačním formuláři po kliknutí na tlačítko „Info". Lze vložit kontaktní údaje, mapku, popis objektu nebo libovolný jiný obsah. Nastavení je per-jazyk — klikněte na **Upravit** vedle příslušného jazyka, upravte obsah v editoru a uložte. Tlačítko **Náhled** zobrazí výsledný obsah bez nutnosti otevírat editor. Tlačítko „Info" se ve formuláři zobrazí pouze pokud je pro daný jazyk obsah vyplněn.
 
 ---
 
@@ -91,7 +91,9 @@ SMS notifikace zákazníkovi nebo správci při potvrzení rezervace. Vyžaduje 
 
 - **SMS notifikace zákazníkovi** — zákazník dostane SMS na číslo zadané v rezervaci
 - **SMS notifikace správci** — SMS se odešle na zadaná telefonní čísla; čísla zadejte s mezinárodní předvolbou (+420…), více čísel oddělte čárkou
-- **Text SMS zprávy** — společná šablona pro zákazníka i správce; počítadlo znaků zobrazuje délku a kódování (GSM max 160 zn., UCS2 max 70 zn. při použití diakritiky); tlačítko „Nahradit diakritiku" automaticky přepíše háčky a čárky na základní znaky
+- **Text SMS zprávy** — šablona se nastavuje zvlášť pro každý jazyk objektu; pokud jazyk zákazníka nemá šablonu, použije se první dostupná; počítadlo znaků zobrazuje délku a kódování (GSM max 160 zn., UCS2 max 70 zn. při použití diakritiky); tlačítko „Nahradit diakritiku" automaticky přepíše háčky a čárky na základní znaky; chybějící šablony jsou označeny oranžově
+
+Ve zprávě lze použít proměnné: `{bookingCode}` (kód rezervace), `{fullName}` (celé jméno), `{firstName}` (jméno), `{lastName}` (příjmení).
 
 SMS se odešle vždy při **potvrzení** rezervace — buď okamžitě (pokud objekt nevyžaduje ruční potvrzení), nebo ve chvíli kdy správce klikne na „Potvrdit".
 

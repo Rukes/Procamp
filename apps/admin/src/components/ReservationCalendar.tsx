@@ -3,7 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMont
 import { cs } from "date-fns/locale";
 import { useNavigate } from "react-router-dom";
 import { Reservation, Camp } from "@procamp/shared";
-import { langFlag } from "../utils/langFlag";
+import { Flag } from "../utils/langFlag";
 
 const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
 const STATUS_CLASS: Record<string, string> = { PENDING: "badge-pending", CONFIRMED: "badge-confirmed", CANCELLED: "badge-cancelled" };
@@ -98,7 +98,7 @@ export default function ReservationCalendar({ reservations, showAllLink = false,
                   className="flex items-center justify-between gap-2 text-xs px-2 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
                 >
                   <div className="min-w-0">
-                    <p className="font-medium text-gray-900 truncate">{langFlag(r.languageCode)} {r.firstName} {r.lastName}</p>
+                    <p className="font-medium text-gray-900 truncate"><Flag code={r.languageCode} className="mr-1" /> {r.firstName} {r.lastName}{r.bookingCode && <span className="ml-1.5 font-mono text-gray-400 font-normal">{r.bookingCode}</span>}</p>
                     {r.camp && <p className="text-gray-400 truncate">{r.camp.name}</p>}
                   </div>
                   <span className={`${STATUS_CLASS[r.status]} flex-shrink-0`}>{STATUS_LABEL[r.status]}</span>

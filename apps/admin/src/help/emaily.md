@@ -15,7 +15,7 @@ Texty všech e-mailů si můžete libovolně upravit. Šablona **Nepotvrzená re
 
 ## Úprava šablon
 
-Otevřete detail objektu → záložka **E-mailové šablony**. Vyberte typ e-mailu a jazyk.
+Otevřete detail objektu → záložka **E-mailové šablony**. V seznamu šablon je u každé jazykové varianty tlačítko **Náhled** (zobrazí renderovaný obsah e-mailu v modalu) a **Upravit** (otevře editor na plnou šířku). Vyberte typ e-mailu a jazyk.
 
 Editor nabízí:
 - Formátování textu — tučné, kurzíva, podtržení, nadpisy, seznamy
@@ -49,7 +49,8 @@ Do textu šablony vložte proměnné ve složených závorkách — systém je p
 | `{{note}}` | Poznámka zákazníka |
 | `{{totalPrice}}` | Celková cena (číslo) |
 | `{{totalPriceFormatted}}` | Celková cena včetně symbolu měny (např. `€ 89` nebo `1 800 Kč`) — doporučeno pro vícejazyčné šablony |
-| `{{reservationId}}` | ID rezervace |
+| `{{bookingCode}}` | Kód rezervace (5 znaků, např. `A3X7T`) — doporučeno pro komunikaci se zákazníkem |
+| `{{reservationId}}` | Interní ID rezervace (dlouhý řetězec) |
 
 ## Opakované odeslání e-mailu
 

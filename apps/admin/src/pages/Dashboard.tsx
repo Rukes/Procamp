@@ -6,7 +6,7 @@ import { format } from "date-fns";
 import { cs } from "date-fns/locale";
 import { Link, useNavigate } from "react-router-dom";
 import { useOrg } from "../contexts/OrgContext";
-import { langFlag } from "../utils/langFlag";
+import { Flag } from "../utils/langFlag";
 import ReservationCalendar from "../components/ReservationCalendar";
 
 function NotePopover({ note, internal = false }: { note: string; internal?: boolean }) {
@@ -169,7 +169,7 @@ export default function DashboardPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <p className="font-medium text-gray-900">{langFlag(r.languageCode)} {r.firstName} {r.lastName}</p>
+                          <p className="font-medium text-gray-900"><Flag code={r.languageCode} className="mr-1" /> {r.firstName} {r.lastName}</p>
                           <p className="text-xs text-gray-400">{r.email}</p>
                         </div>
                         {(r.note || r.internalNote) && (

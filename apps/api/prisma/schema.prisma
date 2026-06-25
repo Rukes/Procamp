@@ -97,7 +97,7 @@ model Camp {
   smsNotifyCustomer     Boolean             @default(false)
   smsNotifyAdmin        Boolean             @default(false)
   smsAdminPhones        String[]            @default([])
-  smsTemplate           String              @default("") @db.Text
+  smsTemplates          Json                @default("{}")
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
   accommodationTypes    AccommodationType[]
@@ -205,6 +205,7 @@ model Reservation {
   internalNote        String?              @db.Text
   totalPrice          Float
   priceSnapshot       Json?
+  bookingCode         String?              @unique
   status              String               @default("PENDING")
   languageCode        String               @default("cs")
   createdAt           DateTime             @default(now())

@@ -41,6 +41,7 @@ function buildVars(reservation: Reservation & { camp: Camp }, nights: number, la
     totalPriceFormatted,
     campName: reservation.camp.name,
     reservationId: reservation.id,
+    bookingCode: reservation.bookingCode ?? "-",
     status: reservation.status,
   };
 }

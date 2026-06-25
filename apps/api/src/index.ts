@@ -17,6 +17,22 @@ import { organizationRoutes } from "./routes/organizations";
 import { activityLogRoutes } from "./routes/activity-logs";
 import { blockedPeriodRoutes } from "./routes/blocked-periods";
 import { publicFormRoutes } from "./routes/public/form";
+import { PrismaClient } from "@prisma/client";
+
+async function migrateBookingCodes(prisma: PrismaClient) {
+  const reservations = await prisma.reservation.findMany({
+    where: { bookingCode: null },
+    orderBy: { createdAt: "asc" },
+    select: { id: true },
+  });
+  if (reservations.length === 0) return;
+  console.log(`[migration] Přiřazuji bookingCode pro ${reservations.length} rezervací...`);
+  for (let i = 0; i < reservations.length; i++) {
+    const code = String(i + 1).padStart(5, "0");
+    await prisma.reservation.update({ where: { id: reservations[i].id }, data: { bookingCode: code } });
+  }
+  console.log("[migration] bookingCode migrace dokončena.");
+}
 
 const app = Fastify({ logger: true });
 
@@ -59,6 +75,9 @@ const start = async () => {
   await app.register(blockedPeriodRoutes, { prefix: "/api/blocked-periods" });
 
   app.get("/api/health", async () => ({ status: "ok" }));
+
+  // Migrace: doplnění bookingCode pro existující rezervace
+  await migrateBookingCodes(app.prisma);
 
   const port = parseInt(process.env.PORT || "3001");
   await app.listen({ port, host: "0.0.0.0" });
