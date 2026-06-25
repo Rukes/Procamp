@@ -25,7 +25,8 @@ export async function authRoutes(app: FastifyInstance) {
     const valid = await bcrypt.compare(body.password, user.passwordHash);
     if (!valid) return reply.status(401).send({ error: "Invalid credentials" });
 
-    await logActivity(app.prisma, { userId: user.id, userEmail: user.email, ip: request.ip, action: "LOGIN", entity: "user", entityId: user.id });
+    const clientIp = (request.headers["x-forwarded-for"] as string)?.split(",")[0].trim() ?? request.ip;
+    await logActivity(app.prisma, { userId: user.id, userEmail: user.email, ip: clientIp, action: "LOGIN", entity: "user", entityId: user.id });
 
     const settings = await app.prisma.systemSettings.findUnique({ where: { id: "singleton" }, select: { globalTokenVersion: true } });
 
