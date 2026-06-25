@@ -2,6 +2,7 @@
 
 ## 25. 6. 2026
 
+- **SMS náhled — zvýraznění** — náhled SMS šablony barevně označuje proměnné (modře), diakritiku (žlutě), nové řádky (fialově) a vícenásobné mezery (červeně); proměnné se zobrazují s testovací hodnotou; kliknutím na proměnnou v seznamu se zkopíruje do schránky
 - **Globální vyhledávání** — Spotlight-style fulltext search přístupný přes ⌘K / Ctrl+K nebo tlačítko Hledat v postranním menu; prohledává rezervace (jméno, kód, e-mail, telefon, poznámky), objekty, uživatele a blokace; výsledky jsou barevně odlišeny písmenovými odznaky (R/O/U/B), navigace klávesami ↑↓ a Enter, postupné vysouvání při otevření a zavření
 - **Vlajky jazyků** — emoji vlajky nahrazeny SVG vlajkami z knihovny `flag-icons`; zobrazují se správně na všech platformách včetně Windows; vlajky jsou viditelné v přepínači jazyka formuláře, v nastavení objektu (SMS šablony) a na stránce Jazyky
 - **Kód rezervace** — každá rezervace dostane unikátní 5místný alfanumerický kód (např. `A3X7T`); nové rezervace ho získají automaticky, existující rezervace jsou postupně doplněny sekvenčně při startu serveru; kód je viditelný jako druhý sloupec v seznamu rezervací, prominentně v detailu rezervace a v kalendářovém výpisu; dostupný jako proměnná `{{bookingCode}}` ve všech e-mailových šablonách a `{bookingCode}` v SMS šabloně; přidán do fulltextového vyhledávání; výchozí šablony e-mailů aktualizovány

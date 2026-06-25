@@ -853,6 +853,37 @@ export default function CampDetailPage() {
     { key: "smtp", label: "SMTP" },
   ];
 
+  const SMS_VAR_EXAMPLES: Record<string, string> = {
+    "{bookingCode}": "ABC123",
+    "{fullName}": "Petr Novak",
+    "{firstName}": "Petr",
+    "{lastName}": "Novak",
+  };
+
+  const renderSmsHighlight = (text: string) => {
+    const combined = /(\{(?:bookingCode|fullName|firstName|lastName)\})|([ěščřžýáíéúůóďťňĚŠČŘŽÝÁÍÉÚŮÓĎŤŇ])|( {2,})|(\r\n|\r|\n)/g;
+    const tokens: { type: string; value: string }[] = [];
+    let last = 0;
+    let m: RegExpExecArray | null;
+    while ((m = combined.exec(text)) !== null) {
+      if (m.index > last) tokens.push({ type: "text", value: text.slice(last, m.index) });
+      if (m[1]) tokens.push({ type: "variable", value: m[1] });
+      else if (m[2]) tokens.push({ type: "diacritic", value: m[2] });
+      else if (m[3]) tokens.push({ type: "spaces", value: m[3] });
+      else if (m[4]) tokens.push({ type: "newline", value: m[4] });
+      last = m.index + m[0].length;
+    }
+    if (last < text.length) tokens.push({ type: "text", value: text.slice(last) });
+
+    return tokens.map((tok, i) => {
+      if (tok.type === "variable") return <span key={i} className="bg-blue-500/30 text-blue-200 rounded px-0.5">{SMS_VAR_EXAMPLES[tok.value] ?? tok.value}</span>;
+      if (tok.type === "diacritic") return <span key={i} className="bg-amber-500/40 text-amber-200 rounded">{tok.value}</span>;
+      if (tok.type === "spaces") return <span key={i} className="bg-red-500/30 text-red-200 rounded">{tok.value}</span>;
+      if (tok.type === "newline") return <span key={i} className="bg-purple-500/30 text-purple-200 rounded px-0.5">↵{"\n"}</span>;
+      return <span key={i}>{tok.value}</span>;
+    });
+  };
+
   const getTypeName = (t: AccommodationType) => {
     const tr = t.translations as Record<string, { name: string }>;
     return tr.cs?.name ?? tr[Object.keys(tr)[0]]?.name ?? "—";
@@ -1126,13 +1157,23 @@ export default function CampDetailPage() {
             <div className="text-xs text-gray-400 mb-3 space-y-0.5">
               <div className="flex flex-col gap-y-0.5">
                 {([
-                  ["{bookingCode}", "kód rezervace"],
-                  ["{fullName}", "celé jméno"],
-                  ["{firstName}", "jméno"],
-                  ["{lastName}", "příjmení"],
-                ] as [string, string][]).map(([key, desc]) => (
+                  ["{bookingCode}", "kód rezervace", "ABC123"],
+                  ["{fullName}", "celé jméno", "Petr Novak"],
+                  ["{firstName}", "jméno", "Petr"],
+                  ["{lastName}", "příjmení", "Novak"],
+                ] as [string, string, string][]).map(([key, desc, example]) => (
                   <div key={key} className="flex items-center gap-x-3">
-                    <div className="w-[7rem] shrink-0"><code className="bg-gray-100 px-1 rounded">{key}</code></div>
+                    <div className="w-[7rem] shrink-0">
+                      <Tooltip text={example}>
+                        <button
+                          type="button"
+                          className="text-left"
+                          onClick={() => { navigator.clipboard.writeText(key); toast.success(`Zkopírováno: ${key}`); }}
+                        >
+                          <code className="bg-gray-100 hover:bg-blue-100 hover:text-blue-700 transition-colors px-1 rounded cursor-pointer">{key}</code>
+                        </button>
+                      </Tooltip>
+                    </div>
                     <span>{desc}</span>
                   </div>
                 ))}
@@ -1213,8 +1254,14 @@ export default function CampDetailPage() {
                             <div className="mt-2">
                               <div className="flex items-center justify-between bg-gray-700 text-gray-300 rounded-t-lg px-3 py-1.5 text-xs">
                                 <span>Náhled</span>
+                                <span className="flex items-center gap-2 text-[10px]">
+                                  <span className="bg-blue-500/30 text-blue-200 rounded px-1">proměnná</span>
+                                  <span className="bg-amber-500/40 text-amber-200 rounded px-1">diakritika</span>
+                                  <span className="bg-purple-500/30 text-purple-200 rounded px-1">↵ nový řádek</span>
+                                  <span className="bg-red-500/30 text-red-200 rounded px-1">více mezer</span>
+                                </span>
                               </div>
-                              <pre className="text-xs bg-gray-900 text-gray-100 p-3 whitespace-pre-wrap font-mono">{resolved}</pre>
+                              <pre className="text-xs bg-gray-900 text-gray-100 p-3 whitespace-pre-wrap font-mono">{renderSmsHighlight(val)}</pre>
                               <div className="flex items-center justify-between bg-gray-800 text-gray-400 rounded-b-lg px-3 py-1.5 text-xs font-mono">
                                 <span>{isUcs2r ? "UCS2" : "GSM"}</span>
                                 <span>{resolved.length} zn. / {countr} SMS</span>
