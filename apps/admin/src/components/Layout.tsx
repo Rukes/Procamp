@@ -6,6 +6,7 @@ import { api } from "../api/client";
 import { Permission } from "@procamp/shared";
 import Tooltip from "./Tooltip";
 import { marked } from "marked";
+import GlobalSearch from "./GlobalSearch";
 
 const nav: { to: string; label: string; icon: string; perm?: keyof Permission; newLink?: string }[] = [
   { to: "/dashboard", label: "Dashboard", icon: "fa-chart-bar" },
@@ -31,6 +32,18 @@ export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [changelogHtml, setChangelogHtml] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen((v) => !v);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   useEffect(() => { setSidebarOpen(false); }, [location.pathname]);
 
@@ -60,7 +73,18 @@ export default function Layout() {
         />
       </div>
 
-      <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+      <div className="px-3 pt-3 pb-1">
+        <button
+          onClick={() => setSearchOpen(true)}
+          className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-gray-200 text-sm transition-colors"
+        >
+          <i className="fa-regular fa-magnifying-glass w-4 text-center" />
+          <span className="flex-1 text-left">Hledat…</span>
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 text-xs text-gray-600 border border-gray-600 rounded px-1">{/Mac|iPhone|iPad/.test(navigator.platform) ? "⌘K" : "Ctrl+K"}</kbd>
+        </button>
+      </div>
+
+      <nav className="flex-1 py-2 px-3 space-y-1 overflow-y-auto">
         {(!user?.isSuperAdmin || selectedOrgId) && visibleNav.map((item) => (
           <div key={item.to} className="flex items-center gap-1">
             <NavLink
@@ -170,9 +194,14 @@ export default function Layout() {
       {/* Mobile top bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-gray-900 text-white flex items-center justify-between px-4 z-20">
         <img src={`${import.meta.env.VITE_API_URL ?? ""}/logos/logo-navbar.png`} alt="Logo" className="w-auto" style={{ height: "2.5rem" }} />
-        <button onClick={() => setSidebarOpen((v) => !v)} className="text-gray-300 hover:text-white p-2">
-          <i className={`fa-regular ${sidebarOpen ? "fa-xmark" : "fa-bars"} text-xl`} />
-        </button>
+        <div className="flex items-center gap-1">
+          <button onClick={() => setSearchOpen(true)} className="text-gray-300 hover:text-white p-2">
+            <i className="fa-regular fa-magnifying-glass text-lg" />
+          </button>
+          <button onClick={() => setSidebarOpen((v) => !v)} className="text-gray-300 hover:text-white p-2">
+            <i className={`fa-regular ${sidebarOpen ? "fa-xmark" : "fa-bars"} text-xl`} />
+          </button>
+        </div>
       </div>
 
       {/* Mobile drawer */}
@@ -188,6 +217,8 @@ export default function Layout() {
       <main className="flex-1 overflow-auto md:ml-60 mt-14 md:mt-0">
         <Outlet />
       </main>
+
+      <GlobalSearch open={searchOpen} onClose={() => setSearchOpen(false)} />
     </div>
   );
 }

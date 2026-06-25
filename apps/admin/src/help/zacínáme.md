@@ -26,6 +26,18 @@ V detailu objektu v záložce **E-mailové šablony** upravte texty e-mailů kte
 ### 5. Vložte formulář na web
 V záložce **Vložení na web** zkopírujte připravený kód a vložte ho na stránku vašeho webu. Zákazníci ihned mohou rezervovat.
 
+## Globální vyhledávání
+
+Stiskněte **⌘K** (Mac) nebo **Ctrl+K** (Windows/Linux) kdekoliv v administraci a otevře se vyhledávání napříč celým systémem. Totéž uděláte kliknutím na tlačítko **Hledat…** v postranním menu.
+
+Vyhledávání prohledá zároveň:
+- **Rezervace** — jméno zákazníka, kód rezervace, e-mail, telefon, poznámky
+- **Objekty** — název a slug
+- **Uživatele** — jméno a e-mail
+- **Blokace** — důvod a interní poznámka
+
+Výsledky jsou barevně označeny písmeny **R** (rezervace), **O** (objekty), **U** (uživatelé), **B** (blokace). Pohybujte se šipkami ↑↓, potvrďte Enterem nebo klikněte. ESC vyhledávání zavře.
+
 ## Přehled sekcí
 
 | Sekce | K čemu slouží |
