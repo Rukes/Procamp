@@ -135,10 +135,19 @@ export default function CampsPage() {
                     <i className="fa-regular fa-arrow-up-right-from-square mr-0.5" />formulář
                   </a>
                 </div>
-                <p className="text-xs text-gray-400 mt-1">
-                  {camp.accommodationTypes?.length ?? 0} {camp.accommodationTypes?.length === 1 ? "typ ubytování" : "typy ubytování"}
-                  {occupancy !== null && <span className="ml-2">· Aktuální vytíženost: {occupancy} %</span>}
-                </p>
+                <div className="flex items-center gap-3 mt-1">
+                  <p className="text-xs text-gray-400">
+                    {camp.accommodationTypes?.length ?? 0} {camp.accommodationTypes?.length === 1 ? "typ ubytování" : "typy ubytování"}
+                  </p>
+                  {occupancy !== null && (
+                    <span className={`text-xs font-medium px-1.5 py-0.5 rounded ${occupancy === 0 ? "bg-gray-100 text-gray-500" : occupancy <= 50 ? "bg-green-100 text-green-700" : occupancy <= 80 ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>
+                      {occupancy} % vytíženo
+                    </span>
+                  )}
+                  {(camp as any).smtpHost && (
+                    <span className="text-xs text-green-600"><i className="fa-regular fa-envelope mr-1" />SMTP aktivní</span>
+                  )}
+                </div>
               </div>
             </div>
           );
