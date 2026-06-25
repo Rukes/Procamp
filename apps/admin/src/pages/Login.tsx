@@ -15,6 +15,7 @@ export default function LoginPage() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [infoOpen, setInfoOpen] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,6 +53,17 @@ export default function LoginPage() {
             {loading ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Přihlašuji…</> : <><i className="fa-regular fa-arrow-right-to-bracket mr-1.5" />Přihlásit se</>}
           </button>
         </form>
+        <div className="mt-6 text-center">
+          <button type="button" onClick={() => setInfoOpen((v) => !v)} className="text-xs text-gray-400 hover:text-gray-600 transition-colors">
+            Registrace a zapomenuté heslo
+          </button>
+          {infoOpen && (
+            <div className="mt-3 text-xs text-gray-500 text-left space-y-2">
+              <p><strong>Registrace</strong> do systému je pouze na pozvánku, prosím, v případě zájmu nás <a href="https://www.mujkemp.cz/#kontakt" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">kontaktujte</a>.</p>
+              <p>V případě <strong>zapomenutého hesla</strong> taktéž <a href="https://www.mujkemp.cz/#kontakt" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">kontaktujte</a> správce.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
