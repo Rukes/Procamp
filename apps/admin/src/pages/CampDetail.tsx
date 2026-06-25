@@ -2,6 +2,10 @@ import { useTitle } from "../hooks/useTitle";
 import Tooltip from "../components/Tooltip";
 import HelpModal from "../components/HelpModal";
 import { useEffect, useRef, useState } from "react";
+import hljs from "highlight.js/lib/core";
+import xml from "highlight.js/lib/languages/xml";
+import "highlight.js/styles/github-dark-dimmed.css";
+hljs.registerLanguage("html", xml);
 import WysiwygEditorShared from "../components/WysiwygEditor";
 import { useParams, useNavigate } from "react-router-dom";
 import { api } from "../api/client";
@@ -1443,10 +1447,31 @@ export default function CampDetailPage() {
       {tab === "embed" && (
         <div className="card p-6 max-w-2xl space-y-4">
           <h3 className="font-semibold">Vložení formuláře na web</h3>
-          <div className="bg-gray-900 text-green-400 font-mono text-sm p-4 rounded-lg overflow-x-auto whitespace-pre">
-            {`<iframe\n  src="${embedUrl}"\n  width="100%"\n  height="700"\n  frameborder="0"\n  style="border:none;border-radius:12px;"\n></iframe>`}
-          </div>
-          <p className="text-xs text-gray-500">Přímý odkaz: <a href={embedUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{embedUrl}</a></p>
+          {(() => {
+            const code = `<iframe\n  src="${embedUrl}"\n  width="100%"\n  height="700"\n  frameborder="0"\n  style="border:none;border-radius:12px;"\n></iframe>`;
+            return (
+              <div className="relative group">
+                <pre className="rounded-xl overflow-x-auto text-sm leading-relaxed !p-0">
+                  <code
+                    className="hljs language-html block p-5"
+                    dangerouslySetInnerHTML={{ __html: hljs.highlight(code, { language: "html" }).value }}
+                  />
+                </pre>
+                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Tooltip text="Kopírovat kód" position="left">
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard.writeText(code).then(() => toast.success("Zkopírováno!"))}
+                      className="bg-white/10 hover:bg-white/20 text-slate-200 text-xs px-2 py-1 rounded"
+                    >
+                      <i className="fa-regular fa-copy" />
+                    </button>
+                  </Tooltip>
+                </div>
+              </div>
+            );
+          })()}
+          <p className="text-xs text-gray-500 flex items-center gap-2">Přímý odkaz: <a href={embedUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{embedUrl}</a><Tooltip text="Kopírovat odkaz" position="top"><button type="button" onClick={() => navigator.clipboard.writeText(embedUrl).then(() => toast.success("Zkopírováno!"))} className="text-gray-400 hover:text-gray-600 transition-colors"><i className="fa-regular fa-copy" /></button></Tooltip></p>
           <p className="text-xs text-gray-500">Pro konkrétní jazyk přidejte parametr: <code className="bg-gray-100 px-1 rounded">?lang=en</code></p>
           {languages.length > 0 && (
             <div>
@@ -1455,11 +1480,14 @@ export default function CampDetailPage() {
                 {languages.map((l) => (
                   <div key={l.code} className="flex items-center gap-2 text-xs text-gray-600">
                     <span>{FLAGS[l.code] ?? "🌐"}</span>
-                    <span>{l.name}</span>
+                    <span>{l.name}{l.isDefault && <span className="ml-1 text-gray-400">(výchozí)</span>}</span>
                     <code className="bg-gray-100 px-1 py-0.5 rounded text-gray-500">?lang={l.code}</code>
                     <a href={`${embedUrl}?lang=${l.code}`} target="_blank" rel="noopener noreferrer" className="text-blue-500 hover:text-blue-700 transition-colors">
                       <i className="fa-regular fa-arrow-up-right-from-square mr-0.5" />otevřít
                     </a>
+                    <button type="button" onClick={() => navigator.clipboard.writeText(`${embedUrl}?lang=${l.code}`).then(() => toast.success("Zkopírováno!"))} className="text-gray-400 hover:text-gray-600 transition-colors flex items-center gap-0.5">
+                      <i className="fa-regular fa-copy mr-0.5" />kopírovat
+                    </button>
                   </div>
                 ))}
               </div>
