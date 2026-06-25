@@ -139,11 +139,16 @@ export async function organizationRoutes(app: FastifyInstance) {
     if (!organizationId) return reply.status(404).send({ error: "Nemáte přiřazenou organizaci." });
     if (!permissions?.org_admin) return reply.status(403).send({ error: "Forbidden" });
     const body = request.body as { goSmsClientId?: string; goSmsClientSecret?: string; goSmsChannelId?: number | null };
+    const beforeGoSms = await app.prisma.organization.findUnique({ where: { id: organizationId }, select: { goSmsClientId: true, goSmsChannelId: true } });
     await app.prisma.organization.update({
       where: { id: organizationId },
       data: { goSmsClientId: body.goSmsClientId, goSmsClientSecret: body.goSmsClientSecret, goSmsChannelId: body.goSmsChannelId },
     });
-    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "organization", entityId: organizationId, payload: { goSms: "updated" } });
+    const diff = diffObjects(
+      { goSmsClientId: beforeGoSms?.goSmsClientId, goSmsChannelId: beforeGoSms?.goSmsChannelId },
+      { goSmsClientId: body.goSmsClientId, goSmsChannelId: body.goSmsChannelId },
+    );
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "organization", entityId: organizationId, payload: diff });
     return { ok: true };
   });
 

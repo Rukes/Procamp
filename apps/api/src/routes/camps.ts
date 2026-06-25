@@ -139,7 +139,7 @@ export async function campRoutes(app: FastifyInstance) {
 
   app.put("/:id", { preHandler: requirePermission("camps_edit") }, async (request) => {
     const { id } = request.params as { id: string };
-    const before = await app.prisma.camp.findUnique({ where: { id }, select: { name: true, slug: true, notificationEmail: true, smtpHost: true, smtpPort: true, smtpUser: true, smtpFrom: true, requiresConfirmation: true } });
+    const before = await app.prisma.camp.findUnique({ where: { id }, select: { name: true, slug: true, notificationEmail: true, smtpHost: true, smtpPort: true, smtpUser: true, smtpFrom: true, smtpReplyTo: true, requiresConfirmation: true, useCustomSmtp: true, hideAdults: true, hideChildren: true, info: true, smsNotifyCustomer: true, smsNotifyAdmin: true, smsAdminPhones: true, smsTemplates: true } });
     const body = updateCampSchema.parse(request.body);
     const data: Record<string, unknown> = { ...body };
     if (body.smtpPassword) {
@@ -154,7 +154,7 @@ export async function campRoutes(app: FastifyInstance) {
       include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true } } },
     });
     if (before) {
-      const afterSnap = { name: camp.name, slug: camp.slug, notificationEmail: camp.notificationEmail, smtpHost: camp.smtpHost, smtpPort: camp.smtpPort, smtpUser: camp.smtpUser, smtpFrom: camp.smtpFrom, requiresConfirmation: camp.requiresConfirmation };
+      const afterSnap = { name: camp.name, slug: camp.slug, notificationEmail: camp.notificationEmail, smtpHost: camp.smtpHost, smtpPort: camp.smtpPort, smtpUser: camp.smtpUser, smtpFrom: camp.smtpFrom, smtpReplyTo: camp.smtpReplyTo, requiresConfirmation: camp.requiresConfirmation, useCustomSmtp: camp.useCustomSmtp, hideAdults: camp.hideAdults, hideChildren: camp.hideChildren, info: camp.info, smsNotifyCustomer: camp.smsNotifyCustomer, smsNotifyAdmin: camp.smsNotifyAdmin, smsAdminPhones: camp.smsAdminPhones, smsTemplates: camp.smsTemplates };
       const diff = diffObjects(before as Record<string, unknown>, afterSnap as Record<string, unknown>);
       await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "camp", entityId: id, payload: diff });
     }
