@@ -9,6 +9,7 @@ export interface Permission {
   reservations_create: boolean;
   reservations_edit: boolean;
   reservations_delete: boolean;
+  reservations_force_create: boolean;
   blockings_view: boolean;
   blockings_edit: boolean;
   blockings_delete: boolean;
@@ -117,6 +118,10 @@ export interface Camp {
   smtpUser: string;
   smtpFrom: string;
   requiresConfirmation: boolean;
+  smsNotifyCustomer: boolean;
+  smsNotifyAdmin: boolean;
+  smsAdminPhones: string[];
+  smsTemplate: string;
   surcharges: Surcharge[];
   accommodationTypes: AccommodationType[];
   createdAt: string;

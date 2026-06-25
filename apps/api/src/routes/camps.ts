@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { updateCampSchema, createSurchargeSchema } from "@procamp/shared";
 import { requirePermission, requireAuth, orgFilter, campFilter } from "../plugins/auth";
 import { logActivity, diffObjects } from "../services/activityLog";
+import { sendSms } from "../services/gosms";
 
 export async function campRoutes(app: FastifyInstance) {
   // Lightweight endpoint — jen id+name, pro filtry v rezervacích (nevyžaduje camps_view)
@@ -26,7 +27,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true, goSmsClientId: true } } },
       orderBy: { createdAt: "asc" },
     });
   });
@@ -41,7 +42,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true, goSmsClientId: true } } },
     });
   });
 
@@ -150,7 +151,7 @@ export async function campRoutes(app: FastifyInstance) {
     const camp = await app.prisma.camp.update({
       where: { id },
       data,
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { slug: true, goSmsClientId: true } } },
     });
     if (before) {
       const afterSnap = { name: camp.name, slug: camp.slug, notificationEmail: camp.notificationEmail, smtpHost: camp.smtpHost, smtpPort: camp.smtpPort, smtpUser: camp.smtpUser, smtpFrom: camp.smtpFrom, requiresConfirmation: camp.requiresConfirmation };
@@ -180,6 +181,54 @@ export async function campRoutes(app: FastifyInstance) {
       return { success: true, message: "Připojení k SMTP serveru bylo úspěšné." };
     } catch (err: unknown) {
       return reply.status(400).send({ error: "Připojení selhalo: " + String(err) });
+    }
+  });
+
+  app.post("/:id/test-sms", { preHandler: requirePermission("camps_edit") }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { phone } = request.body as { phone?: string };
+    if (!phone) return reply.status(400).send({ error: "Telefon je povinný." });
+    if (!/^\+[1-9]\d{6,14}$/.test(phone)) return reply.status(400).send({ error: "Neplatný formát čísla (+420…)." });
+
+    const camp = await app.prisma.camp.findUnique({
+      where: { id },
+      select: { smsTemplate: true, organizationId: true },
+    });
+    if (!camp) return reply.status(404).send({ error: "Objekt nenalezen." });
+    if (!camp.organizationId) return reply.status(400).send({ error: "Objekt nemá organizaci." });
+
+    const org = await app.prisma.organization.findUnique({
+      where: { id: camp.organizationId },
+      select: { goSmsClientId: true, goSmsClientSecret: true, goSmsChannelId: true },
+    });
+    if (!org?.goSmsClientId || !org.goSmsClientSecret || !org.goSmsChannelId) {
+      return reply.status(400).send({ error: "GoSMS není nakonfigurováno v nastavení organizace." });
+    }
+
+    const message = camp.smsTemplate || "Vaše rezervace byla potvrzena.";
+    try {
+      const result = await sendSms(
+        app.prisma,
+        camp.organizationId,
+        org.goSmsClientId,
+        org.goSmsClientSecret,
+        org.goSmsChannelId,
+        phone,
+        message,
+        { userEmail: request.user.email, ip: request.ip },
+      );
+      await logActivity(app.prisma, {
+        userId: request.user.sub,
+        userEmail: request.user.email,
+        ip: request.ip,
+        action: "SMS_TEST_SEND",
+        entity: "camp",
+        entityId: id,
+        payload: { test: true, phone, message, response: result },
+      });
+      return { ok: true, response: result };
+    } catch (err: unknown) {
+      return reply.status(502).send({ error: "Odeslání selhalo: " + (err as Error).message });
     }
   });
 

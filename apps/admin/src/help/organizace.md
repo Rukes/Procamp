@@ -21,6 +21,17 @@ Vyplňte údaje vaší firmy nebo živnosti:
 - **Formát čísel** — oddělovač tisíců a desetinných míst (přizpůsobí se vaší zemi)
 - **Google Analytics ID** — volitelné Measurement ID (ve formátu `G-XXXXXXXXXX`); pokud je vyplněno, události z rezervačního formuláře (`begin_checkout`, `purchase`) budou odesílány do vaší GA property
 
+## GoSMS
+
+Přístupové údaje pro odesílání SMS notifikací zákazníkům a správcům přes službu GoSMS.
+
+- **Client ID** a **Client Secret** — najdete v samoobsluze GoSMS
+- **ID komunikačního kanálu** — číslo kanálu přes který se SMS odesílají; dostupné kanály zobrazíte tlačítkem **Načíst kredit**
+- **Ověřit nastavení** — ověří přihlašovací údaje vůči GoSMS API bez odeslání SMS
+- **Načíst kredit** — zobrazí aktuální zůstatek kreditu a seznam dostupných kanálů
+
+Po uložení přístupových údajů lze SMS notifikace zapnout samostatně pro každý objekt (záložka SMS v nastavení objektu).
+
 ## Podmínky & GDPR
 
 Zde můžete napsat vlastní text obchodních podmínek nebo GDPR textu. Editor umožňuje formátování textu (nadpisy, tučné písmo, seznamy, odkazy).

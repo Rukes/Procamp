@@ -4,6 +4,7 @@ import { verifyCaptcha } from "../../plugins/auth";
 import { checkAvailability, getOccupiedDates } from "../../services/availability";
 import { sendReservationEmails } from "../../services/email";
 import { logActivity } from "../../services/activityLog";
+import { sendReservationSms } from "../../services/gosms";
 
 export async function publicFormRoutes(app: FastifyInstance) {
   // Get camp public data (for form) — /:orgSlug/:campSlug
@@ -104,6 +105,7 @@ export async function publicFormRoutes(app: FastifyInstance) {
       },
     });
     if (!camp) return reply.status(404).send({ error: "Camp not found" });
+    // Ensure SMS fields are present (they have defaults so always exist)
 
     const captchaOk = await verifyCaptcha((request.body as { captchaToken?: string }).captchaToken);
     if (!captchaOk) return reply.status(400).send({ error: "Captcha verification failed" });
@@ -164,6 +166,9 @@ export async function publicFormRoutes(app: FastifyInstance) {
     sendReservationEmails(app.prisma, reservation as never, nights).catch((err) =>
       app.log.error({ err }, "Failed to send reservation emails"),
     );
+    if (!camp.requiresConfirmation) {
+      sendReservationSms(app.prisma, reservation, camp as never, {}).catch(() => {});
+    }
 
     await logActivity(app.prisma, {
       userEmail: `${body.firstName} ${body.lastName} <${body.email}>`,

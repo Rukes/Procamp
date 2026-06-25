@@ -8,7 +8,7 @@ import { useToast } from "../contexts/ToastContext";
 import Pagination from "../components/Pagination";
 import Tooltip from "../components/Tooltip";
 
-const PERM_LABELS: { key: keyof Permission; label: string; group: string }[] = [
+const PERM_LABELS: { key: keyof Permission; label: string; group: string; tooltip?: string }[] = [
   { key: "camps_view", label: "Zobrazit objekty", group: "Objekty" },
   { key: "camps_create", label: "Vytvářet objekty", group: "Objekty" },
   { key: "camps_edit", label: "Upravovat objekty", group: "Objekty" },
@@ -18,6 +18,7 @@ const PERM_LABELS: { key: keyof Permission; label: string; group: string }[] = [
   { key: "reservations_create", label: "Vytvářet rezervace", group: "Rezervace" },
   { key: "reservations_edit", label: "Upravovat rezervace", group: "Rezervace" },
   { key: "reservations_delete", label: "Mazat rezervace", group: "Rezervace" },
+  { key: "reservations_force_create", label: "Vytvářet nedostupné rezervace", group: "Rezervace", tooltip: "Umožňuje vytvořit rezervaci i v termínu, který je blokovaný nebo má plnou kapacitu. Systém zobrazí varování, ale rezervaci nevyloučí." },
   { key: "blockings_view", label: "Zobrazit blokace", group: "Blokace" },
   { key: "blockings_edit", label: "Vytvářet a upravovat blokace", group: "Blokace" },
   { key: "blockings_delete", label: "Mazat blokace", group: "Blokace" },
@@ -27,7 +28,7 @@ const PERM_LABELS: { key: keyof Permission; label: string; group: string }[] = [
 
 const DEFAULT_PERMS: Permission = {
   camps_view: false, camps_create: false, camps_edit: false, camps_delete: false,
-  reservations_view: false, reservations_create: false, reservations_edit: false, reservations_delete: false,
+  reservations_view: false, reservations_create: false, reservations_edit: false, reservations_delete: false, reservations_force_create: false,
   blockings_view: false, blockings_edit: false, blockings_delete: false,
   users_manage: false, templates_edit: false, settings_edit: false, org_admin: false,
 };
@@ -44,6 +45,11 @@ const PermissionGrid = ({ perms, onChange }: { perms: Permission; onChange: (k: 
               <label key={p.key} className="flex items-center gap-2 text-sm cursor-pointer">
                 <input type="checkbox" checked={!!perms[p.key]} onChange={(e) => onChange(p.key, e.target.checked)} className="rounded" />
                 {p.label}
+                {p.tooltip && (
+                  <Tooltip text={p.tooltip} position="top">
+                    <i className="fa-regular fa-circle-question text-gray-400 hover:text-gray-600 text-xs" />
+                  </Tooltip>
+                )}
               </label>
             ))}
           </div>

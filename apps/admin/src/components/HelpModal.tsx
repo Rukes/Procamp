@@ -10,12 +10,14 @@ import jazyky from "../help/jazyky.md?raw";
 import emaily from "../help/emaily.md?raw";
 import formular from "../help/formulár.md?raw";
 import blokace from "../help/blokace.md?raw";
+import novaRezervace from "../help/nova-rezervace.md?raw";
 
 const TOPICS: Record<string, string> = {
   "zacínáme": zacíname,
   "organizace": organizace,
   "objekty": objekty,
   "rezervace": rezervace,
+  "nova-rezervace": novaRezervace,
   "blokace": blokace,
   "uzivatele": uzivatele,
   "jazyky": jazyky,

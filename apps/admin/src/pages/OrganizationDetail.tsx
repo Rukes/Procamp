@@ -27,6 +27,9 @@ interface Organization {
   decimalSeparator: string;
   internalNote: string | null;
   gaTrackingId?: string | null;
+  goSmsClientId?: string;
+  goSmsClientSecret?: string;
+  goSmsChannelId?: number | null;
   _count: { camps: number; users: number };
 }
 
@@ -44,7 +47,7 @@ const DECIMAL_OPTIONS = [
 ];
 const formatPreview = (t: string, d: string) => `1${t}234${d}56`;
 
-type Tab = "billing" | "settings" | "terms";
+type Tab = "billing" | "settings" | "terms" | "gosms";
 
 export default function OrganizationDetailPage() {
   useTitle("Detail organizace");
@@ -59,6 +62,10 @@ export default function OrganizationDetailPage() {
   const [form, setForm] = useState<Partial<Organization>>({});
   const [saving, setSaving] = useState(false);
   const [aresLoading, setAresLoading] = useState(false);
+  const [goSmsCredit, setGoSmsCredit] = useState<{ currentCredit: number; currency: string; channels: { id: number; name: string }[] } | null>(null);
+  const [goSmsCreditLoading, setGoSmsCreditLoading] = useState(false);
+  const [goSmsVerifying, setGoSmsVerifying] = useState(false);
+  const [goSmsVerifyResult, setGoSmsVerifyResult] = useState<"ok" | "error" | null>(null);
 
   const loadAres = async () => {
     if (!form.ico || form.ico.length < 6) return;
@@ -116,10 +123,36 @@ export default function OrganizationDetailPage() {
     }
   };
 
+  const verifyGoSms = async () => {
+    setGoSmsVerifying(true);
+    setGoSmsVerifyResult(null);
+    try {
+      await api.get(`/organizations/${id}/gosms-credit`);
+      setGoSmsVerifyResult("ok");
+    } catch {
+      setGoSmsVerifyResult("error");
+    } finally {
+      setGoSmsVerifying(false);
+    }
+  };
+
+  const loadGoSmsCredit = async () => {
+    setGoSmsCreditLoading(true);
+    try {
+      const r = await api.get(`/organizations/${id}/gosms-credit`);
+      setGoSmsCredit(r.data);
+    } catch {
+      toast.error("Nepodařilo se načíst kredit z GoSMS.");
+    } finally {
+      setGoSmsCreditLoading(false);
+    }
+  };
+
   const tabs: { key: Tab; label: string; icon: string }[] = [
     { key: "billing", label: "Fakturační údaje", icon: "fa-receipt" },
     { key: "settings", label: "Nastavení", icon: "fa-gear" },
     { key: "terms", label: "Podmínky & GDPR", icon: "fa-shield-check" },
+    { key: "gosms", label: "GoSMS", icon: "fa-message-sms" },
   ];
 
   return (
@@ -280,6 +313,35 @@ export default function OrganizationDetailPage() {
           </>
         )}
 
+        {tab === "gosms" && (
+          <>
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-800 mb-2">
+              <i className="fa-regular fa-circle-info mr-1.5" />Přihlašovací údaje najdete v samoobsluze GoSMS. ID kanálu lze načíst tlačítkem níže po vyplnění Client ID a Secret.
+            </div>
+            <div>
+              <label className="label">Client ID</label>
+              <input className="input font-mono" value={(form as any).goSmsClientId ?? ""} onChange={(e) => setForm((f) => ({ ...f, goSmsClientId: e.target.value }))} placeholder="váš client_id z GoSMS" />
+            </div>
+            <div>
+              <label className="label">Client Secret</label>
+              <input className="input font-mono" type="password" value={(form as any).goSmsClientSecret ?? ""} onChange={(e) => setForm((f) => ({ ...f, goSmsClientSecret: e.target.value }))} placeholder="váš client_secret z GoSMS" />
+            </div>
+            <div>
+              <label className="label">ID komunikačního kanálu</label>
+              <input className="input" type="number" value={(form as any).goSmsChannelId ?? ""} onChange={(e) => setForm((f) => ({ ...f, goSmsChannelId: e.target.value ? Number(e.target.value) : null }))} placeholder="např. 123" />
+            </div>
+            {goSmsCredit && (
+              <div className="text-sm text-gray-700">
+                Kredit: <strong>{goSmsCredit.currentCredit} {goSmsCredit.currency}</strong>
+                {goSmsCredit.channels.length > 0 && (
+                  <span className="ml-3 text-gray-500">Kanály: {goSmsCredit.channels.map((c) => `${c.name} (ID: ${c.id})`).join(", ")}</span>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {tab !== "gosms" && (
         <div className="pt-2 flex items-center justify-between">
           <button className="btn-primary" type="submit" disabled={saving}>
             {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</>}
@@ -288,6 +350,26 @@ export default function OrganizationDetailPage() {
             <i className="fa-regular fa-trash mr-1.5" />Smazat organizaci
           </button>
         </div>
+        )}
+        {tab === "gosms" && (
+        <div className="pt-2 flex flex-col gap-3">
+          <div className="flex items-center gap-3 flex-wrap">
+            <button type="button" className="btn-secondary" onClick={verifyGoSms} disabled={goSmsVerifying}>
+              {goSmsVerifying ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ověřuji…</> : <><i className="fa-regular fa-circle-check mr-1.5" />Ověřit nastavení</>}
+            </button>
+            {goSmsVerifyResult === "ok" && <span className="text-sm text-green-600 flex items-center gap-1.5"><i className="fa-regular fa-circle-check" />Připojení funguje</span>}
+            {goSmsVerifyResult === "error" && <span className="text-sm text-red-600 flex items-center gap-1.5"><i className="fa-regular fa-circle-xmark" />Připojení selhalo — zkontrolujte Client ID a Secret</span>}
+          </div>
+          <div className="flex items-center gap-3 flex-wrap">
+            <button type="button" className="btn-secondary" onClick={loadGoSmsCredit} disabled={goSmsCreditLoading}>
+              {goSmsCreditLoading ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Načítám…</> : <><i className="fa-regular fa-wallet mr-1.5" />Načíst kredit</>}
+            </button>
+            <button className="btn-primary ml-auto" type="submit" disabled={saving}>
+              {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit GoSMS nastavení</>}
+            </button>
+          </div>
+        </div>
+        )}
       </form>
     </div>
   );

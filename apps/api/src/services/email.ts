@@ -121,9 +121,9 @@ export async function sendReservationEmails(
     const to = camp.notificationEmail.split(",").map((e) => e.trim()).filter(Boolean).join(", ");
     try {
       await transport.sendMail({ from: smtpConfig.from, replyTo: smtpConfig.replyTo, to, subject: renderTemplate(adminTpl.subject, vars), html: renderTemplate(adminTpl.body, vars) });
-      await logActivity(prisma, { ...logBase, action: "EMAIL_SENT", payload: { type: "ADMIN_NOTIFICATION", to } });
+      await logActivity(prisma, { ...logBase, action: "EMAIL_SENT", payload: { type: "ADMIN_NOTIFICATION", to, vars } });
     } catch (err: unknown) {
-      await logActivity(prisma, { ...logBase, action: "EMAIL_FAILED", payload: { type: "ADMIN_NOTIFICATION", to, error: String(err) } });
+      await logActivity(prisma, { ...logBase, action: "EMAIL_FAILED", payload: { type: "ADMIN_NOTIFICATION", to, vars, error: String(err) } });
     }
   }
 
@@ -131,9 +131,9 @@ export async function sendReservationEmails(
     const to = only?.overrideEmail ?? reservation.email;
     try {
       await transport.sendMail({ from: smtpConfig.from, replyTo: smtpConfig.replyTo, to, subject: renderTemplate(customerTpl.subject, vars), html: renderTemplate(customerTpl.body, vars) });
-      await logActivity(prisma, { ...logBase, action: "EMAIL_SENT", payload: { type: customerTplType, to } });
+      await logActivity(prisma, { ...logBase, action: "EMAIL_SENT", payload: { type: customerTplType, to, vars } });
     } catch (err: unknown) {
-      await logActivity(prisma, { ...logBase, action: "EMAIL_FAILED", payload: { type: customerTplType, to, error: String(err) } });
+      await logActivity(prisma, { ...logBase, action: "EMAIL_FAILED", payload: { type: customerTplType, to, vars, error: String(err) } });
     }
   }
 }

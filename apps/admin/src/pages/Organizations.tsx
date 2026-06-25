@@ -20,6 +20,8 @@ interface Organization {
   billingEmail: string;
   internalNote: string | null;
   gaTrackingId: string | null;
+  goSmsClientId?: string;
+  goSmsChannelId?: number | null;
   createdAt: string;
   _count: { camps: number; users: number; languages: number };
 }
@@ -231,6 +233,14 @@ export default function OrganizationsPage() {
                       <span className="text-xs text-gray-300">·</span>
                       <span className="text-xs text-green-600">
                         <i className="fa-brands fa-google mr-1" />GA aktivní
+                      </span>
+                    </>
+                  )}
+                  {org.goSmsClientId && (
+                    <>
+                      <span className="text-xs text-gray-300">·</span>
+                      <span className="text-xs text-blue-600">
+                        <i className="fa-regular fa-message-sms mr-1" />GoSMS aktivní{org.goSmsChannelId ? "" : " (chybí kanál)"}
                       </span>
                     </>
                   )}

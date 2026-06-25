@@ -1,5 +1,14 @@
 # Changelog
 
+## 25. 6. 2026
+
+- **Integrace GoSMS** — SMS notifikace zákazníkovi a/nebo správci při potvrzení rezervace; nastavení API přihlašovacích údajů v detailu organizace (záložka GoSMS), ID kanálu, tlačítko pro načtení kreditu a výpis dostupných kanálů
+- **SMS šablona** — textarea v nastavení objektu s počítadlem znaků, indikátorem kódování (GSM 160 zn. / UCS2 70 zn.) a tlačítkem pro nahrazení diakritiky
+- **SMS notifikace zákazníkovi** — checkbox v nastavení objektu; telefon se bere z rezervace; při ručním vytvoření rezervace v adminu dostupný checkbox „Odeslat zákazníkovi SMS"
+- **SMS notifikace správci** — checkbox + pole pro telefonní čísla s validací (formát +420…, více čísel oddělených čárkou)
+- **Znovu odeslat SMS** — v detailu rezervace tlačítko „SMS" (zobrazí se pouze pokud je SMS pro zákazníky povolena); možnost odeslat na jiné telefonní číslo s validací
+- **Logování SMS** — každé odeslání SMS se zaznamená do activity logu včetně kompletní odpovědi z GoSMS API
+
 ## 24. 6. 2026
 
 - **Dynamická cena typů ubytování** — místo jedné pevné ceny lze nastavit cenové hladiny podle počtu nocí (např. 1–3 noci = 800 Kč/noc, 4–6 nocí = 700 Kč/noc, 7+ nocí = 600 Kč/noc); zákazník ve formuláři vidí minimální cenu a ikonu pro otevření tabulky hladin; cena se přepočítává automaticky při výběru termínu

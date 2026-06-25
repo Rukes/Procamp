@@ -58,6 +58,10 @@ export const updateCampSchema = z.object({
   hideChildren: z.boolean().optional(),
   useCustomSmtp: z.boolean().optional(),
   info: z.record(z.string()).optional(),
+  smsNotifyCustomer: z.boolean().optional(),
+  smsNotifyAdmin: z.boolean().optional(),
+  smsAdminPhones: z.array(z.string()).optional(),
+  smsTemplate: z.string().optional(),
 });
 
 export const createSurchargeSchema = z.object({

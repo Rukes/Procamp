@@ -26,6 +26,9 @@ model Organization {
   decimalSeparator    String   @default(",")
   internalNote        String?  @db.Text
   gaTrackingId        String?
+  goSmsClientId       String   @default("")
+  goSmsClientSecret   String   @default("")
+  goSmsChannelId      Int?
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   users               User[]
@@ -91,6 +94,10 @@ model Camp {
   hideChildren          Boolean             @default(false)
   useCustomSmtp         Boolean             @default(false)
   info                  Json                @default("{}")
+  smsNotifyCustomer     Boolean             @default(false)
+  smsNotifyAdmin        Boolean             @default(false)
+  smsAdminPhones        String[]            @default([])
+  smsTemplate           String              @default("") @db.Text
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
   accommodationTypes    AccommodationType[]

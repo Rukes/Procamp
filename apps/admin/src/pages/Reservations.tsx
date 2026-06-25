@@ -332,6 +332,7 @@ export default function ReservationsPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <span className={STATUS_CLASS[es]}>{STATUS_LABEL[es]}</span>
+                        {isOngoing(r) && <span className="badge bg-blue-100 text-blue-700">Probíhá</span>}
                         {r.status === "PENDING" && es !== "EXPIRED" && can("reservations_edit") && (
                           <button
                             className="px-2 py-0.5 rounded text-xs bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"

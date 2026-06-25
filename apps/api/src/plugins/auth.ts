@@ -94,6 +94,7 @@ declare module "@fastify/jwt" {
       permissions: Permission;
       organizationId: string | null;
       tokenVersion: number;
+      globalTokenVersion: number;
     };
     user: {
       sub: string;
@@ -102,6 +103,7 @@ declare module "@fastify/jwt" {
       permissions: Permission;
       organizationId: string | null;
       tokenVersion: number;
+      globalTokenVersion: number;
     };
   }
 }

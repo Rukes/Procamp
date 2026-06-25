@@ -52,7 +52,7 @@ export async function languageRoutes(app: FastifyInstance) {
           if (defaultTrans && !srcTranslations[code]) {
             await app.prisma.accommodationType.update({
               where: { id: at.id },
-              data: { translations: { ...srcTranslations, [code]: { ...defaultTrans } } },
+              data: { translations: { ...srcTranslations, [code]: { ...defaultTrans } } as object },
             });
           }
           const srcPrice = at.prices[0];
@@ -90,7 +90,7 @@ export async function languageRoutes(app: FastifyInstance) {
           if (defaultTrans && !srcTranslations[code]) {
             await app.prisma.surcharge.update({
               where: { id: sur.id },
-              data: { translations: { ...srcTranslations, [code]: { ...defaultTrans } } },
+              data: { translations: { ...srcTranslations, [code]: { ...defaultTrans } } as object },
             });
           }
           const srcPrice = sur.prices[0];

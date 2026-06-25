@@ -48,6 +48,11 @@ function NotePopover({ note, internal = false }: { note: string; internal?: bool
 
 const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
 const STATUS_CLASS: Record<string, string> = { PENDING: "badge-pending", CONFIRMED: "badge-confirmed", CANCELLED: "badge-cancelled" };
+function isOngoing(r: { status: string; checkIn: string; checkOut: string }): boolean {
+  if (r.status !== "CONFIRMED") return false;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  return new Date(r.checkIn) <= today && new Date(r.checkOut) > today;
+}
 
 export default function DashboardPage() {
   useTitle("Dashboard");
@@ -91,7 +96,7 @@ export default function DashboardPage() {
     <div className="p-4 md:p-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
 
-      <div className="grid grid-cols-3 gap-3 mb-8">
+      <div className="grid grid-cols-3 gap-3 mb-8 max-w-lg">
         <div className="rounded-xl px-4 py-4 bg-blue-100 border border-blue-200">
           <p className="text-xs text-blue-600"><span className="hidden sm:inline">Celkem rezervací</span><span className="sm:hidden">Celkem</span></p>
           <p className="text-2xl font-bold mt-0.5 text-blue-800">{reservations.length}</p>
@@ -183,6 +188,7 @@ export default function DashboardPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
                         <span className={STATUS_CLASS[r.status]}>{STATUS_LABEL[r.status]}</span>
+                        {isOngoing(r) && <span className="badge bg-blue-100 text-blue-700">Probíhá</span>}
                         {r.status === "PENDING" && (
                           <button
                             className="px-2 py-0.5 rounded text-xs bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"

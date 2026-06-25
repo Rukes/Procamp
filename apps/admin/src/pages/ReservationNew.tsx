@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { api } from "../api/client";
 import { Camp, AccommodationType, Language, Surcharge, formatPrice, getEffectivePricePerNight } from "@procamp/shared";
 import { useToast } from "../contexts/ToastContext";
+import { useAuth } from "../contexts/AuthContext";
 import { ARRIVAL_TIMES } from "../utils/arrivalTimes";
 import { DayPicker, DateRange } from "react-day-picker";
 import { format, isBefore, startOfDay } from "date-fns";
@@ -15,6 +16,7 @@ export default function ReservationNewPage() {
   useTitle("Nová rezervace");
   const navigate = useNavigate();
   const toast = useToast();
+  const { can } = useAuth();
   const [helpOpen, setHelpOpen] = useState(false);
   const [camps, setCamps] = useState<Camp[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -28,11 +30,10 @@ export default function ReservationNewPage() {
 
   const handleRangeSelect = (r: DateRange | undefined) => {
     setRange(r);
-    setForm((f) => ({
-      ...f,
-      checkIn: r?.from ? format(r.from, "yyyy-MM-dd") : "",
-      checkOut: r?.to ? format(r.to, "yyyy-MM-dd") : "",
-    }));
+    const checkIn = r?.from ? format(r.from, "yyyy-MM-dd") : "";
+    const checkOut = r?.to ? format(r.to, "yyyy-MM-dd") : "";
+
+    setForm((f) => ({ ...f, checkIn, checkOut }));
   };
 
   const nights = range?.from && range?.to
@@ -57,6 +58,9 @@ export default function ReservationNewPage() {
   });
   const [sendCustomer, setSendCustomer] = useState(true);
   const [sendAdmin, setSendAdmin] = useState(false);
+  const [sendCustomerSms, setSendCustomerSms] = useState(false);
+  const [campSmsEnabled, setCampSmsEnabled] = useState(false);
+  const [availWarnings, setAvailWarnings] = useState<{ booked: number; capacity: number; blocks: { reason?: string; dateFrom: string; dateTo: string }[] } | null>(null);
 
   useEffect(() => {
     api.get("/camps").then((r) => { setCamps(r.data); if (r.data.length === 1) setCampId(r.data[0].id); }).catch(() => {});
@@ -70,9 +74,24 @@ export default function ReservationNewPage() {
       const s: Surcharge[] = r.data.surcharges ?? [];
       setSurcharges(s);
       setSelectedSurchargeIds(s.filter((x) => !x.isOptional).map((x) => x.id));
+      setCampSmsEnabled(r.data.smsNotifyCustomer ?? false);
     }).catch(() => {});
     setForm((f) => ({ ...f, accommodationTypeId: "" }));
+    setAvailWarnings(null);
   }, [campId]);
+
+  useEffect(() => {
+    const { checkIn, checkOut, accommodationTypeId } = form;
+    if (!checkIn || !checkOut || !campId || !accommodationTypeId) {
+      setAvailWarnings(null);
+      return;
+    }
+    let cancelled = false;
+    api.post("/reservations/check-availability", { campId, accommodationTypeId, checkIn, checkOut })
+      .then((res) => { if (!cancelled) setAvailWarnings(res.data.available ? null : res.data); })
+      .catch(() => { if (!cancelled) setAvailWarnings(null); });
+    return () => { cancelled = true; };
+  }, [form.checkIn, form.checkOut, form.accommodationTypeId, campId]);
 
   const getTypeName = (t: AccommodationType) => {
     const tr = t.translations as Record<string, { name: string }>;
@@ -132,6 +151,8 @@ export default function ReservationNewPage() {
         selectedSurchargeIds,
         sendCustomerEmail: sendCustomer,
         sendAdminEmail: sendAdmin,
+        sendCustomerSms: sendCustomerSms,
+        force: availWarnings != null && can("reservations_force_create"),
       });
       toast.success("Rezervace byla vytvořena.");
       navigate(`/reservations/${res.data.id}`);
@@ -164,11 +185,11 @@ export default function ReservationNewPage() {
           <h1 className="text-2xl font-bold text-gray-900">Nová rezervace</h1>
           <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
         </div>
-        {helpOpen && <HelpModal topic="rezervace" onClose={() => setHelpOpen(false)} />}
+        {helpOpen && <HelpModal topic="nova-rezervace" onClose={() => setHelpOpen(false)} />}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Objekt + typ */}
+        {/* Krok 1: Objekt + typ */}
         <div className="card p-6 space-y-4">
           <h2 className="font-semibold text-gray-700">Ubytování</h2>
           <div>
@@ -178,7 +199,7 @@ export default function ReservationNewPage() {
               {camps.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
-          {types.length > 0 && (
+          {campId && types.length > 0 && (
             <div>
               <label className="label">Typ ubytování</label>
               <select className="input" value={form.accommodationTypeId} onChange={(e) => set("accommodationTypeId", e.target.value)} required>
@@ -187,6 +208,13 @@ export default function ReservationNewPage() {
               </select>
             </div>
           )}
+          {campId && types.length === 0 && <p className="text-sm text-gray-400">Načítám typy ubytování…</p>}
+        </div>
+
+        {/* Krok 2: Zbytek — zobrazí se až po výběru objektu + typu */}
+        {campId && form.accommodationTypeId && (<>
+        <div className="card p-6 space-y-4">
+          <h2 className="font-semibold text-gray-700">Termín a detaily</h2>
           <div>
             <label className="label">Termín pobytu</label>
             <div className="flex justify-center border border-gray-200 rounded-xl p-2 overflow-x-auto">
@@ -209,6 +237,68 @@ export default function ReservationNewPage() {
                 {format(range!.from!, "d. M.", { locale: cs })} – {format(range!.to!, "d. M. yyyy", { locale: cs })} · <strong>{nights} {nights === 1 ? "noc" : nights < 5 ? "noci" : "nocí"}</strong>
               </p>
             )}
+            {availWarnings && (
+              <div className="mt-3 rounded-xl border border-red-300 bg-red-50 p-3 space-y-1">
+                <p className="text-sm font-medium text-red-700"><i className="fa-regular fa-triangle-exclamation mr-1.5" />Upozornění — termín není volně dostupný</p>
+                {availWarnings.blocks.length > 0 && availWarnings.blocks.map((b, i) => (
+                  <p key={i} className="text-xs text-red-600">
+                    <i className="fa-regular fa-ban mr-1" />Blokace {format(new Date(b.dateFrom), "d. M.", { locale: cs })}–{format(new Date(b.dateTo), "d. M. yyyy", { locale: cs })}{b.reason ? `: ${b.reason}` : ""}
+                  </p>
+                ))}
+                {availWarnings.capacity > 0 && availWarnings.booked >= availWarnings.capacity && (
+                  <p className="text-xs text-red-600"><i className="fa-regular fa-users mr-1" />Kapacita obsazena ({availWarnings.booked}/{availWarnings.capacity})</p>
+                )}
+                {can("reservations_force_create")
+                  ? <p className="text-xs text-red-500 pt-1">Rezervaci lze i přesto vytvořit — máte oprávnění Vytvářet nedostupné rezervace.</p>
+                  : <p className="text-xs text-red-500 pt-1">Rezervaci v tomto termínu nelze vytvořit.</p>
+                }
+              </div>
+            )}
+            {selectedType?.useDynamicPricing && (selectedType as AccommodationType & { nightTiers?: { fromNight: number; prices: { languageCode: string; pricePerNight: number }[] }[] }).nightTiers?.length ? (() => {
+              const tiers = (selectedType as AccommodationType & { nightTiers: { fromNight: number; prices: { languageCode: string; pricePerNight: number }[] }[] }).nightTiers;
+              return (
+                <div className="mt-3 rounded-xl border border-yellow-300 bg-yellow-50 p-3">
+                  <p className="text-xs font-medium text-yellow-800 mb-2"><i className="fa-regular fa-circle-info mr-1.5" />Dynamická cena</p>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm border-collapse border border-yellow-200 rounded-lg overflow-hidden">
+                      <thead>
+                        <tr className="bg-yellow-100">
+                          {tiers.map((tier, idx) => {
+                            const isLast = idx === tiers.length - 1;
+                            const toNight = isLast ? null : tiers[idx + 1].fromNight - 1;
+                            const label = isLast
+                              ? `${tier.fromNight}+ nocí`
+                              : toNight === tier.fromNight
+                                ? `${tier.fromNight}. noc`
+                                : `${tier.fromNight}–${toNight} nocí`;
+                            return <th key={tier.fromNight} className="text-center font-medium text-yellow-700 py-1.5 px-3 border border-yellow-200 text-xs">{label}</th>;
+                          })}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          {tiers.map((tier) => {
+                            const p = tier.prices.find((x) => x.languageCode === form.languageCode) ?? tier.prices[0];
+                            const price = p?.pricePerNight;
+                            const isActive = nights > 0 && (() => {
+                              const si = tiers.indexOf(tier);
+                              const isLast = si === tiers.length - 1;
+                              return nights >= tier.fromNight && (isLast || nights < tiers[si + 1].fromNight);
+                            })();
+                            return (
+                              <td key={tier.fromNight} className={`text-center font-semibold py-2 px-3 border border-yellow-200 text-sm ${isActive ? "bg-yellow-200 text-yellow-900" : "text-gray-700"}`}>
+                                {price !== undefined && langObj ? `${langObj.currencyPosition === "before" ? langObj.currencySymbol + " " : ""}${price}${langObj.currencyPosition !== "before" ? " " + langObj.currencySymbol : ""}` : "—"}
+                                <span className="text-xs font-normal text-gray-400"> /noc</span>
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              );
+            })() : null}
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
@@ -311,7 +401,7 @@ export default function ReservationNewPage() {
             <div>
               <label className="label">E-mail</label>
               <input className="input" type="email" value={form.email} onChange={(e) => set("email", e.target.value)} required />
-              <div className="flex items-center gap-4 mt-2">
+              <div className="flex flex-col gap-1.5 mt-2">
                 <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
                   <input type="checkbox" className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600" checked={sendCustomer} onChange={(e) => setSendCustomer(e.target.checked)} />
                   Odeslat potvrzení zákazníkovi
@@ -320,6 +410,12 @@ export default function ReservationNewPage() {
                   <input type="checkbox" className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600" checked={sendAdmin} onChange={(e) => setSendAdmin(e.target.checked)} />
                   Odeslat potvrzení správci
                 </label>
+                {campSmsEnabled && (
+                  <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                    <input type="checkbox" className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600" checked={sendCustomerSms} onChange={(e) => setSendCustomerSms(e.target.checked)} />
+                    Odeslat zákazníkovi SMS
+                  </label>
+                )}
               </div>
             </div>
             <div>
@@ -338,13 +434,14 @@ export default function ReservationNewPage() {
         </div>
 
         <div className="flex gap-3">
-          <button className="btn-primary" type="submit" disabled={saving || !campId || !form.accommodationTypeId || !form.checkIn || !form.checkOut}>
+          <button className="btn-primary" type="submit" disabled={saving || !campId || !form.accommodationTypeId || !form.checkIn || !form.checkOut || (!!availWarnings && !can("reservations_force_create"))}>
             {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Vytvořit rezervaci</>}
           </button>
           <button className="btn-secondary" type="button" onClick={() => navigate("/reservations")}>
             <i className="fa-regular fa-xmark mr-1.5" />Zrušit
           </button>
         </div>
+        </>)}
       </form>
     </div>
   );

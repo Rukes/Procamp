@@ -1,6 +1,6 @@
 import { FastifyInstance } from "fastify";
 import bcrypt from "bcryptjs";
-import { loginSchema } from "@procamp/shared";
+import { loginSchema, Permission } from "@procamp/shared";
 import { requireAuth, verifyCaptcha } from "../plugins/auth";
 import { logActivity } from "../services/activityLog";
 
@@ -33,7 +33,7 @@ export async function authRoutes(app: FastifyInstance) {
       sub: user.id,
       email: user.email,
       isSuperAdmin: user.isSuperAdmin,
-      permissions: user.permissions as unknown as Record<string, boolean>,
+      permissions: user.permissions as unknown as Permission,
       organizationId: user.organizationId ?? null,
       tokenVersion: user.tokenVersion,
       globalTokenVersion: settings?.globalTokenVersion ?? 0,

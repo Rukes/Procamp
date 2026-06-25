@@ -1,5 +1,5 @@
 import { useTitle } from "../hooks/useTitle";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { api } from "../api/client";
 import { Reservation, Camp, AccommodationType, NightTier } from "@procamp/shared";
@@ -28,6 +28,37 @@ export default function ReservationDetailPage() {
   const [emailSending, setEmailSending] = useState(false);
   const [customEmailOpen, setCustomEmailOpen] = useState(false);
   const [customEmail, setCustomEmail] = useState("");
+  const [smsSending, setSmsSending] = useState(false);
+  const [smsDropdownOpen, setSmsDropdownOpen] = useState(false);
+  const [smsPhoneOpen, setSmsPhoneOpen] = useState(false);
+  const [smsPhone, setSmsPhone] = useState("");
+  const emailMenuRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!emailMenuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (emailMenuRef.current && !emailMenuRef.current.contains(e.target as Node)) {
+        setEmailMenuOpen(false);
+        setCustomEmailOpen(false);
+        setCustomEmail("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [emailMenuOpen]);
+
+  const smsDropdownRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!smsDropdownOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (smsDropdownRef.current && !smsDropdownRef.current.contains(e.target as Node)) {
+        setSmsDropdownOpen(false);
+        setSmsPhoneOpen(false);
+        setSmsPhone("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [smsDropdownOpen]);
 
   useEffect(() => {
     if (!editing) return;
@@ -87,6 +118,21 @@ export default function ReservationDetailPage() {
       toast.error("Nepodařilo se odeslat e-mail.");
     } finally {
       setEmailSending(false);
+    }
+  };
+
+  const handleResendSms = async (overridePhone?: string) => {
+    setSmsSending(true);
+    setSmsPhoneOpen(false);
+    try {
+      await api.post(`/reservations/${id}/resend-sms`, { overridePhone });
+      toast.success(overridePhone ? `SMS odesláno na ${overridePhone}.` : "SMS zákazníkovi bylo odesláno.");
+      setSmsPhone("");
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? "Nepodařilo se odeslat SMS.";
+      toast.error(msg);
+    } finally {
+      setSmsSending(false);
     }
   };
 
@@ -205,7 +251,7 @@ export default function ReservationDetailPage() {
           {reservation.status === "CANCELLED" && (
             <button className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium transition-colors" onClick={() => setStatus("PENDING")}><i className="fa-regular fa-rotate-left mr-1.5" />Obnovit jako čekající</button>
           )}
-          <div className="relative">
+          <div className="relative" ref={emailMenuRef}>
             <button
               className="px-4 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-sm font-medium transition-colors flex items-center gap-1.5"
               onClick={() => setEmailMenuOpen((v) => !v)}
@@ -242,6 +288,55 @@ export default function ReservationDetailPage() {
               </div>
             )}
           </div>
+          {(reservation.camp as Camp & { smsNotifyCustomer?: boolean })?.smsNotifyCustomer && (
+            <div className="relative" ref={smsDropdownRef}>
+              <button
+                className="px-4 py-2 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 text-sm font-medium transition-colors flex items-center gap-1.5"
+                onClick={() => setSmsDropdownOpen((v) => !v)}
+                disabled={smsSending}
+              >
+                <i className={smsSending ? "fa-regular fa-spinner-third fa-spin" : "fa-regular fa-message-sms"} />
+                SMS
+                <i className="fa-regular fa-chevron-down text-xs" />
+              </button>
+              {smsDropdownOpen && <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-max">
+                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed" disabled={!/^\+[1-9]\d{6,14}$/.test(reservation.phone ?? "")} onClick={() => { if (confirm("Znovu odeslat SMS zákazníkovi?")) handleResendSms(); }}>
+                  <i className="fa-regular fa-user text-gray-400" />Znovu odeslat SMS zákazníkovi
+                </button>
+                {!/^\+[1-9]\d{6,14}$/.test(reservation.phone ?? "") && (
+                  <p className="px-4 pb-2 text-xs text-red-500">Telefon zákazníka není validní</p>
+                )}
+                <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2" onClick={() => setSmsPhoneOpen((v) => !v)}>
+                  <i className="fa-regular fa-phone text-gray-400" />Odeslat na jiné číslo…
+                </button>
+                {smsPhoneOpen && (
+                  <div className="px-4 pb-3 pt-1 border-t border-gray-100 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <input
+                        autoFocus
+                        type="tel"
+                        className={`input py-1 text-sm flex-1 min-w-[180px] ${smsPhone && !/^\+[1-9]\d{6,14}$/.test(smsPhone.trim()) ? "border-red-400 focus:ring-red-300" : ""}`}
+                        placeholder="+420123456789"
+                        value={smsPhone}
+                        onChange={(e) => setSmsPhone(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); if (/^\+[1-9]\d{6,14}$/.test(smsPhone.trim())) handleResendSms(smsPhone.trim()); } if (e.key === "Escape") { setSmsPhoneOpen(false); setSmsPhone(""); } }}
+                      />
+                      <button
+                        className="btn-primary py-1 text-xs shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+                        disabled={!/^\+[1-9]\d{6,14}$/.test(smsPhone.trim())}
+                        onClick={() => handleResendSms(smsPhone.trim())}
+                      >
+                        <i className="fa-regular fa-paper-plane mr-1" />Odeslat
+                      </button>
+                    </div>
+                    {smsPhone && !/^\+[1-9]\d{6,14}$/.test(smsPhone.trim()) && (
+                      <p className="text-xs text-red-500">Neplatný formát čísla (+420123456789)</p>
+                    )}
+                  </div>
+                )}
+              </div>}
+            </div>
+          )}
           <button className="px-4 py-2 rounded-lg bg-yellow-400 hover:bg-yellow-500 text-gray-900 text-sm font-medium transition-colors ml-auto" onClick={startEdit}><i className="fa-regular fa-pen mr-1.5" />Upravit</button>
         </div>
       )}

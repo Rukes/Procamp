@@ -1,13 +1,16 @@
 import { FastifyInstance } from "fastify";
 import { requireSuperAdmin, requireAuth } from "../plugins/auth";
 import { logActivity, diffObjects } from "../services/activityLog";
+import { getGoSmsCredit } from "../services/gosms";
 
 export async function organizationRoutes(app: FastifyInstance) {
   // Vlastní organizace přihlášeného uživatele (pro org_admin)
   const ORG_PUBLIC_SELECT = {
     id: true, name: true, slug: true, billingName: true, country: true, ico: true, dic: true,
     address: true, contactPerson: true, billingEmail: true, termsText: true, requireTermsAcceptance: true,
-    defaultLanguageCode: true, thousandsSeparator: true, decimalSeparator: true, gaTrackingId: true, createdAt: true, updatedAt: true,
+    defaultLanguageCode: true, thousandsSeparator: true, decimalSeparator: true, gaTrackingId: true,
+    goSmsClientId: true, goSmsClientSecret: true, goSmsChannelId: true,
+    createdAt: true, updatedAt: true,
   };
 
   app.get("/mine", { preHandler: requireAuth }, async (request, reply) => {
@@ -101,6 +104,9 @@ export async function organizationRoutes(app: FastifyInstance) {
       decimalSeparator: body.decimalSeparator as string | undefined,
       internalNote: body.internalNote !== undefined ? (body.internalNote as string) : undefined,
       gaTrackingId: body.gaTrackingId !== undefined ? (body.gaTrackingId as string | null) : undefined,
+      goSmsClientId: body.goSmsClientId !== undefined ? (body.goSmsClientId as string) : undefined,
+      goSmsClientSecret: body.goSmsClientSecret !== undefined ? (body.goSmsClientSecret as string) : undefined,
+      goSmsChannelId: body.goSmsChannelId !== undefined ? (body.goSmsChannelId as number | null) : undefined,
     };
     const before = await app.prisma.organization.findUnique({ where: { id } });
     const org = await app.prisma.organization.update({ where: { id }, data });
@@ -109,6 +115,49 @@ export async function organizationRoutes(app: FastifyInstance) {
       await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "organization", entityId: id, payload: diff });
     }
     return org;
+  });
+
+  // GoSMS kredit + kanály — SA nebo org_admin vlastní organizace
+  app.get("/:id/gosms-credit", { preHandler: requireAuth }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { isSuperAdmin, organizationId, permissions } = request.user;
+    if (!isSuperAdmin && (organizationId !== id || !permissions?.org_admin)) return reply.status(403).send({ error: "Forbidden" });
+    const org = await app.prisma.organization.findUnique({ where: { id }, select: { goSmsClientId: true, goSmsClientSecret: true } });
+    if (!org?.goSmsClientId || !org.goSmsClientSecret) return reply.status(400).send({ error: "GoSMS není nakonfigurováno." });
+    try {
+      const data = await getGoSmsCredit(org.goSmsClientId, org.goSmsClientSecret, id);
+      return data;
+    } catch (err) {
+      app.log.error({ err }, "GoSMS credit fetch failed");
+      return reply.status(502).send({ error: `Nepodařilo se načíst kredit z GoSMS: ${(err as Error).message}` });
+    }
+  });
+
+  // GoSMS nastavení pro org_admin
+  app.put("/mine/gosms", { preHandler: requireAuth }, async (request, reply) => {
+    const { organizationId, permissions } = request.user;
+    if (!organizationId) return reply.status(404).send({ error: "Nemáte přiřazenou organizaci." });
+    if (!permissions?.org_admin) return reply.status(403).send({ error: "Forbidden" });
+    const body = request.body as { goSmsClientId?: string; goSmsClientSecret?: string; goSmsChannelId?: number | null };
+    await app.prisma.organization.update({
+      where: { id: organizationId },
+      data: { goSmsClientId: body.goSmsClientId, goSmsClientSecret: body.goSmsClientSecret, goSmsChannelId: body.goSmsChannelId },
+    });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "organization", entityId: organizationId, payload: { goSms: "updated" } });
+    return { ok: true };
+  });
+
+  // GoSMS kredit pro vlastní org
+  app.get("/mine/gosms-credit", { preHandler: requireAuth }, async (request, reply) => {
+    const { organizationId, permissions } = request.user;
+    if (!organizationId || !permissions?.org_admin) return reply.status(403).send({ error: "Forbidden" });
+    const org = await app.prisma.organization.findUnique({ where: { id: organizationId }, select: { goSmsClientId: true, goSmsClientSecret: true } });
+    if (!org?.goSmsClientId || !org.goSmsClientSecret) return reply.status(400).send({ error: "GoSMS není nakonfigurováno." });
+    try {
+      return await getGoSmsCredit(org.goSmsClientId, org.goSmsClientSecret, organizationId);
+    } catch {
+      return reply.status(502).send({ error: "Nepodařilo se načíst kredit z GoSMS." });
+    }
   });
 
   app.delete("/:id", { preHandler: requireSuperAdmin() }, async (request, reply) => {

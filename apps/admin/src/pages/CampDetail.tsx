@@ -10,7 +10,7 @@ import { Camp, Surcharge, EmailTemplate, Language, AccommodationType, Accommodat
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 
-type Tab = "settings" | "types" | "smtp" | "surcharges" | "emails" | "embed";
+type Tab = "settings" | "types" | "sms" | "smtp" | "surcharges" | "emails" | "embed";
 
 const TEMPLATE_VARS = [
   { key: "{{firstName}}", desc: "Jméno zákazníka" },
@@ -596,6 +596,16 @@ export default function CampDetailPage() {
   const [infoLang, setInfoLang] = useState("");
   const [infoValues, setInfoValues] = useState<Record<string, string>>({});
   const [savingInfo, setSavingInfo] = useState(false);
+  const [smsNotifyCustomer, setSmsNotifyCustomer] = useState(false);
+  const [smsNotifyAdmin, setSmsNotifyAdmin] = useState(false);
+  const [smsAdminPhones, setSmsAdminPhones] = useState("");
+  const [smsTemplate, setSmsTemplate] = useState("");
+  const [smsPhoneError, setSmsPhoneError] = useState("");
+  const [smsLengthHelpOpen, setSmsLengthHelpOpen] = useState(false);
+  const [smsTestOpen, setSmsTestOpen] = useState(false);
+  const [smsTestPhone, setSmsTestPhone] = useState("");
+  const [smsTestSending, setSmsTestSending] = useState(false);
+  const [smsTestResult, setSmsTestResult] = useState<{ ok: boolean; message: string; detail?: Record<string, unknown> } | null>(null);
 
   // Accommodation type editor
   const [editType, setEditType] = useState<AccommodationType | null | "new">(null);
@@ -620,6 +630,10 @@ export default function CampDetailPage() {
     setHideAdults(campRes.data.hideAdults ?? false);
     setHideChildren(campRes.data.hideChildren ?? false);
     setInfoValues(campRes.data.info ?? {});
+    setSmsNotifyCustomer(campRes.data.smsNotifyCustomer ?? false);
+    setSmsNotifyAdmin(campRes.data.smsNotifyAdmin ?? false);
+    setSmsAdminPhones((campRes.data.smsAdminPhones ?? []).join(", "));
+    setSmsTemplate(campRes.data.smsTemplate ?? "");
     setInfoLang(langRes.data[0]?.code ?? "cs");
     setLanguages(langRes.data);
     setTemplates(tplRes.data);
@@ -653,17 +667,65 @@ export default function CampDetailPage() {
       else data[k] = v;
     });
     checkboxFields.forEach((k) => { if (!(k in data)) data[k] = false; });
+    if (!data.name) data.name = camp.name;
     data.hideAdults = hideAdults;
     data.hideChildren = hideChildren;
+    data.smsNotifyCustomer = smsNotifyCustomer;
+    data.smsNotifyAdmin = smsNotifyAdmin;
+    data.smsTemplate = smsTemplate;
+    if (smsNotifyAdmin && smsAdminPhones.trim()) {
+      const phones = smsAdminPhones.split(",").map((p: string) => p.trim()).filter(Boolean);
+      const invalid = phones.find((p: string) => !/^\+[1-9]\d{6,14}$/.test(p));
+      if (invalid) {
+        setSmsPhoneError(`Neplatný formát čísla: ${invalid}. Použijte formát +420123456789.`);
+        setSaving(false);
+        return;
+      }
+      data.smsAdminPhones = phones;
+    } else {
+      data.smsAdminPhones = [];
+    }
     try {
       const res = await api.put(`/camps/${id}`, data);
       setCamp(res.data);
+      setSmsNotifyCustomer(res.data.smsNotifyCustomer ?? false);
+      setSmsNotifyAdmin(res.data.smsNotifyAdmin ?? false);
+      setSmsAdminPhones((res.data.smsAdminPhones ?? []).join(", "));
+      setSmsTemplate(res.data.smsTemplate ?? "");
       toast.success("Nastavení bylo uloženo.");
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
       toast.error(msg ?? "Nepodařilo se uložit.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleTestSms = async () => {
+    if (!/^\+[1-9]\d{6,14}$/.test(smsTestPhone.trim())) {
+      setSmsTestResult({ ok: false, message: "Neplatný formát čísla. Použijte formát +420123456789." });
+      return;
+    }
+    setSmsTestSending(true);
+    setSmsTestResult(null);
+    try {
+      const res = await api.post(`/camps/${id}/test-sms`, { phone: smsTestPhone.trim() });
+      const r = res.data?.response;
+      setSmsTestResult({ ok: true, message: "SMS byla odeslána.", detail: r ?? undefined });
+    } catch (err: unknown) {
+      const raw = (err as { response?: { data?: { error?: string } } })?.response?.data?.error ?? "Odeslání selhalo.";
+      // Extract "detail" from embedded JSON in error string
+      let msg = raw;
+      try {
+        const jsonMatch = raw.match(/\{.*\}/s);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          msg = parsed.detail ?? raw;
+        }
+      } catch { /* noop */ }
+      setSmsTestResult({ ok: false, message: msg });
+    } finally {
+      setSmsTestSending(false);
     }
   };
 
@@ -774,6 +836,7 @@ export default function CampDetailPage() {
     { key: "surcharges", label: "Příplatky" },
     { key: "emails", label: "E-mailové šablony" },
     { key: "embed", label: "Vložení na web" },
+    { key: "sms", label: "SMS" },
     { key: "smtp", label: "SMTP" },
   ];
 
@@ -992,6 +1055,153 @@ export default function CampDetailPage() {
             <button className="btn-primary" onClick={() => setEditType("new")}><i className="fa-regular fa-plus mr-1.5" />Přidat typ ubytování</button>
           )}
         </div>
+      )}
+
+      {/* SMS */}
+      {tab === "sms" && (
+        !(camp as any).organization?.goSmsClientId ? (
+          <div className="card p-6 max-w-2xl">
+            <div className="rounded-xl bg-orange-50 border border-orange-200 p-4 flex items-start gap-3">
+              <i className="fa-regular fa-triangle-exclamation text-orange-500 mt-0.5" />
+              <div>
+                <p className="text-sm font-medium text-orange-800">GoSMS není nastaveno</p>
+                <p className="text-sm text-orange-700 mt-0.5">Nejprve nastavte API přístupové údaje GoSMS v nastavení organizace.</p>
+              </div>
+            </div>
+          </div>
+        ) : (
+        <form onSubmit={handleSaveSettings} className="card p-6 space-y-5 max-w-2xl">
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input type="checkbox" checked={smsNotifyCustomer} onChange={(e) => setSmsNotifyCustomer(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+            <div>
+              <p className="text-sm font-medium text-gray-900">SMS notifikace zákazníkovi</p>
+              <p className="text-xs text-gray-500">Zákazník dostane SMS při potvrzení rezervace. Telefon se bere z rezervace.</p>
+            </div>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <input type="checkbox" checked={smsNotifyAdmin} onChange={(e) => setSmsNotifyAdmin(e.target.checked)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
+            <div>
+              <p className="text-sm font-medium text-gray-900">SMS notifikace správci</p>
+              <p className="text-xs text-gray-500">Správce dostane SMS při potvrzení rezervace.</p>
+            </div>
+          </label>
+          {smsNotifyAdmin && (
+            <div>
+              <label className="label">Telefonní čísla správce</label>
+              <input
+                className="input"
+                value={smsAdminPhones}
+                onChange={(e) => { setSmsAdminPhones(e.target.value); setSmsPhoneError(""); }}
+                placeholder="+420123456789, +420987654321"
+                onBlur={(e) => { e.target.value = e.target.value.split(",").map((s) => s.trim()).filter(Boolean).join(", "); setSmsAdminPhones(e.target.value); }}
+              />
+              <p className="text-xs text-gray-400 mt-1">Více čísel oddělte čárkou. Každé číslo musí být s mezinárodní předvolbou (+420…).</p>
+              {smsPhoneError && <p className="text-xs text-red-600 mt-1">{smsPhoneError}</p>}
+            </div>
+          )}
+          <div>
+            <label className="label">Text SMS zprávy</label>
+            <textarea
+              className="input min-h-[80px] resize-y"
+              value={smsTemplate}
+              onChange={(e) => setSmsTemplate(e.target.value)}
+              placeholder="Vaše rezervace byla potvrzena."
+              maxLength={1000}
+            />
+            <div className="flex items-start justify-between mt-1">
+              <Tooltip text="Nahradí diakritiku v textu pro správný formát">
+              <button
+                type="button"
+                className="text-xs text-blue-600 hover:underline"
+                onClick={() => setSmsTemplate(smsTemplate
+                  .replace(/á/g,"a").replace(/Á/g,"A").replace(/č/g,"c").replace(/Č/g,"C")
+                  .replace(/ď/g,"d").replace(/Ď/g,"D").replace(/é/g,"e").replace(/É/g,"E")
+                  .replace(/ě/g,"e").replace(/Ě/g,"E").replace(/í/g,"i").replace(/Í/g,"I")
+                  .replace(/ň/g,"n").replace(/Ň/g,"N").replace(/ó/g,"o").replace(/Ó/g,"O")
+                  .replace(/ř/g,"r").replace(/Ř/g,"R").replace(/š/g,"s").replace(/Š/g,"S")
+                  .replace(/ť/g,"t").replace(/Ť/g,"T").replace(/ú/g,"u").replace(/Ú/g,"U")
+                  .replace(/ů/g,"u").replace(/Ů/g,"U").replace(/ý/g,"y").replace(/Ý/g,"Y")
+                  .replace(/ž/g,"z").replace(/Ž/g,"Z")
+                )}
+              >
+                <i className="fa-regular fa-text-slash mr-1" />Nahradit diakritiku
+              </button>
+              </Tooltip>
+              {(() => {
+                const isUcs2 = /[ěščřžýáíéúůóďťňĚŠČŘŽÝÁÍÉÚŮÓĎŤŇ]/.test(smsTemplate);
+                const limit = isUcs2 ? 70 : 160;
+                const smsCount = Math.max(1, Math.ceil(smsTemplate.length / limit));
+                const over = smsCount > 1;
+                return (
+                  <div className="flex flex-col items-end gap-0.5">
+                    <span className={`text-xs font-mono ${over ? "text-amber-600" : "text-gray-400"}`}>
+                      {smsTemplate.length} znaků / {smsCount} SMS
+                    </span>
+                    {isUcs2 ? (
+                      <span className="text-xs text-amber-600">UCS2 — max 70 zn.</span>
+                    ) : (
+                      <span className="text-xs text-gray-400">GSM — max 160 zn.</span>
+                    )}
+                    <button type="button" className="text-xs text-gray-400 hover:text-gray-600 underline" onClick={() => setSmsLengthHelpOpen(true)}>Jak funguje délka SMS?</button>
+                  </div>
+                );
+              })()}
+            </div>
+          </div>
+          {can("camps_edit") && (
+            <div className="flex items-center gap-3 pt-2">
+              <button type="button" className="px-4 py-2 rounded-lg bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium transition-colors" onClick={() => { if (!smsTemplate.trim()) { toast.error("Nejdříve vyplňte text SMS zprávy."); return; } setSmsTestOpen((v) => !v); setSmsTestResult(null); if (!smsTestPhone) setSmsTestPhone(smsAdminPhones.split(",")[0]?.trim() ?? ""); }}>
+                <i className="fa-regular fa-paper-plane mr-1.5" />Testovací SMS
+              </button>
+              <button className="btn-primary ml-auto" type="submit" disabled={saving}>
+                {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit změny</>}
+              </button>
+            </div>
+          )}
+          {smsTestOpen && (
+            <div className="border border-gray-200 rounded-xl p-4 space-y-3 bg-gray-50">
+              <p className="text-sm font-medium text-gray-700">Odeslat testovací SMS</p>
+              <div className="flex items-center gap-2">
+                <input
+                  type="tel"
+                  className="input flex-1"
+                  placeholder="+420123456789"
+                  value={smsTestPhone}
+                  onChange={(e) => { setSmsTestPhone(e.target.value); setSmsTestResult(null); }}
+                  onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); handleTestSms(); } }}
+                />
+                <button type="button" className="btn-primary shrink-0" onClick={handleTestSms} disabled={smsTestSending}>
+                  {smsTestSending ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Odesílám…</> : <><i className="fa-regular fa-paper-plane mr-1.5" />Odeslat</>}
+                </button>
+              </div>
+              <p className="text-xs text-gray-400">Text zprávy: <em>{smsTemplate || "Vaše rezervace byla potvrzena."}</em></p>
+              {smsTestResult && (
+                <div className={`text-sm rounded-lg p-3 space-y-2 ${smsTestResult.ok ? "bg-green-50 text-green-800 border border-green-200" : "bg-red-50 text-red-800 border border-red-200"}`}>
+                  <div className="flex items-center gap-2 font-medium">
+                    <i className={`fa-regular ${smsTestResult.ok ? "fa-circle-check" : "fa-circle-xmark"}`} />
+                    {smsTestResult.message}
+                  </div>
+                  {smsTestResult.ok && smsTestResult.detail && (() => {
+                    const r = smsTestResult.detail as Record<string, unknown>;
+                    const stats = r.stats as Record<string, unknown> | undefined;
+                    const info = r.sendingInfo as Record<string, unknown> | undefined;
+                    return (
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-green-700 pt-1 border-t border-green-200">
+                        {stats?.price !== undefined && <span>Cena: <strong>{String(stats.price)} {String(stats.currency ?? "")}</strong></span>}
+                        {stats?.smsCount !== undefined && <span>Počet SMS: <strong>{String(stats.smsCount)}</strong></span>}
+                        {stats?.hasDiacritics !== undefined && <span>Diakritika: <strong>{stats.hasDiacritics ? "ano (UCS2)" : "ne (GSM)"}</strong></span>}
+                        {stats?.recipientsCount !== undefined && <span>Příjemci: <strong>{String(stats.recipientsCount)}</strong></span>}
+                        {info?.status !== undefined && <span>Stav: <strong>{String(info.status)}</strong></span>}
+                        {info?.sendStart !== undefined && <span>Odesláno: <strong>{new Date(String(info.sendStart)).toLocaleString("cs-CZ")}</strong></span>}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          )}
+        </form>
+        )
       )}
 
       {/* SMTP */}
@@ -1255,6 +1465,17 @@ export default function CampDetailPage() {
               </div>
             </div>
           )}
+        </div>
+      )}
+      {smsLengthHelpOpen && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-stretch sm:items-start justify-center sm:p-4 sm:pt-12" onClick={() => setSmsLengthHelpOpen(false)}>
+          <div className="bg-white sm:rounded-2xl shadow-xl w-full sm:max-w-4xl h-full sm:h-[90vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+              <h2 className="font-semibold text-gray-900">Délka SMS zprávy</h2>
+              <button onClick={() => setSmsLengthHelpOpen(false)} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
+            </div>
+            <iframe src="https://napoveda.gosms.cz/tema/delka-sms?embed=" className="w-full flex-1 rounded-b-2xl" style={{ minHeight: 400 }} />
+          </div>
         </div>
       )}
     </div>

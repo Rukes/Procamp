@@ -13,6 +13,7 @@ Každému uživateli lze nastavit přesně ta oprávnění která potřebuje. Op
 - **Vytvoření** — může vytvořit novou rezervaci v adminu
 - **Úprava** — může upravit rezervaci a změnit její stav
 - **Smazání** — může trvale smazat rezervaci
+- **Vytvářet nedostupné rezervace** — může vytvořit rezervaci i v blokovaném termínu nebo při plné kapacitě; systém zobrazí varování, ale rezervaci nevyloučí
 
 ### Objekty
 - **Zobrazení** — vidí objekty a jejich nastavení

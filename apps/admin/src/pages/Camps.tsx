@@ -7,6 +7,7 @@ import { Camp, Reservation } from "@procamp/shared";
 import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import Pagination from "../components/Pagination";
+import Tooltip from "../components/Tooltip";
 
 export default function CampsPage() {
   useTitle("Objekty");
@@ -118,8 +119,9 @@ export default function CampsPage() {
         {(perPage === 0 ? camps : camps.slice((page - 1) * perPage, page * perPage)).map((camp) => {
           const occupancy = getOccupancy(camp);
           return (
-            <div key={camp.id} className="card p-5 flex items-center justify-between">
-              <div>
+            <div key={camp.id} className="card p-5 flex items-center gap-4">
+              <Tooltip text="Nastavení objektu" position="top"><Link to={`/camps/${camp.id}`} className="px-3 py-2 rounded-lg border border-yellow-400 hover:bg-yellow-50 text-yellow-600 text-sm font-medium transition-colors shrink-0"><i className="fa-regular fa-gear" /></Link></Tooltip>
+              <div className="flex-1 min-w-0">
                 <h2 className="font-semibold text-gray-900">{camp.name}</h2>
                 <div className="flex items-center gap-2 mt-0.5">
                   <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{camp.slug}</code>
@@ -137,9 +139,6 @@ export default function CampsPage() {
                   {camp.accommodationTypes?.length ?? 0} {camp.accommodationTypes?.length === 1 ? "typ ubytování" : "typy ubytování"}
                   {occupancy !== null && <span className="ml-2">· Aktuální vytíženost: {occupancy} %</span>}
                 </p>
-              </div>
-              <div className="flex gap-2">
-                <Link to={`/camps/${camp.id}`} className="btn-secondary"><i className="fa-regular fa-gear sm:mr-1.5" /><span className="hidden sm:inline">Spravovat</span></Link>
               </div>
             </div>
           );

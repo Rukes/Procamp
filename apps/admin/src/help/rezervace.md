@@ -66,7 +66,8 @@ Klikněte na rezervaci pro otevření detailu. Pokud má typ ubytování nastave
 V detailu lze:
 
 - **Potvrdit nebo zrušit** rezervaci tlačítky vpravo nahoře
-- **Znovu odeslat e-mail** — tlačítko **E-maily** → „Znovu odeslat potvrzovací e-mail zákazníkovi" (s potvrzením)
+- **Znovu odeslat e-mail** — tlačítko **E-maily** → „Znovu odeslat potvrzovací e-mail zákazníkovi" (s potvrzením); nebo „Odeslat na jiný e-mail…" pro libovolnou adresu
+- **Znovu odeslat SMS** — tlačítko **SMS** (zobrazí se jen pokud objekt má zapnuté SMS notifikace zákazníkovi); „Znovu odeslat zákazníkovi" je neaktivní pokud telefon v rezervaci není ve formátu +420…; „Odeslat na jiné číslo…" umožní zadat libovolné číslo s validací; při chybě se zobrazí konkrétní důvod z GoSMS
 - **Upravit údaje** — kontaktní informace, termín, SPZ, poznámku
 - **Přidat interní poznámku** — poznámka viditelná pouze pro správce
 - **Smazat rezervaci** — odkaz dole vpravo; tato akce je nevratná

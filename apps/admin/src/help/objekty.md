@@ -85,6 +85,18 @@ Hotový `<iframe>` kód pro vložení na web. Viz sekce [Formulář na web](#for
 
 ---
 
+## Záložka: SMS
+
+SMS notifikace zákazníkovi nebo správci při potvrzení rezervace. Vyžaduje nastavení GoSMS API v detailu organizace (záložka GoSMS).
+
+- **SMS notifikace zákazníkovi** — zákazník dostane SMS na číslo zadané v rezervaci
+- **SMS notifikace správci** — SMS se odešle na zadaná telefonní čísla; čísla zadejte s mezinárodní předvolbou (+420…), více čísel oddělte čárkou
+- **Text SMS zprávy** — společná šablona pro zákazníka i správce; počítadlo znaků zobrazuje délku a kódování (GSM max 160 zn., UCS2 max 70 zn. při použití diakritiky); tlačítko „Nahradit diakritiku" automaticky přepíše háčky a čárky na základní znaky
+
+SMS se odešle vždy při **potvrzení** rezervace — buď okamžitě (pokud objekt nevyžaduje ruční potvrzení), nebo ve chvíli kdy správce klikne na „Potvrdit".
+
+---
+
 ## Záložka: SMTP
 
 Vlastní SMTP nastavení pro odesílání e-mailů z vašeho serveru místo systémového.
