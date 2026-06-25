@@ -61,7 +61,7 @@ export const updateCampSchema = z.object({
   smsNotifyCustomer: z.boolean().optional(),
   smsNotifyAdmin: z.boolean().optional(),
   smsAdminPhones: z.array(z.string()).optional(),
-  smsTemplate: z.string().optional(),
+  smsTemplates: z.record(z.string()).optional(),
 });
 
 export const createSurchargeSchema = z.object({
