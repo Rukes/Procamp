@@ -22,6 +22,7 @@ interface Organization {
   gaTrackingId: string | null;
   goSmsClientId?: string;
   goSmsChannelId?: number | null;
+  hideCopyright?: boolean;
   createdAt: string;
   _count: { camps: number; users: number; languages: number };
 }
@@ -205,7 +206,7 @@ export default function OrganizationsPage() {
                     >
                       <i className="fa-regular fa-note-sticky text-xs text-red-500 cursor-pointer" />
                       {openNoteId === org.id && (
-                        <div className="absolute left-0 top-5 z-50 w-72 bg-white border border-red-200 rounded-lg shadow-lg p-3">
+                        <div className="absolute left-0 top-5 z-50 w-72 max-w-[80vw] bg-white border border-red-200 rounded-lg shadow-lg p-3">
                           <p className="text-xs font-semibold text-red-500 mb-1.5 flex items-center gap-1.5">
                             <i className="fa-regular fa-note-sticky" /> Interní poznámka
                           </p>
@@ -215,7 +216,7 @@ export default function OrganizationsPage() {
                     </div>
                   )}
                 </div>
-                <div className="flex items-center gap-2 mt-1">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
                   <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-500">{org.slug}</code>
                   <span className="text-xs text-gray-400">
                     <i className="fa-regular fa-tent mr-1" />{org._count.camps} {org._count.camps === 1 ? "objekt" : org._count.camps < 5 ? "objekty" : "objektů"}
@@ -241,6 +242,14 @@ export default function OrganizationsPage() {
                       <span className="text-xs text-gray-300">·</span>
                       <span className="text-xs text-blue-600">
                         <i className="fa-regular fa-message-sms mr-1" />GoSMS aktivní{org.goSmsChannelId ? "" : " (chybí kanál)"}
+                      </span>
+                    </>
+                  )}
+                  {org.hideCopyright && (
+                    <>
+                      <span className="text-xs text-gray-300">·</span>
+                      <span className="text-xs text-orange-600">
+                        <i className="fa-regular fa-eye-slash mr-1" />Bez copyrightu
                       </span>
                     </>
                   )}
