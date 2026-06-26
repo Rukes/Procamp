@@ -350,7 +350,7 @@ export default function ReservationsPage() {
                             onClick={(e) => handleConfirm(e, r.id)}
                           ><i className="fa-regular fa-check mr-1" />Potvrdit</button>
                         )}
-                        {r.status !== "CANCELLED" && can("reservations_edit") && (
+                        {r.status === "PENDING" && es !== "EXPIRED" && can("reservations_edit") && (
                           <button
                             className="px-2 py-0.5 rounded text-xs border border-red-500 text-red-600 hover:bg-red-50 font-medium transition-colors"
                             onClick={(e) => handleCancel(e, r.id)}
