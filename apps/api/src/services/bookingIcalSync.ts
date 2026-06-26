@@ -76,7 +76,10 @@ export async function syncAllBookingIcal(prisma: PrismaClient) {
 
 export function startBookingCron(prisma: PrismaClient) {
   cron.schedule("0 * * * *", () => {
-    syncAllBookingIcal(prisma).catch((err) => console.error("[booking-sync] cron error:", err));
+    console.log("[booking-sync] Running sync...");
+    syncAllBookingIcal(prisma)
+      .then(() => console.log("[booking-sync] Sync done"))
+      .catch((err) => console.error("[booking-sync] cron error:", err));
   });
   console.log("[booking-sync] Cron started — syncing every hour");
 }
