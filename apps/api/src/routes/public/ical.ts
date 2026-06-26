@@ -33,7 +33,7 @@ export async function icalRoutes(app: FastifyInstance) {
     const lines: string[] = [
       "BEGIN:VCALENDAR",
       "VERSION:2.0",
-      "PRODID:-//MůjKemp.cz//CS",
+      "PRODID:-//MujKemp.cz//CS",
       "CALSCALE:GREGORIAN",
       "METHOD:PUBLISH",
     ];
