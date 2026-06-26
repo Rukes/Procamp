@@ -29,13 +29,29 @@ export default function DateStep({ occupied, value, onChange, onNext, onBack, la
   const isDisabled = (date: Date) =>
     isBefore(date, today) || occupiedSet.has(format(date, "yyyy-MM-dd"));
 
-  const handleSelect = (r: DateRange | undefined) => {
-    setRange(r);
-    onChange({ checkIn: r?.from ?? null, checkOut: r?.to ?? null });
+  const rangeHasConflict = (r: DateRange | undefined): boolean => {
+    if (!r?.from || !r?.to) return false;
+    const d = new Date(r.from);
+    while (d < r.to) {
+      if (occupiedSet.has(format(d, "yyyy-MM-dd"))) return true;
+      d.setDate(d.getDate() + 1);
+    }
+    return false;
   };
 
+  const handleSelect = (r: DateRange | undefined) => {
+    setRange(r);
+    if (rangeHasConflict(r)) {
+      onChange({ checkIn: null, checkOut: null });
+    } else {
+      onChange({ checkIn: r?.from ?? null, checkOut: r?.to ?? null });
+    }
+  };
+
+  const conflict = rangeHasConflict(range);
+
   const nights =
-    range?.from && range?.to
+    range?.from && range?.to && !conflict
       ? Math.round((range.to.getTime() - range.from.getTime()) / 86400000)
       : 0;
 
@@ -68,9 +84,15 @@ export default function DateStep({ occupied, value, onChange, onNext, onBack, la
         </div>
       )}
 
+      {conflict && (
+        <div className="bg-red-50 rounded-xl p-3 text-center text-sm text-red-600 font-medium mb-4">
+          {tr.errorNoAvailability}
+        </div>
+      )}
+
       <div className="flex gap-3 mt-2">
         <button className="btn-secondary" onClick={onBack}>{tr.back}</button>
-        <button className="btn-primary" onClick={onNext} disabled={!range?.from || !range?.to}>
+        <button className="btn-primary" onClick={onNext} disabled={!range?.from || !range?.to || conflict}>
           {tr.next}
         </button>
       </div>

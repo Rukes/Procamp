@@ -42,7 +42,7 @@ export async function searchRoutes(app: FastifyInstance) {
             { slug: contains },
           ],
         },
-        select: { id: true, name: true, slug: true, _count: { select: { accommodationTypes: true } } },
+        select: { id: true, name: true, slug: true, organization: { select: { slug: true } }, _count: { select: { accommodationTypes: true } } },
         take: 5,
       }),
       app.prisma.user.findMany({

@@ -5,6 +5,7 @@ import { checkAvailability, getOccupiedDates } from "../../services/availability
 import { sendReservationEmails } from "../../services/email";
 import { logActivity } from "../../services/activityLog";
 import { sendReservationSms } from "../../services/gosms";
+import { generateUniqueBookingCode } from "../../utils/bookingCode";
 
 export async function publicFormRoutes(app: FastifyInstance) {
   // Get camp public data (for form) — /:orgSlug/:campSlug
@@ -59,6 +60,8 @@ export async function publicFormRoutes(app: FastifyInstance) {
         childPricePerNight: price?.childPricePerNight ?? 0,
         useDynamicPricing: t.useDynamicPricing,
         nightTiers,
+        maxAdults: t.maxAdults ?? null,
+        maxChildren: t.maxChildren ?? null,
       };
     });
 
@@ -136,8 +139,10 @@ export async function publicFormRoutes(app: FastifyInstance) {
     }, 0);
     const totalPrice = (pricePerNight + personsPrice + surchargesPrice) * nights;
 
+    const bookingCode = await generateUniqueBookingCode(app.prisma);
     const reservation = await app.prisma.reservation.create({
       data: {
+        bookingCode,
         campId: camp.id,
         accommodationTypeId: body.accommodationTypeId,
         checkIn, checkOut,
@@ -185,6 +190,8 @@ export async function publicFormRoutes(app: FastifyInstance) {
       checkIn: body.checkIn,
       checkOut: body.checkOut,
       nights,
+      bookingCode: reservation.bookingCode,
+      status: reservation.status,
     });
   });
 }

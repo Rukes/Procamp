@@ -89,7 +89,7 @@ export default function ReservationsPage() {
   const [camps, setCamps] = useState<Camp[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
   const [search, setSearch] = useState("");
-  const [campFilter, setCampFilter] = useState("");
+  const [campFilter, setCampFilter] = useState(() => new URLSearchParams(window.location.search).get("camp") ?? "");
   const [statusFilter, setStatusFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -126,6 +126,13 @@ export default function ReservationsPage() {
     e.stopPropagation();
     if (!confirm("Opravdu chcete potvrdit tuto rezervaci včetně odeslání potvrzení?")) return;
     await api.patch(`/reservations/${id}/status`, { status: "CONFIRMED" });
+    load();
+  };
+
+  const handleCancel = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    if (!confirm("Opravdu chcete zrušit tuto rezervaci?")) return;
+    await api.patch(`/reservations/${id}/status`, { status: "CANCELLED" });
     load();
   };
 
@@ -342,6 +349,12 @@ export default function ReservationsPage() {
                             className="px-2 py-0.5 rounded text-xs bg-green-600 hover:bg-green-700 text-white font-medium transition-colors"
                             onClick={(e) => handleConfirm(e, r.id)}
                           ><i className="fa-regular fa-check mr-1" />Potvrdit</button>
+                        )}
+                        {r.status !== "CANCELLED" && can("reservations_edit") && (
+                          <button
+                            className="px-2 py-0.5 rounded text-xs border border-red-500 text-red-600 hover:bg-red-50 font-medium transition-colors"
+                            onClick={(e) => handleCancel(e, r.id)}
+                          ><i className="fa-regular fa-ban mr-1" />Zamítnout</button>
                         )}
                       </div>
                     </td>

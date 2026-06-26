@@ -16,7 +16,7 @@ V sekci **Jazyky** zkontrolujte výchozí jazyk (čeština je přidána automati
 
 ### 3. Vytvořte objekt
 V sekci **Objekty** klikněte na **+ Nový objekt** a zadejte název kempu nebo ubytovacího zařízení. Po vytvoření přejděte do jeho detailu a nastavte:
-- **Typy ubytování** — karavan, stan, chatka… u každého nastavte kapacitu a ceny
+- **Typy ubytování** — karavan, stan, chatka… u každého nastavte kapacitu a ceny; volitelně lze nastavit i **kapacitu lůžek** (max. počet dospělých a dětí) — zákazník pak ve formuláři nemůže vybrat více osob, než je povoleno
 - **Příplatky** — elektřina, pes, snídaně…
 - **Nastavení** — notifikační e-mail, SMTP pro odesílání potvrzení zákazníkům
 
@@ -37,6 +37,8 @@ Vyhledávání prohledá zároveň:
 - **Blokace** — důvod a interní poznámka
 
 Výsledky jsou barevně označeny písmeny **R** (rezervace), **O** (objekty), **U** (uživatelé), **B** (blokace). Pohybujte se šipkami ↑↓, potvrďte Enterem nebo klikněte. ESC vyhledávání zavře.
+
+U výsledků objektů se zobrazí odkaz **formulář** — kliknutím otevřete rezervační formulář v novém okně. Pokud je výsledek aktivní (šipkami), stiskněte **→** pro přímé otevření formuláře.
 
 ## Přehled sekcí
 

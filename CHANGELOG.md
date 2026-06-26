@@ -1,5 +1,15 @@
 # Changelog
 
+## 26. 6. 2026
+
+- **Kapacita lůžek** — v nastavení typu ubytování lze nastavit maximální počet dospělých a dětí; ve formuláři se tlačítko `+` zablokuje při dosažení limitu; limit je zobrazen v podtitulku (`15 let a více (max 2)`) i v přehledu typů
+- **Dynamická cena — dospělý/dítě** — při zapnuté dynamické ceně se nyní zobrazují i pole pro cenu dospělého a dítěte (ta jsou vždy pevná)
+- **Zamítnout rezervaci ze seznamu** — červené outline tlačítko přímo v řádku rezervace; potvrzení přes dialog
+- **Rychlý přechod na rezervace objektu** — tlačítko Rezervace v seznamu objektů otevře seznam rezervací předfiltrovaný na daný objekt
+- **Globální vyhledávání — formulář objektu** — ve výsledcích objektů přibyl odkaz „formulář" (otevře v novém okně); na aktivním řádku lze formulář otevřít šipkou →
+- **Oprava výběru termínu přes obsazené dny** — formulář nyní detekuje, zda vybraný rozsah zahrnuje obsazené dny, a zablokuje tlačítko Dále
+- **Oprava časového posunu dat** — odesílaná data termínu byla kvůli UTC posunu o den posunutá; opraveno použitím lokální časové zóny
+
 ## 25. 6. 2026
 
 - **SMS náhled — zvýraznění** — náhled SMS šablony barevně označuje proměnné (modře), diakritiku (žlutě), nové řádky (fialově) a vícenásobné mezery (červeně); proměnné se zobrazují s testovací hodnotou; kliknutím na proměnnou v seznamu se zkopíruje do schránky

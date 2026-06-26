@@ -18,6 +18,8 @@ export interface PublicAccommodationType {
   childPricePerNight: number;
   useDynamicPricing: boolean;
   nightTiers: PublicNightTier[];
+  maxAdults: number | null;
+  maxChildren: number | null;
 }
 
 export function getEffectivePricePerNight(type: PublicAccommodationType, nights: number): number {

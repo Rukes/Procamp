@@ -15,9 +15,9 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
   // Create type
   app.post("/:campId/accommodation-types", { preHandler: requirePermission("camps_edit") }, async (request, reply) => {
     const { campId } = request.params as { campId: string };
-    const body = request.body as { translations: Record<string, { name: string; shortDescription?: string; longDescription?: string }>; capacity: number; sortOrder?: number };
+    const body = request.body as { translations: Record<string, { name: string; shortDescription?: string; longDescription?: string }>; capacity: number; maxAdults?: number | null; maxChildren?: number | null; sortOrder?: number };
     const type = await app.prisma.accommodationType.create({
-      data: { campId, translations: body.translations, capacity: body.capacity, sortOrder: body.sortOrder ?? 0 },
+      data: { campId, translations: body.translations, capacity: body.capacity, maxAdults: body.maxAdults ?? null, maxChildren: body.maxChildren ?? null, sortOrder: body.sortOrder ?? 0 },
       include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } },
     });
     return reply.status(201).send(type);
@@ -26,7 +26,7 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
   // Update type
   app.put("/:campId/accommodation-types/:id", { preHandler: requirePermission("camps_edit") }, async (request) => {
     const { id } = request.params as { campId: string; id: string };
-    const body = request.body as { translations?: Record<string, { name: string; shortDescription?: string; longDescription?: string }>; capacity?: number; sortOrder?: number };
+    const body = request.body as { translations?: Record<string, { name: string; shortDescription?: string; longDescription?: string }>; capacity?: number; maxAdults?: number | null; maxChildren?: number | null; sortOrder?: number };
     return app.prisma.accommodationType.update({
       where: { id },
       data: body,

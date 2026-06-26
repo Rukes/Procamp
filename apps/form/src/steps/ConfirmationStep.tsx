@@ -10,20 +10,29 @@ interface Props {
   totalPrice: number;
   lang: Language;
   nights: number;
+  bookingCode?: string;
+  isPending?: boolean;
+  onInfo?: () => void;
 }
 
-export default function ConfirmationStep({ firstName, checkIn, checkOut, totalPrice, lang, nights }: Props) {
+export default function ConfirmationStep({ firstName, checkIn, checkOut, totalPrice, lang, nights, bookingCode, isPending, onInfo }: Props) {
   const t = useT(lang.code);
   const locale = getDateLocale(lang.code);
 
   return (
     <div className="step-card text-center py-10">
-      <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-        <span className="text-3xl">✓</span>
+      <div className={`w-16 h-16 ${isPending ? "bg-amber-100" : "bg-green-100"} rounded-full flex items-center justify-center mx-auto mb-4`}>
+        <span className="text-3xl">{isPending ? "⏳" : "✓"}</span>
       </div>
-      <h2 className="text-xl font-bold text-gray-900 mb-2">{t.confirmTitle}</h2>
-      <p className="text-gray-600 mb-6">{t.confirmSubtitle(firstName)}</p>
+      <h2 className="text-xl font-bold text-gray-900 mb-2">{isPending ? t.confirmTitlePending : t.confirmTitle}</h2>
+      <p className="text-gray-600 mb-6">{isPending ? t.confirmSubtitlePending(firstName) : t.confirmSubtitle(firstName)}</p>
       <div className="bg-gray-50 rounded-xl p-4 text-sm space-y-2 text-left max-w-xs mx-auto">
+        {bookingCode && (
+          <div className="flex justify-between items-center pb-2 border-b border-gray-200">
+            <span className="text-gray-500">{t.confirmBookingCode}</span>
+            <span className="font-mono font-bold text-base tracking-widest text-blue-700">{bookingCode}</span>
+          </div>
+        )}
         <div className="flex justify-between"><span className="text-gray-500">{t.confirmCheckIn}</span><span className="font-medium">{format(checkIn, "d. M. yyyy", { locale })}</span></div>
         <div className="flex justify-between"><span className="text-gray-500">{t.confirmCheckOut}</span><span className="font-medium">{format(checkOut, "d. M. yyyy", { locale })}</span></div>
         <div className="flex justify-between"><span className="text-gray-500">{t.confirmNights}</span><span className="font-medium">{nights}</span></div>
@@ -31,6 +40,15 @@ export default function ConfirmationStep({ firstName, checkIn, checkOut, totalPr
           <span>{t.confirmTotal}</span><span>{formatPrice(totalPrice, lang)}</span>
         </div>
       </div>
+      {onInfo && (
+        <button
+          type="button"
+          onClick={onInfo}
+          className="mt-4 w-full max-w-xs mx-auto block px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-xl transition-colors"
+        >
+          Zobrazit informace
+        </button>
+      )}
       <p className="text-xs text-gray-400 mt-6">{t.confirmFooter}</p>
     </div>
   );

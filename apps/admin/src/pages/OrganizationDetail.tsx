@@ -47,7 +47,7 @@ const DECIMAL_OPTIONS = [
 ];
 const formatPreview = (t: string, d: string) => `1${t}234${d}56`;
 
-type Tab = "billing" | "settings" | "terms" | "gosms";
+type Tab = "billing" | "settings" | "terms" | "gosms" | "superadmin";
 
 export default function OrganizationDetailPage() {
   useTitle("Detail organizace");
@@ -148,15 +148,16 @@ export default function OrganizationDetailPage() {
     }
   };
 
-  const tabs: { key: Tab; label: string; icon: string }[] = [
+  const tabs: { key: Tab; label: string; icon: string; saOnly?: boolean }[] = [
     { key: "billing", label: "Fakturační údaje", icon: "fa-receipt" },
     { key: "settings", label: "Nastavení", icon: "fa-gear" },
     { key: "terms", label: "Podmínky & GDPR", icon: "fa-shield-check" },
     { key: "gosms", label: "GoSMS", icon: "fa-message-sms" },
+    { key: "superadmin", label: "Super Admin", icon: "fa-shield-halved", saOnly: true },
   ];
 
   return (
-    <div className="p-8 max-w-3xl">
+    <div className="p-8 max-w-5xl">
       <div className="flex items-center gap-3 mb-6">
         <button onClick={() => navigate("/organizations")} className="text-gray-400 hover:text-gray-600 transition-colors">
           <i className="fa-regular fa-arrow-left" />
@@ -173,7 +174,7 @@ export default function OrganizationDetailPage() {
       </div>
 
       <div className="flex border-b border-gray-200 mb-6 gap-1">
-        {tabs.map((t) => (
+        {tabs.filter((t) => !t.saOnly || user?.isSuperAdmin).map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
@@ -341,7 +342,7 @@ export default function OrganizationDetailPage() {
           </>
         )}
 
-        {tab !== "gosms" && (
+        {tab !== "gosms" && tab !== "superadmin" && (
         <div className="pt-2 flex items-center justify-between">
           <button className="btn-primary" type="submit" disabled={saving}>
             {saving ? <><i className="fa-regular fa-spinner-third fa-spin mr-1.5" />Ukládám…</> : <><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit</>}
@@ -371,6 +372,33 @@ export default function OrganizationDetailPage() {
         </div>
         )}
       </form>
+
+      {tab === "superadmin" && user?.isSuperAdmin && (
+        <div className="space-y-4">
+          <div className="card p-5">
+            <h3 className="font-semibold text-gray-900 mb-1">Export dat organizace</h3>
+            <p className="text-sm text-gray-500 mb-4">
+              JSON export pro účely debuggingu — organizace, objekty, uživatelé (bez hesel), blokace a rezervace za posledních 30 dní.
+            </p>
+            <button
+              type="button"
+              className="btn-primary inline-flex items-center gap-2"
+              onClick={async () => {
+                const res = await api.get(`/organizations/${id}/export`, { responseType: "blob" });
+                const url = URL.createObjectURL(new Blob([res.data], { type: "application/json" }));
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `org-export-${org.slug}-${new Date().toISOString().slice(0, 16).replace("T", "-")}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              <i className="fa-regular fa-download" />
+              Stáhnout JSON
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

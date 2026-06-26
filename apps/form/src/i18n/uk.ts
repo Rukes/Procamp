@@ -52,12 +52,15 @@ export const uk: Translations = {
   contactSubmitting: "Надсилаю…",
 
   confirmTitle: "Бронювання надіслано!",
+  confirmTitlePending: "Бронювання отримано!",
   confirmSubtitle: (name) => `Дякуємо, ${name}! Підтвердження надіслано на вашу електронну пошту.`,
+  confirmSubtitlePending: (name) => `Дякуємо, ${name}! Ваше бронювання очікує підтвердження. Ми повідомимо вас електронною поштою.`,
   confirmCheckIn: "Заїзд",
   confirmCheckOut: "Виїзд",
   confirmNights: "Кількість ночей",
   confirmTotal: "Загальна вартість",
   confirmFooter: "Оплата при заїзді. Чекаємо на вас!",
+  confirmBookingCode: "Код бронювання",
 
   campInfo: "Інфо",
   errorNoAvailability: "На жаль, на вибрані дати місць немає.",

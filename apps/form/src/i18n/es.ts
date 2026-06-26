@@ -52,12 +52,15 @@ export const es: Translations = {
   contactSubmitting: "Enviando…",
 
   confirmTitle: "¡Reserva enviada!",
+  confirmTitlePending: "¡Reserva recibida!",
   confirmSubtitle: (name) => `¡Gracias, ${name}! Se ha enviado una confirmación a tu e-mail.`,
+  confirmSubtitlePending: (name) => `¡Gracias, ${name}! Tu reserva está pendiente de confirmación. Te informaremos por e-mail.`,
   confirmCheckIn: "Llegada",
   confirmCheckOut: "Salida",
   confirmNights: "Noches",
   confirmTotal: "Precio total",
   confirmFooter: "El pago se realiza a la llegada. ¡Te esperamos!",
+  confirmBookingCode: "Código de reserva",
 
   campInfo: "Info",
   errorNoAvailability: "Lo sentimos, no hay disponibilidad para las fechas seleccionadas.",

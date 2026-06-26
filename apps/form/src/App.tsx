@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { format } from "date-fns";
 import { useParams, useSearchParams } from "react-router-dom";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { useCamp, PublicAccommodationType } from "./hooks/useCamp";
@@ -45,7 +46,7 @@ function FormApp() {
   const [children, setChildren] = useState(0);
   const [selectedSurchargeIds, setSelectedSurchargeIds] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  const [confirmed, setConfirmed] = useState<{ totalPrice: number; nights: number } | null>(null);
+  const [confirmed, setConfirmed] = useState<{ totalPrice: number; nights: number; bookingCode?: string; status?: string } | null>(null);
   const [serverError, setServerError] = useState("");
   const [contactData, setContactData] = useState<ContactData | null>(null);
 
@@ -112,15 +113,15 @@ function FormApp() {
     try {
       const res = await api.post(`/camp/${orgSlug}/${campSlug}/reserve`, {
         accommodationTypeId: type?.id,
-        checkIn: checkIn!.toISOString().slice(0, 10),
-        checkOut: checkOut!.toISOString().slice(0, 10),
+        checkIn: format(checkIn!, "yyyy-MM-dd"),
+        checkOut: format(checkOut!, "yyyy-MM-dd"),
         adults,
         children,
         selectedSurchargeIds,
         ...contact,
         languageCode: lang,
       });
-      setConfirmed({ totalPrice: res.data.totalPrice, nights: res.data.nights });
+      setConfirmed({ totalPrice: res.data.totalPrice, nights: res.data.nights, bookingCode: res.data.bookingCode, status: res.data.status });
       trackPurchase({
         reservationId: res.data.id,
         campName: camp.name,
@@ -226,6 +227,9 @@ function FormApp() {
             totalPrice={confirmed.totalPrice}
             lang={langObj}
             nights={confirmed.nights}
+            bookingCode={confirmed.bookingCode}
+            isPending={confirmed.status === "PENDING"}
+            onInfo={infoHtml ? () => setInfoOpen(true) : undefined}
           />
         )}
       </div>

@@ -165,6 +165,68 @@ export async function organizationRoutes(app: FastifyInstance) {
     }
   });
 
+  app.get("/:id/export", { preHandler: requireSuperAdmin() }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+
+    const MASKED = "SKRYTO PRO EXPORT";
+
+    const org = await app.prisma.organization.findUnique({
+      where: { id },
+      select: {
+        id: true, name: true, slug: true,
+        billingName: true, country: true, ico: true, dic: true, address: true,
+        contactPerson: true, billingEmail: true, gaTrackingId: true, internalNote: true,
+        defaultLanguageCode: true, thousandsSeparator: true, decimalSeparator: true,
+        requireTermsAcceptance: true, createdAt: true,
+        goSmsClientId: true, goSmsClientSecret: true, goSmsChannelId: true,
+        camps: {
+          select: {
+            id: true, name: true, slug: true, notificationEmail: true,
+            smtpHost: true, smtpPort: true, smtpUser: true, smtpFrom: true, smtpReplyTo: true,
+            smtpPasswordEncrypted: true,
+            useCustomSmtp: true, requiresConfirmation: true, hideAdults: true, hideChildren: true,
+            smsNotifyCustomer: true, smsNotifyAdmin: true, smsAdminPhones: true,
+            accommodationTypes: { select: { id: true, translations: true, capacity: true, sortOrder: true, useDynamicPricing: true } },
+            surcharges: { select: { id: true, translations: true, isOptional: true, isHidden: true, sortOrder: true } },
+            blockedPeriods: {
+              where: { dateFrom: { gte: thirtyDaysAgo } },
+              select: { id: true, dateFrom: true, dateTo: true, reason: true, internalNote: true, accommodationTypeId: true },
+            },
+            reservations: {
+              where: { createdAt: { gte: thirtyDaysAgo } },
+              select: {
+                id: true, bookingCode: true, status: true, firstName: true, lastName: true,
+                email: true, phone: true, checkIn: true, checkOut: true,
+                adults: true, children: true, totalPrice: true, note: true, internalNote: true,
+                languageCode: true, createdAt: true, accommodationTypeId: true,
+              },
+            },
+          },
+        },
+        users: {
+          select: { id: true, name: true, email: true, permissions: true, isSuperAdmin: true, createdAt: true },
+        },
+      },
+    });
+
+    if (!org) return reply.status(404).send({ error: "Not found" });
+
+    const masked = {
+      ...org,
+      goSmsClientId: org.goSmsClientId ? MASKED : null,
+      goSmsClientSecret: org.goSmsClientSecret ? MASKED : null,
+      camps: org.camps.map((c) => ({
+        ...c,
+        smtpPasswordEncrypted: c.smtpPasswordEncrypted ? MASKED : null,
+      })),
+    };
+
+    reply.header("Content-Disposition", `attachment; filename="org-export-${org.slug}-${new Date().toISOString().slice(0, 10)}.json"`);
+    reply.header("Content-Type", "application/json");
+    return reply.send(JSON.stringify(masked, null, 2));
+  });
+
   app.delete("/:id", { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const org = await app.prisma.organization.findUnique({ where: { id } });

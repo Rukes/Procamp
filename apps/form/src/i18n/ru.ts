@@ -52,12 +52,15 @@ export const ru: Translations = {
   contactSubmitting: "Отправляю…",
 
   confirmTitle: "Бронирование отправлено!",
+  confirmTitlePending: "Бронирование получено!",
   confirmSubtitle: (name) => `Спасибо, ${name}! Подтверждение отправлено на ваш e-mail.`,
+  confirmSubtitlePending: (name) => `Спасибо, ${name}! Ваше бронирование ожидает подтверждения. Мы сообщим вам по e-mail.`,
   confirmCheckIn: "Заезд",
   confirmCheckOut: "Выезд",
   confirmNights: "Количество ночей",
   confirmTotal: "Общая стоимость",
   confirmFooter: "Оплата при заезде. Ждём вас!",
+  confirmBookingCode: "Код бронирования",
 
   campInfo: "Инфо",
   errorNoAvailability: "К сожалению, на выбранные даты мест нет.",

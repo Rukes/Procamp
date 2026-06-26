@@ -43,12 +43,12 @@ interface Props {
   onBack: () => void;
 }
 
-function Counter({ label, sub, value, onChange, min = 0 }: { label: string; sub: string; value: number; onChange: (v: number) => void; min?: number }) {
+function Counter({ label, sub, value, onChange, min = 0, max }: { label: string; sub: string; value: number; onChange: (v: number) => void; min?: number; max?: number }) {
   return (
     <div className="flex items-center justify-between py-3 border-b border-gray-100 last:border-0">
       <div>
         <p className="font-medium text-gray-900 text-sm">{label}</p>
-        <p className="text-xs text-gray-500">{sub}</p>
+        <p className="text-xs text-gray-500">{sub}{max !== undefined ? ` (max ${max})` : ""}</p>
       </div>
       <div className="flex items-center gap-3">
         <button
@@ -61,7 +61,8 @@ function Counter({ label, sub, value, onChange, min = 0 }: { label: string; sub:
         <button
           type="button"
           onClick={() => onChange(value + 1)}
-          className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors text-lg leading-none"
+          disabled={max !== undefined && value >= max}
+          className="w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 transition-colors text-lg leading-none disabled:opacity-40"
         >+</button>
       </div>
     </div>
@@ -94,11 +95,13 @@ export default function ConfigStep({
 
   return (
     <div className="step-card space-y-6">
-      <div>
-        <h2 className="text-base font-semibold text-gray-900 mb-3">{t.configPersonsTitle}</h2>
-        {!camp.hideAdults && <Counter label={t.configAdults} sub={t.configAdultsSub} value={adults} onChange={onChangeAdults} min={1} />}
-        {!camp.hideChildren && <Counter label={t.configChildren} sub={t.configChildrenSub} value={children} onChange={onChangeChildren} />}
-      </div>
+      {(!camp.hideAdults || !camp.hideChildren) && (
+        <div>
+          <h2 className="text-base font-semibold text-gray-900 mb-3">{t.configPersonsTitle}</h2>
+          {!camp.hideAdults && <Counter label={t.configAdults} sub={t.configAdultsSub} value={adults} onChange={onChangeAdults} min={1} max={type.maxAdults ?? undefined} />}
+          {!camp.hideChildren && <Counter label={t.configChildren} sub={t.configChildrenSub} value={children} onChange={onChangeChildren} max={type.maxChildren ?? undefined} />}
+        </div>
+      )}
 
       {camp.surcharges.length > 0 && (
         <div>

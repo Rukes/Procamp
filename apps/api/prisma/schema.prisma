@@ -115,6 +115,8 @@ model AccommodationType {
   camp             Camp                    @relation(fields: [campId], references: [id], onDelete: Cascade)
   translations     Json                    @default("{}")
   capacity         Int                     @default(1)
+  maxAdults        Int?
+  maxChildren      Int?
   sortOrder        Int                     @default(0)
   useDynamicPricing Boolean               @default(false)
   createdAt        DateTime                @default(now())

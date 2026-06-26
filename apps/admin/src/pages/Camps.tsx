@@ -149,6 +149,11 @@ export default function CampsPage() {
                   )}
                 </div>
               </div>
+              <Tooltip text="Rezervace tohoto objektu" position="top">
+                <Link to={`/reservations?camp=${camp.id}`} className="px-3 py-2 rounded-lg border border-blue-400 hover:bg-blue-50 text-blue-600 text-sm font-medium transition-colors shrink-0">
+                  <i className="fa-regular fa-calendar-check mr-1.5" />Rezervace
+                </Link>
+              </Tooltip>
             </div>
           );
         })}

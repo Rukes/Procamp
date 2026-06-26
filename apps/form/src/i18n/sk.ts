@@ -52,12 +52,15 @@ export const sk: Translations = {
   contactSubmitting: "Odosielam…",
 
   confirmTitle: "Rezervácia odoslaná!",
+  confirmTitlePending: "Rezervácia prijatá!",
   confirmSubtitle: (name) => `Ďakujeme, ${name}! Potvrdenie sme poslali na váš e-mail.`,
+  confirmSubtitlePending: (name) => `Ďakujeme, ${name}! Vaša rezervácia čaká na potvrdenie. Budeme vás informovať e-mailom.`,
   confirmCheckIn: "Príjazd",
   confirmCheckOut: "Odjazd",
   confirmNights: "Počet nocí",
   confirmTotal: "Celková cena",
   confirmFooter: "Platba prebieha na mieste. Tešíme sa na vás!",
+  confirmBookingCode: "Kód rezervácie",
 
   campInfo: "Informácie",
   errorNoAvailability: "Žiaľ, kapacita je pre vybraný dátum obsadená.",

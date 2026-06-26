@@ -52,12 +52,15 @@ export const hu: Translations = {
   contactSubmitting: "Küldés…",
 
   confirmTitle: "Foglalás elküldve!",
+  confirmTitlePending: "Foglalás beérkezett!",
   confirmSubtitle: (name) => `Köszönjük, ${name}! Visszaigazolást küldtünk az e-mail-jére.`,
+  confirmSubtitlePending: (name) => `Köszönjük, ${name}! Foglalása megerősítésre vár. E-mailben értesítjük.`,
   confirmCheckIn: "Érkezés",
   confirmCheckOut: "Távozás",
   confirmNights: "Éjszakák száma",
   confirmTotal: "Teljes ár",
   confirmFooter: "Fizetés érkezéskor. Várjuk Önt!",
+  confirmBookingCode: "Foglalási kód",
 
   campInfo: "Infó",
   errorNoAvailability: "Sajnos a kiválasztott időpontban nincs szabad hely.",

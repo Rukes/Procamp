@@ -4,7 +4,7 @@ import { api } from "../api/client";
 import { format } from "date-fns";
 
 interface ResResult { id: string; bookingCode?: string | null; firstName: string; lastName: string; email: string; checkIn: string; checkOut: string; status: string; }
-interface CampResult { id: string; name: string; slug: string; _count: { accommodationTypes: number }; }
+interface CampResult { id: string; name: string; slug: string; organization: { slug: string }; _count: { accommodationTypes: number }; }
 interface UserResult { id: string; name: string; email: string; }
 interface BlockingResult { id: string; reason: string; internalNote?: string | null; dateFrom: string; dateTo: string; camp: { name: string }; }
 
@@ -18,7 +18,7 @@ interface Results {
 const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
 const STATUS_CLASS: Record<string, string> = { PENDING: "text-amber-600", CONFIRMED: "text-green-600", CANCELLED: "text-red-500" };
 
-interface FlatItem { type: "reservation" | "camp" | "user" | "blocking"; id: string; href: string; title: string; subtitle?: string; meta?: string; metaClass?: string; }
+interface FlatItem { type: "reservation" | "camp" | "user" | "blocking"; id: string; href: string; title: string; subtitle?: string; meta?: string; metaClass?: string; formUrl?: string; }
 
 function toFlat(results: Results): FlatItem[] {
   const fmt = (d: string) => format(new Date(d), "d. M. yyyy");
@@ -39,6 +39,7 @@ function toFlat(results: Results): FlatItem[] {
       title: c.name,
       subtitle: c.slug,
       meta: `${c._count.accommodationTypes} typ${c._count.accommodationTypes === 1 ? "" : "y"}`,
+      formUrl: `${import.meta.env.VITE_FORM_BASE_URL}/form/${c.organization.slug}/${c.slug}`,
     })),
     ...results.users.map((u) => ({
       type: "user" as const,
@@ -145,6 +146,7 @@ export default function GlobalSearch({ open, onClose }: Props) {
     if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex((i) => Math.min(i + 1, results.length - 1)); }
     if (e.key === "ArrowUp")   { e.preventDefault(); setActiveIndex((i) => Math.max(i - 1, 0)); }
     if (e.key === "Enter" && results[activeIndex]) go(results[activeIndex].href);
+    if (e.key === "ArrowRight" && results[activeIndex]?.formUrl) { e.preventDefault(); window.open(results[activeIndex].formUrl, "_blank"); }
     if (e.key === "Escape") handleClose();
   };
 
@@ -207,21 +209,31 @@ export default function GlobalSearch({ open, onClose }: Props) {
                     const idx = globalIdx++;
                     const isActive = idx === activeIndex;
                     return (
-                      <button
+                      <div
                         key={item.id}
                         ref={isActive ? activeRef : null}
-                        onClick={() => go(item.href)}
                         onMouseEnter={() => setActiveIndex(idx)}
-                        className={`w-full flex items-center gap-3 px-4 py-2.5 text-left transition-colors ${isActive ? "bg-blue-50" : "hover:bg-gray-50"}`}
+                        className={`flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer ${isActive ? "bg-blue-50" : "hover:bg-gray-50"}`}
                       >
                         <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 text-xs font-bold ${cfg.bg} ${cfg.text}`}>{cfg.letter}</div>
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0" onClick={() => go(item.href)}>
                           <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
                           {item.subtitle && <p className="text-xs text-gray-400 truncate">{item.subtitle}</p>}
                         </div>
-                        {item.meta && <span className={`shrink-0 text-xs ${item.metaClass ?? "text-gray-400"}`}>{item.meta}</span>}
-                        <i className={`fa-regular fa-corner-down-left text-xs shrink-0 ${isActive ? "text-blue-400" : "invisible"}`} />
-                      </button>
+                        {item.meta && <span className={`shrink-0 text-xs ${item.metaClass ?? "text-gray-400"}`} onClick={() => go(item.href)}>{item.meta}</span>}
+                        {item.formUrl && (
+                          <a
+                            href={item.formUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 text-xs px-2 py-0.5 rounded border border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors"
+                          >formulář</a>
+                        )}
+                        {item.formUrl && isActive && (
+                          <span className="shrink-0 px-1 py-0.5 rounded bg-blue-100 text-blue-400 font-mono text-[10px]">→</span>
+                        )}
+                        <span className={`text-xs shrink-0 font-mono ${isActive ? "text-blue-400" : "invisible"}`} onClick={() => go(item.href)}>↵</span>
+                      </div>
                     );
                   })}
                 </div>

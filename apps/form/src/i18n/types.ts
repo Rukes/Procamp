@@ -57,12 +57,15 @@ export interface Translations {
 
   // ConfirmationStep
   confirmTitle: string;
+  confirmTitlePending: string;
   confirmSubtitle: (name: string) => string;
+  confirmSubtitlePending: (name: string) => string;
   confirmCheckIn: string;
   confirmCheckOut: string;
   confirmNights: string;
   confirmTotal: string;
   confirmFooter: string;
+  confirmBookingCode: string;
 
   // Info modal
   campInfo: string;

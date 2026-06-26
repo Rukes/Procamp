@@ -324,6 +324,8 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
     return Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v.longDescription ?? ""]));
   });
   const [capacity, setCapacity] = useState(type?.capacity ?? 1);
+  const [maxAdults, setMaxAdults] = useState<number | "">(type?.maxAdults ?? "");
+  const [maxChildren, setMaxChildren] = useState<number | "">(type?.maxChildren ?? "");
   const [prices, setPrices] = useState<Record<string, { pricePerNight: string; adultPricePerNight: string; childPricePerNight: string }>>(() => {
     if (!type) return {};
     return Object.fromEntries(type.prices.map((p) => [p.languageCode, { pricePerNight: String(p.pricePerNight), adultPricePerNight: String(p.adultPricePerNight), childPricePerNight: String(p.childPricePerNight) }]));
@@ -401,8 +403,9 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
           childPricePerNight: parseFloat(p.childPricePerNight) || 0,
         }])
       );
-      const typeId = type ? type.id : (await api.post(`/camps/${campId}/accommodation-types`, { translations, capacity })).data.id;
-      if (type) await api.put(`/camps/${campId}/accommodation-types/${type.id}`, { translations, capacity });
+      const typePayload = { translations, capacity, maxAdults: maxAdults === "" ? null : maxAdults, maxChildren: maxChildren === "" ? null : maxChildren };
+      const typeId = type ? type.id : (await api.post(`/camps/${campId}/accommodation-types`, typePayload)).data.id;
+      if (type) await api.put(`/camps/${campId}/accommodation-types/${type.id}`, typePayload);
       for (const [lang, p] of Object.entries(numericPrices)) {
         await api.put(`/camps/${campId}/accommodation-types/${typeId}/prices/${lang}`, p);
       }
@@ -450,6 +453,41 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
               <p><code className="bg-gray-100 px-1 rounded">1+</code> = maximální počet souběžných rezervací pro dané termíny</p>
             </div>
           </div>
+
+          {/* Kapacita lůžek */}
+          {(!hideAdults || !hideChildren) && (
+            <div>
+              <label className="label">Kapacita lůžek <span className="text-gray-400 font-normal">(nepovinné)</span></label>
+              <div className="flex gap-3">
+                {!hideAdults && (
+                  <div className="flex-1">
+                    <label className="label">Dospělí</label>
+                    <input
+                      className="input"
+                      type="number"
+                      min="1"
+                      placeholder="bez limitu"
+                      value={maxAdults}
+                      onChange={(e) => setMaxAdults(e.target.value === "" ? "" : Number(e.target.value))}
+                    />
+                  </div>
+                )}
+                {!hideChildren && (
+                  <div className="flex-1">
+                    <label className="label">Děti</label>
+                    <input
+                      className="input"
+                      type="number"
+                      min="0"
+                      placeholder="bez limitu"
+                      value={maxChildren}
+                      onChange={(e) => setMaxChildren(e.target.value === "" ? "" : Number(e.target.value))}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Typ ceny */}
           <div>
@@ -526,22 +564,40 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
                 <WysiwygEditor value={longDescriptions[activeLang] ?? ""} onChange={(v) => setLongDescriptions({ ...longDescriptions, [activeLang]: v })} showVars={false} />
               </div>
               {useDynamicPricing ? (
-                <div className="space-y-2">
-                  <label className="label">Ceny dle počtu nocí {sym && <span className="text-gray-400">({sym})</span>}</label>
-                  {fromNights.map((fn, idx) => (
-                    <div key={fn} className="flex items-center gap-3">
-                      <span className="text-sm text-gray-500 w-32 shrink-0">
-                        {idx < fromNights.length - 1 ? `Od ${fn} ${fn === 1 ? "noci" : fn < 5 ? "nocí" : "nocí"}` : `Od ${fn} nocí a více`}
-                      </span>
-                      <input
-                        className="input w-32"
-                        type="number" min="0" step="0.01"
-                        value={getTierPrice(fn, activeLang)}
-                        onChange={(e) => setTierPrice(fn, activeLang, e.target.value)}
-                      />
-                      <span className="text-sm text-gray-400">{sym} / noc</span>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="label">Ceny dle počtu nocí {sym && <span className="text-gray-400">({sym})</span>}</label>
+                    {fromNights.map((fn, idx) => (
+                      <div key={fn} className="flex items-center gap-3">
+                        <span className="text-sm text-gray-500 w-32 shrink-0">
+                          {idx < fromNights.length - 1 ? `Od ${fn} ${fn === 1 ? "noci" : fn < 5 ? "nocí" : "nocí"}` : `Od ${fn} nocí a více`}
+                        </span>
+                        <input
+                          className="input w-32"
+                          type="number" min="0" step="0.01"
+                          value={getTierPrice(fn, activeLang)}
+                          onChange={(e) => setTierPrice(fn, activeLang, e.target.value)}
+                        />
+                        <span className="text-sm text-gray-400">{sym} / noc</span>
+                      </div>
+                    ))}
+                  </div>
+                  {(!hideAdults || !hideChildren) && (
+                    <div className="grid grid-cols-2 gap-3">
+                      {!hideAdults && (
+                        <div>
+                          <label className="label">Dospělý / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
+                          <input className="input" type="number" min="0" step="0.01" value={p.adultPricePerNight} onChange={(e) => setPrice(activeLang, "adultPricePerNight", e.target.value)} />
+                        </div>
+                      )}
+                      {!hideChildren && (
+                        <div>
+                          <label className="label">Dítě / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
+                          <input className="input" type="number" min="0" step="0.01" value={p.childPricePerNight} onChange={(e) => setPrice(activeLang, "childPricePerNight", e.target.value)} />
+                        </div>
+                      )}
                     </div>
-                  ))}
+                  )}
                 </div>
               ) : (
                 <div className="grid grid-cols-3 gap-3">
@@ -1076,7 +1132,14 @@ export default function CampDetailPage() {
                   )}
                   <div>
                     <p className="font-semibold text-gray-900">{getTypeName(t)}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Kapacita: {t.capacity} míst</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      Kapacita: {t.capacity} míst
+                      {(t.maxAdults != null || t.maxChildren != null) && (
+                        <span className="ml-1">
+                          ({[t.maxAdults != null && !hideAdults ? t.maxAdults : null, t.maxChildren != null && !hideChildren ? t.maxChildren : null].filter(v => v != null).join("/")})
+                        </span>
+                      )}
+                    </p>
                     {t.useDynamicPricing && t.nightTiers?.length ? (
                       <p className="text-xs text-gray-400">
                         <span className="text-blue-600 font-medium">Dynamická cena</span> · od {Math.min(...t.nightTiers.flatMap((tier) => tier.prices.filter((p) => p.languageCode === "cs").map((p) => p.pricePerNight)))} {cs?.currencySymbol ?? "Kč"} / noc
