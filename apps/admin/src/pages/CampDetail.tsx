@@ -15,7 +15,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { useToast } from "../contexts/ToastContext";
 import { Flag } from "../utils/langFlag";
 
-type Tab = "settings" | "types" | "sms" | "smtp" | "surcharges" | "emails" | "embed";
+type Tab = "settings" | "types" | "sms" | "smtp" | "surcharges" | "emails" | "embed" | "booking";
 
 const TEMPLATE_VARS = [
   { key: "{{bookingCode}}", desc: "Kód rezervace" },
@@ -634,6 +634,167 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
   );
 }
 
+const BOOKING_CONDITIONS = `iCal synchronizace je na Booking.com dostupná pouze pokud nemovitost:
+• je otevřená a rezervovatelná
+• nemá napojený Connectivity provider (channel manager jako Prievio apod.)
+• má max. 20 typů pokojů, každý s max. 1 jednotkou
+
+Změny v Booking.com se synchronizují přibližně každou hodinu. Booking.com si náš export stahuje obvykle do 30 minut až několika hodin.`;
+
+// --- Booking záložka ---
+function BookingTab({ camp, campId, onRefresh, onHelp }: { camp: Camp; campId: string; onRefresh: () => void; onHelp: () => void }) {
+  const toast = useToast();
+  const [saving, setSaving] = useState<string | null>(null);
+  const [regeneratingHash, setRegeneratingHash] = useState(false);
+  const [conditionsOpen, setConditionsOpen] = useState(false);
+  const [icalUrls, setIcalUrls] = useState<Record<string, string>>(() => {
+    const map: Record<string, string> = {};
+    for (const t of camp.accommodationTypes ?? []) map[t.id] = (t as any).bookingIcalUrl ?? "";
+    return map;
+  });
+
+  const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
+  const campHash = (camp as any).bookingExportHash as string | null | undefined;
+
+  const handleSave = async (typeId: string) => {
+    setSaving(typeId);
+    try {
+      await api.put(`/camps/${campId}/accommodation-types/${typeId}/booking`, { bookingIcalUrl: icalUrls[typeId] || null });
+      toast.success("Uloženo.");
+      onRefresh();
+    } catch { toast.error("Nepodařilo se uložit."); } finally { setSaving(null); }
+  };
+
+  const handleToggleExport = async (typeId: string, enabled: boolean) => {
+    if (enabled && !campHash) { toast.error("Nejprve vygenerujte exportní hash objektu."); return; }
+    try {
+      await api.put(`/camps/${campId}/accommodation-types/${typeId}/booking`, { bookingExportEnabled: enabled });
+      toast.success(enabled ? "Export aktivován." : "Export deaktivován.");
+      onRefresh();
+    } catch { toast.error("Nepodařilo se změnit stav."); }
+  };
+
+  const handleRegenerateHash = async (isFirst: boolean) => {
+    if (!isFirst && !confirm("Přegenerovat hash? Všechny exportní URL přestanou fungovat.")) return;
+    setRegeneratingHash(true);
+    try {
+      await api.post(`/camps/${campId}/booking/regenerate-hash`);
+      toast.success(isFirst ? "Hash vygenerován." : "Hash přegenerován.");
+      onRefresh();
+    } catch { toast.error("Nepodařilo se přegenerovat hash."); } finally { setRegeneratingHash(false); }
+  };
+
+  const types = (camp.accommodationTypes ?? []) as (AccommodationType & { bookingIcalUrl?: string | null; bookingExportEnabled?: boolean })[];
+
+  return (
+    <div className="space-y-6 max-w-3xl">
+
+      {/* Podmínky + nápověda — jedna linie */}
+      <div>
+        <div className="flex items-center justify-between">
+          <button
+            type="button"
+            className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 font-medium"
+            onClick={() => setConditionsOpen((v) => !v)}
+          >
+            <i className={`fa-regular fa-chevron-${conditionsOpen ? "up" : "down"} text-[10px]`} />
+            Podmínky iCal synchronizace s Booking.com
+          </button>
+          <button type="button" onClick={onHelp} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600">
+            <i className="fa-regular fa-circle-question" />
+            Nápověda k integraci
+          </button>
+        </div>
+        {conditionsOpen && (
+          <div className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800 whitespace-pre-line">
+            {BOOKING_CONDITIONS}
+          </div>
+        )}
+      </div>
+
+      {/* Hash na úrovni objektu */}
+      <div className="card p-5">
+        <h4 className="font-semibold text-gray-900 mb-1">Exportní hash objektu</h4>
+        <p className="text-xs text-gray-400 mb-3">
+          Jeden sdílený hash pro všechny exportní URL tohoto objektu. Přegenerováním se zneplatní všechny stávající URL.
+        </p>
+        {campHash ? (
+          <div className="flex items-center gap-2">
+            <input
+              className="input flex-1 font-mono text-xs text-gray-400 bg-gray-50"
+              readOnly
+              value={campHash}
+              onClick={(e) => (e.target as HTMLInputElement).select()}
+            />
+            <button
+              type="button"
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 whitespace-nowrap text-gray-600"
+              disabled={regeneratingHash}
+              onClick={() => handleRegenerateHash(false)}
+            >
+              {regeneratingHash ? "Generuji…" : "Přegenerovat"}
+            </button>
+          </div>
+        ) : (
+          <button type="button" className="btn-secondary" disabled={regeneratingHash} onClick={() => handleRegenerateHash(true)}>
+            {regeneratingHash ? "Generuji…" : "Vygenerovat hash"}
+          </button>
+        )}
+      </div>
+
+      {/* Per typ */}
+      {types.map((type) => {
+        const name = (type.translations as any)?.cs?.name ?? (type.translations as any)?.[Object.keys(type.translations as any)[0]]?.name ?? "Typ ubytování";
+        const exportUrl = campHash ? `${apiBase}/api/public/ical/${type.id}/${campHash}` : null;
+        return (
+          <div key={type.id} className="card p-5 space-y-4">
+            <h4 className="font-semibold text-gray-900">{name}</h4>
+
+            {/* Import */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Import z Booking.com (iCal URL)</label>
+              <p className="text-xs text-gray-400 mb-2">Najdete v extranetu Booking.com: Kalendář → Synchronizovat → Exportovat kalendář</p>
+              <div className="flex gap-2">
+                <input
+                  className="input flex-1 font-mono text-sm"
+                  placeholder="https://ical.booking.com/v1/export?t=..."
+                  value={icalUrls[type.id] ?? ""}
+                  onChange={(e) => setIcalUrls((prev) => ({ ...prev, [type.id]: e.target.value }))}
+                />
+                <button type="button" className="btn-primary whitespace-nowrap" disabled={saving === type.id} onClick={() => handleSave(type.id)}>
+                  {saving === type.id ? "Ukládám…" : "Uložit"}
+                </button>
+              </div>
+            </div>
+
+            {/* Export */}
+            <div className="border-t pt-4">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Export do Booking.com</label>
+              <p className="text-xs text-gray-400 mb-3">Tuto URL zadejte v extranetu Booking.com: Kalendář → Synchronizovat → Importovat kalendář</p>
+              {exportUrl ? (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <input className="input flex-1 font-mono text-xs text-gray-500 bg-gray-50" readOnly value={exportUrl} onClick={(e) => (e.target as HTMLInputElement).select()} />
+                    <button type="button" className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50" onClick={() => navigator.clipboard.writeText(exportUrl).then(() => toast.success("Zkopírováno!"))}>
+                      <i className="fa-regular fa-copy" />
+                    </button>
+                  </div>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="checkbox" className="w-4 h-4 rounded" checked={!!type.bookingExportEnabled} onChange={(e) => handleToggleExport(type.id, e.target.checked)} />
+                    <span className="text-sm text-gray-700">Aktivní</span>
+                  </label>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-400 italic">Nejprve vygenerujte exportní hash objektu výše.</p>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // --- Hlavní stránka ---
 export default function CampDetailPage() {
   useTitle("Detail objektu");
@@ -657,6 +818,7 @@ export default function CampDetailPage() {
   const [tplSubject, setTplSubject] = useState("");
   const [tplKey, setTplKey] = useState(0);
   const [helpOpen, setHelpOpen] = useState(false);
+  const [helpIntegraceOpen, setHelpIntegraceOpen] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [infoLang, setInfoLang] = useState("");
   const [previewModal, setPreviewModal] = useState<{ title: string; subject?: string; html: string } | null>(null);
@@ -899,6 +1061,8 @@ export default function CampDetailPage() {
     ? `${import.meta.env.VITE_FORM_BASE_URL}/form/${orgSlug}/${camp.slug}`
     : `${import.meta.env.VITE_FORM_BASE_URL}/form/${camp.slug}`;
 
+  const bookingEnabled = !!(camp as any)?.organization?.bookingEnabled;
+
   const tabs: { key: Tab; label: string }[] = [
     { key: "settings", label: "Nastavení" },
     { key: "types", label: "Typy ubytování" },
@@ -907,6 +1071,7 @@ export default function CampDetailPage() {
     { key: "embed", label: "Vložení na web" },
     { key: "sms", label: "SMS" },
     { key: "smtp", label: "SMTP" },
+    ...(bookingEnabled ? [{ key: "booking" as Tab, label: "Booking" }] : []),
   ];
 
   const SMS_VAR_EXAMPLES: Record<string, string> = {
@@ -953,6 +1118,7 @@ export default function CampDetailPage() {
           <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
         </div>
         {helpOpen && <HelpModal topic="objekty" onClose={() => setHelpOpen(false)} />}
+        {helpIntegraceOpen && <HelpModal topic="integrace" onClose={() => setHelpIntegraceOpen(false)} />}
         <a href={embedUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary">
           <i className="fa-regular fa-arrow-up-right-from-square mr-1.5" />Otevřít formulář
         </a>
@@ -1707,6 +1873,9 @@ export default function CampDetailPage() {
             </div>
           )}
         </div>
+      )}
+      {tab === "booking" && bookingEnabled && (
+        <BookingTab camp={camp!} campId={id!} onRefresh={load} onHelp={() => setHelpIntegraceOpen(true)} />
       )}
       {previewModal && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-8" onClick={() => setPreviewModal(null)}>

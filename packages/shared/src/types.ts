@@ -91,6 +91,10 @@ export interface AccommodationType {
   campId: string;
   translations: Record<string, { name: string; shortDescription?: string; longDescription?: string }>;
   capacity: number;
+  maxAdults?: number | null;
+  maxChildren?: number | null;
+  bookingIcalUrl?: string | null;
+  bookingExportEnabled?: boolean;
   sortOrder: number;
   useDynamicPricing: boolean;
   prices: AccommodationTypePrice[];
@@ -122,6 +126,7 @@ export interface Camp {
   smsNotifyAdmin: boolean;
   smsAdminPhones: string[];
   smsTemplates: Record<string, string>;
+  bookingExportHash?: string | null;
   surcharges: Surcharge[];
   accommodationTypes: AccommodationType[];
   createdAt: string;

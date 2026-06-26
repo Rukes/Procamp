@@ -18,6 +18,8 @@ import { activityLogRoutes } from "./routes/activity-logs";
 import { blockedPeriodRoutes } from "./routes/blocked-periods";
 import { searchRoutes } from "./routes/search";
 import { publicFormRoutes } from "./routes/public/form";
+import { icalRoutes } from "./routes/public/ical";
+import { startBookingCron } from "./services/bookingIcalSync";
 import { PrismaClient } from "@prisma/client";
 
 async function migrateBookingCodes(prisma: PrismaClient) {
@@ -61,6 +63,7 @@ const start = async () => {
 
   // Public routes (no auth)
   await app.register(publicFormRoutes, { prefix: "/api/public" });
+  await app.register(icalRoutes, { prefix: "/api/public" });
 
   // Protected routes
   await app.register(authRoutes, { prefix: "/api/auth" });
@@ -80,6 +83,8 @@ const start = async () => {
 
   // Migrace: doplnění bookingCode pro existující rezervace
   await migrateBookingCodes(app.prisma);
+
+  startBookingCron(app.prisma);
 
   const port = parseInt(process.env.PORT || "3001");
   await app.listen({ port, host: "0.0.0.0" });

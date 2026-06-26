@@ -103,6 +103,20 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
     });
   });
 
+  // Update booking integration fields (iCal import URL, export enabled)
+  app.put("/:campId/accommodation-types/:id/booking", { preHandler: requirePermission("camps_edit") }, async (request) => {
+    const { id } = request.params as { campId: string; id: string };
+    const body = request.body as { bookingIcalUrl?: string | null; bookingExportEnabled?: boolean };
+    return app.prisma.accommodationType.update({
+      where: { id },
+      data: {
+        bookingIcalUrl: body.bookingIcalUrl !== undefined ? body.bookingIcalUrl : undefined,
+        bookingExportEnabled: body.bookingExportEnabled !== undefined ? body.bookingExportEnabled : undefined,
+      },
+      include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } },
+    });
+  });
+
   // Upsert night tier prices for a language
   app.put("/:campId/accommodation-types/:typeId/night-tiers/:tierId/prices/:langCode", { preHandler: requirePermission("camps_edit") }, async (request) => {
     const { tierId, langCode } = request.params as { campId: string; typeId: string; tierId: string; langCode: string };

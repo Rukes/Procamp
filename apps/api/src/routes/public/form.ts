@@ -94,7 +94,7 @@ export async function publicFormRoutes(app: FastifyInstance) {
   });
 
   // Submit reservation
-  app.post("/camp/:orgSlug/:campSlug/reserve", async (request, reply) => {
+  app.post("/camp/:orgSlug/:campSlug/reserve", { config: { rateLimit: { max: 10, timeWindow: "10 minutes" } } }, async (request, reply) => {
     const { orgSlug, campSlug } = request.params as { orgSlug: string; campSlug: string };
 
     const org = await app.prisma.organization.findUnique({ where: { slug: orgSlug } });

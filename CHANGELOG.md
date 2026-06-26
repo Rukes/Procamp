@@ -9,6 +9,8 @@
 - **Globální vyhledávání — formulář objektu** — ve výsledcích objektů přibyl odkaz „formulář" (otevře v novém okně); na aktivním řádku lze formulář otevřít šipkou →
 - **Oprava výběru termínu přes obsazené dny** — formulář nyní detekuje, zda vybraný rozsah zahrnuje obsazené dny, a zablokuje tlačítko Dále
 - **Oprava časového posunu dat** — odesílaná data termínu byla kvůli UTC posunu o den posunutá; opraveno použitím lokální časové zóny
+- **Booking.com integrace** — obousměrná synchronizace obsazenosti přes iCal; import z Booking.com se stahuje automaticky každou hodinu; export pro Booking.com je dostupný per typ ubytování jako veřejná URL; integrace se aktivuje v nastavení organizace a konfiguruje v záložce Booking v detailu objektu
+- **Rate limiting** — veřejný endpoint pro vytvoření rezervace je omezen na 10 pokusů za 10 minut per IP; iCal export na 60 requestů za hodinu per IP
 
 ## 25. 6. 2026
 

@@ -3,6 +3,7 @@ import { updateCampSchema, createSurchargeSchema } from "@procamp/shared";
 import { requirePermission, requireAuth, orgFilter, campFilter } from "../plugins/auth";
 import { logActivity, diffObjects } from "../services/activityLog";
 import { sendSms } from "../services/gosms";
+import { randomBytes } from "crypto";
 
 export async function campRoutes(app: FastifyInstance) {
   // Lightweight endpoint — jen id+name, pro filtry v rezervacích (nevyžaduje camps_view)
@@ -27,7 +28,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, bookingEnabled: true } } },
       orderBy: { createdAt: "asc" },
     });
   });
@@ -42,7 +43,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, bookingEnabled: true } } },
     });
   });
 
@@ -151,7 +152,7 @@ export async function campRoutes(app: FastifyInstance) {
     const camp = await app.prisma.camp.update({
       where: { id },
       data,
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, bookingEnabled: true } } },
     });
     if (before) {
       const afterSnap = { name: camp.name, slug: camp.slug, notificationEmail: camp.notificationEmail, smtpHost: camp.smtpHost, smtpPort: camp.smtpPort, smtpUser: camp.smtpUser, smtpFrom: camp.smtpFrom, smtpReplyTo: camp.smtpReplyTo, requiresConfirmation: camp.requiresConfirmation, useCustomSmtp: camp.useCustomSmtp, hideAdults: camp.hideAdults, hideChildren: camp.hideChildren, info: camp.info, smsNotifyCustomer: camp.smsNotifyCustomer, smsNotifyAdmin: camp.smsNotifyAdmin, smsAdminPhones: camp.smsAdminPhones, smsTemplates: camp.smsTemplates };
@@ -295,5 +296,16 @@ const s = await app.prisma.surcharge.update({ where: { id }, data: { isOptional,
     await app.prisma.surcharge.delete({ where: { id } });
     await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "DELETE", entity: "surcharge", entityId: id, payload: s });
     return { success: true };
+  });
+
+  // Regenerate booking export hash for a camp
+  app.post("/:campId/booking/regenerate-hash", { preHandler: requirePermission("camps_edit") }, async (request) => {
+    const { campId } = request.params as { campId: string };
+    const hash = randomBytes(24).toString("hex");
+    return app.prisma.camp.update({
+      where: { id: campId },
+      data: { bookingExportHash: hash },
+      select: { id: true, bookingExportHash: true },
+    });
   });
 }

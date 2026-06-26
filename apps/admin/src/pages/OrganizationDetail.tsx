@@ -30,6 +30,7 @@ interface Organization {
   goSmsClientId?: string;
   goSmsClientSecret?: string;
   goSmsChannelId?: number | null;
+  bookingEnabled?: boolean;
   _count: { camps: number; users: number };
 }
 
@@ -89,8 +90,12 @@ export default function OrganizationDetailPage() {
     }
   };
 
-  useEffect(() => {
+  const reload = () => {
     api.get(`/organizations/${id}`).then((r) => { setOrg(r.data); setForm(r.data); }).catch(() => navigate("/organizations"));
+  };
+
+  useEffect(() => {
+    reload();
     api.get("/languages").then((r) => setLanguages(r.data)).catch(() => {});
   }, [id]);
 
@@ -375,6 +380,31 @@ export default function OrganizationDetailPage() {
 
       {tab === "superadmin" && user?.isSuperAdmin && (
         <div className="space-y-4">
+          <div className="card p-5">
+            <h3 className="font-semibold text-gray-900 mb-3">Integrace</h3>
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded"
+                checked={!!(form as any).bookingEnabled}
+                onChange={(e) => setForm((f) => ({ ...f, bookingEnabled: e.target.checked }))}
+              />
+              <span className="text-sm font-medium text-gray-700">Povolit Booking.com integraci</span>
+            </label>
+            <p className="text-xs text-gray-400 mt-1 ml-7">
+              Zobrazí záložku Booking v detailu každého objektu pro nastavení iCal synchronizace.
+            </p>
+            <button
+              type="button"
+              className="btn-primary mt-4"
+              onClick={async () => {
+                await api.put(`/organizations/${id}`, { ...(form as any) });
+                reload();
+              }}
+            >
+              Uložit
+            </button>
+          </div>
           <div className="card p-5">
             <h3 className="font-semibold text-gray-900 mb-1">Export dat organizace</h3>
             <p className="text-sm text-gray-500 mb-4">

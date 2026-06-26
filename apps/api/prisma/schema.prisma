@@ -29,6 +29,7 @@ model Organization {
   goSmsClientId       String   @default("")
   goSmsClientSecret   String   @default("")
   goSmsChannelId      Int?
+  bookingEnabled      Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   users               User[]
@@ -98,6 +99,7 @@ model Camp {
   smsNotifyAdmin        Boolean             @default(false)
   smsAdminPhones        String[]            @default([])
   smsTemplates          Json                @default("{}")
+  bookingExportHash     String?             @unique
   createdAt             DateTime            @default(now())
   updatedAt             DateTime            @updatedAt
   accommodationTypes    AccommodationType[]
@@ -115,10 +117,12 @@ model AccommodationType {
   camp             Camp                    @relation(fields: [campId], references: [id], onDelete: Cascade)
   translations     Json                    @default("{}")
   capacity         Int                     @default(1)
-  maxAdults        Int?
-  maxChildren      Int?
-  sortOrder        Int                     @default(0)
-  useDynamicPricing Boolean               @default(false)
+  maxAdults             Int?
+  maxChildren           Int?
+  bookingIcalUrl        String?
+  bookingExportEnabled  Boolean             @default(false)
+  sortOrder             Int                 @default(0)
+  useDynamicPricing     Boolean             @default(false)
   createdAt        DateTime                @default(now())
   updatedAt        DateTime                @updatedAt
   prices           AccommodationTypePrice[]
@@ -236,6 +240,8 @@ model BlockedPeriod {
   dateTo              DateTime
   reason              String             @default("")
   internalNote        String?            @db.Text
+  source              String             @default("manual")
+  externalUid         String?
   createdAt           DateTime           @default(now())
   updatedAt           DateTime           @updatedAt
 }
