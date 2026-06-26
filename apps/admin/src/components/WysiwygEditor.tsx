@@ -16,8 +16,13 @@ export default function WysiwygEditor({ value, onChange, vars }: Props) {
   const [sourceMode, setSourceMode] = useState(false);
   const [popup, setPopup] = useState<Popup | null>(null);
 
+  const prevValue = useRef<string | null>(null);
   useEffect(() => {
-    if (ref.current && !isInit.current) { ref.current.innerHTML = value; isInit.current = true; }
+    if (ref.current && (!isInit.current || (prevValue.current !== null && prevValue.current !== value && ref.current.innerHTML !== value))) {
+      ref.current.innerHTML = value;
+      isInit.current = true;
+    }
+    prevValue.current = value;
   }, [value]);
   useEffect(() => {
     if (!sourceMode && ref.current) { ref.current.innerHTML = value; }

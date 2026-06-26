@@ -2,6 +2,10 @@
 
 ## 26. 6. 2026
 
+- **Oprava ukládání podrobného popisu typů ubytování** — přepnutí jazyka v editoru nyní správně načte obsah pro daný jazyk; po uložení se editor aktualizuje na nově uložená data
+
+
+
 - **Kapacita lůžek** — v nastavení typu ubytování lze nastavit maximální počet dospělých a dětí; ve formuláři se tlačítko `+` zablokuje při dosažení limitu; limit je zobrazen v podtitulku (`15 let a více (max 2)`) i v přehledu typů
 - **Dynamická cena — dospělý/dítě** — při zapnuté dynamické ceně se nyní zobrazují i pole pro cenu dospělého a dítěte (ta jsou vždy pevná)
 - **Zamítnout rezervaci ze seznamu** — červené outline tlačítko přímo v řádku rezervace; potvrzení přes dialog

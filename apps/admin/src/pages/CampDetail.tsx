@@ -561,7 +561,7 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
               </div>
               <div>
                 <label className="label">Podrobný popis <span className="text-gray-400 font-normal">(nepovinné — zobrazí se po kliknutí na <code>i</code>)</span></label>
-                <WysiwygEditor value={longDescriptions[activeLang] ?? ""} onChange={(v) => setLongDescriptions({ ...longDescriptions, [activeLang]: v })} showVars={false} />
+                <WysiwygEditor key={activeLang} value={longDescriptions[activeLang] ?? ""} onChange={(v) => setLongDescriptions({ ...longDescriptions, [activeLang]: v })} showVars={false} />
               </div>
               {useDynamicPricing ? (
                 <div className="space-y-4">
