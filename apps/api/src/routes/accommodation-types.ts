@@ -1,5 +1,7 @@
 import { FastifyInstance } from "fastify";
-import { requireAuth, requirePermission } from "../plugins/auth";
+import { requireAuth, requirePermission, requireSuperAdmin } from "../plugins/auth";
+import { syncType } from "../services/bookingIcalSync";
+import { logActivity } from "../services/activityLog";
 
 export async function accommodationTypeRoutes(app: FastifyInstance) {
   // List types for a camp
@@ -101,6 +103,35 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
       where: { id: typeId },
       include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } },
     });
+  });
+
+  // Manuální spuštění Booking.com sync pro jeden typ (SA only)
+  app.post("/:campId/accommodation-types/:id/booking/sync", { preHandler: requireSuperAdmin() }, async (request, reply) => {
+    const { id } = request.params as { campId: string; id: string };
+    const type = await app.prisma.accommodationType.findUnique({ where: { id }, select: { bookingIcalUrl: true } });
+    if (!type?.bookingIcalUrl) return reply.status(400).send({ error: "Typ nemá nastavenou iCal URL." });
+    try {
+      const result = await syncType(app.prisma, id, type.bookingIcalUrl);
+      await logActivity(app.prisma, {
+        userId: request.user.sub,
+        userEmail: request.user.email,
+        action: "SYNC",
+        entity: "Typ ubytování",
+        entityId: id,
+        payload: result,
+      });
+      return result;
+    } catch (err: any) {
+      await logActivity(app.prisma, {
+        userId: request.user.sub,
+        userEmail: request.user.email,
+        action: "SYNC_ERROR",
+        entity: "Typ ubytování",
+        entityId: id,
+        payload: { error: err?.message ?? "Sync selhal." },
+      });
+      return reply.status(500).send({ error: err?.message ?? "Sync selhal." });
+    }
   });
 
   // Update booking integration fields (iCal import URL, export enabled)

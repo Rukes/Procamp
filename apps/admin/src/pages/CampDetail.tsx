@@ -644,7 +644,9 @@ Změny v Booking.com se synchronizují přibližně každou hodinu. Booking.com 
 // --- Booking záložka ---
 function BookingTab({ camp, campId, onRefresh, onHelp }: { camp: Camp; campId: string; onRefresh: () => void; onHelp: () => void }) {
   const toast = useToast();
+  const { user } = useAuth();
   const [saving, setSaving] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState<string | null>(null);
   const [regeneratingHash, setRegeneratingHash] = useState(false);
   const [conditionsOpen, setConditionsOpen] = useState(false);
   const [icalUrls, setIcalUrls] = useState<Record<string, string>>(() => {
@@ -663,6 +665,20 @@ function BookingTab({ camp, campId, onRefresh, onHelp }: { camp: Camp; campId: s
       toast.success("Uloženo.");
       onRefresh();
     } catch { toast.error("Nepodařilo se uložit."); } finally { setSaving(null); }
+  };
+
+  const handleSync = async (typeId: string) => {
+    setSyncing(typeId);
+    try {
+      const res = await api.post(`/camps/${campId}/accommodation-types/${typeId}/booking/sync`);
+      const { added, updated, removed } = res.data;
+      toast.success(`Sync dokončen: +${added} přidáno, ~${updated} aktualizováno, -${removed} smazáno`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.error ?? "Sync selhal.");
+    } finally {
+      setSyncing(null);
+      onRefresh();
+    }
   };
 
   const handleToggleExport = async (typeId: string, enabled: boolean) => {
@@ -748,7 +764,21 @@ function BookingTab({ camp, campId, onRefresh, onHelp }: { camp: Camp; campId: s
         const exportUrl = campHash ? `${apiBase}/api/public/ical/${type.id}/${campHash}` : null;
         return (
           <div key={type.id} className="card p-5 space-y-4">
-            <h4 className="font-semibold text-gray-900">{name}</h4>
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-gray-900">{name}</h4>
+              {user?.isSuperAdmin && (type as any).bookingIcalUrl && (
+                <Tooltip text="Spustit synchronizaci nyní" position="left">
+                  <button
+                    type="button"
+                    className="text-gray-400 hover:text-blue-600 transition-colors disabled:opacity-40"
+                    disabled={syncing === type.id}
+                    onClick={() => handleSync(type.id)}
+                  >
+                    <i className={`fa-regular fa-arrows-rotate ${syncing === type.id ? "animate-spin" : ""}`} />
+                  </button>
+                </Tooltip>
+              )}
+            </div>
 
             {/* Import */}
             <div>

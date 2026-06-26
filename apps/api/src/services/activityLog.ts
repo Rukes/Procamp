@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-type Action = "LOGIN" | "CREATE" | "UPDATE" | "DELETE" | "EMAIL_SENT" | "EMAIL_FAILED" | "SMS_SEND" | "SMS_RESEND" | "SMS_TEST_SEND";
+type Action = "LOGIN" | "CREATE" | "UPDATE" | "DELETE" | "EMAIL_SENT" | "EMAIL_FAILED" | "SMS_SEND" | "SMS_RESEND" | "SMS_TEST_SEND" | "SYNC" | "SYNC_ERROR";
 
 export function diffObjects(before: Record<string, unknown>, after: Record<string, unknown>): Record<string, { before: unknown; after: unknown }> {
   const keys = new Set([...Object.keys(before), ...Object.keys(after)]);

@@ -17,6 +17,8 @@ Blokace termínů umožňuje uzavřít konkrétní dny pro rezervace — napří
 
 V seznamu blokací klikněte na **Upravit** pro změnu údajů, nebo na **Smazat** pro odstranění blokace. Po smazání se termín opět stane dostupným pro rezervace.
 
+Blokace označené **Booking.com** jsou vloženy automaticky ze synchronizace s Booking.com — nelze je ručně upravit ani smazat. Spravují se výhradně přes Booking.com extranet.
+
 ## Jak blokace funguje
 
 Blokace funguje jako "virtuální obsazení" — systém ji bere v úvahu stejně jako skutečné rezervace:

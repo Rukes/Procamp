@@ -23,6 +23,7 @@ interface BlockedPeriod {
   dateTo: string;
   reason: string;
   internalNote: string | null;
+  source: string;
 }
 
 const EMPTY = { campId: "", accommodationTypeId: "", dateFrom: "", dateTo: "", reason: "", internalNote: "" };
@@ -180,12 +181,18 @@ export default function BlockingsPage() {
                     <td className="px-4 py-3 text-gray-600">{p.internalNote || <span className="text-gray-400 italic">—</span>}</td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 justify-end">
-                        <button className="text-xs px-2 py-1 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors" onClick={() => openEdit(p)}>
-                          <i className="fa-regular fa-pen mr-1" />Upravit
-                        </button>
-                        <button className="text-xs px-2 py-1 rounded border border-red-200 text-red-500 hover:bg-red-50 transition-colors" onClick={() => handleDelete(p)}>
-                          <i className="fa-regular fa-trash mr-1" />Smazat
-                        </button>
+                        {p.source === "booking" ? (
+                          <span className="text-xs px-2 py-1 rounded border border-blue-200 text-blue-600 bg-blue-50">Booking.com</span>
+                        ) : (
+                          <>
+                            <button className="text-xs px-2 py-1 rounded border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors" onClick={() => openEdit(p)}>
+                              <i className="fa-regular fa-pen mr-1" />Upravit
+                            </button>
+                            <button className="text-xs px-2 py-1 rounded border border-red-200 text-red-500 hover:bg-red-50 transition-colors" onClick={() => handleDelete(p)}>
+                              <i className="fa-regular fa-trash mr-1" />Smazat
+                            </button>
+                          </>
+                        )}
                       </div>
                     </td>
                   </tr>
