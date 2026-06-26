@@ -245,6 +245,14 @@ export default function OrganizationsPage() {
                       </span>
                     </>
                   )}
+                  {(org as any).bookingEnabled && (
+                    <>
+                      <span className="text-xs text-gray-300">·</span>
+                      <span className="text-xs text-blue-700">
+                        <i className="fa-regular fa-calendar-days mr-1" />Booking.com
+                      </span>
+                    </>
+                  )}
                   {org.hideCopyright && (
                     <>
                       <span className="text-xs text-gray-300">·</span>
