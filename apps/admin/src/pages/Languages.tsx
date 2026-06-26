@@ -182,7 +182,7 @@ export default function LanguagesPage() {
         </div>
       )}
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-6">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold text-gray-900">Jazyky formuláře</h1>
@@ -192,8 +192,8 @@ export default function LanguagesPage() {
           <p className="text-sm text-gray-500 mt-1">Každý jazyk má vlastní měnu — zákazník vidí ceny v měně svého jazyka.</p>
         </div>
         {can("org_admin") && available.length > 0 && (
-          <button className="btn bg-green-600 hover:bg-green-700 text-white text-sm" onClick={() => { setAddForm(EMPTY_FORM); setAddOpen(true); }}>
-            <i className="fa-regular fa-plus mr-1.5" /><span className="hidden sm:inline">Přidat jazyk</span><span className="sm:hidden">Přidat</span>
+          <button className="btn bg-green-600 hover:bg-green-700 text-white text-sm shrink-0" onClick={() => { setAddForm(EMPTY_FORM); setAddOpen(true); }}>
+            <i className="fa-regular fa-plus mr-1.5" /><span className="hidden sm:inline">Přidat jazyk</span><span className="sm:hidden">Přidat jazyk</span>
           </button>
         )}
       </div>

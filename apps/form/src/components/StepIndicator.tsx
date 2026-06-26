@@ -30,7 +30,7 @@ export default function StepIndicator({ current, lang }: Props) {
               </span>
             </div>
             {i < STEPS.length - 1 && (
-              <div className={`flex-1 h-0.5 mx-1 mb-4 ${done ? "bg-blue-600" : "bg-gray-200"}`} />
+              <div className={`flex-1 h-0.5 mx-1 sm:mb-4 ${done ? "bg-blue-600" : "bg-gray-200"}`} />
             )}
           </div>
         );

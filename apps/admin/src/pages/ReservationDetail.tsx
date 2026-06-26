@@ -33,6 +33,10 @@ export default function ReservationDetailPage() {
   const [smsPhoneOpen, setSmsPhoneOpen] = useState(false);
   const [smsPhone, setSmsPhone] = useState("");
   const emailMenuRef = useRef<HTMLDivElement>(null);
+  const emailBtnRef = useRef<HTMLButtonElement>(null);
+  const [emailDropdownStyle, setEmailDropdownStyle] = useState<React.CSSProperties>({});
+  const smsBtnRef = useRef<HTMLButtonElement>(null);
+  const [smsDropdownStyle, setSmsDropdownStyle] = useState<React.CSSProperties>({});
   useEffect(() => {
     if (!emailMenuOpen) return;
     const handler = (e: MouseEvent) => {
@@ -253,8 +257,18 @@ export default function ReservationDetailPage() {
           )}
           <div className="relative" ref={emailMenuRef}>
             <button
+              ref={emailBtnRef}
               className="px-4 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 text-sm font-medium transition-colors flex items-center gap-1.5"
-              onClick={() => setEmailMenuOpen((v) => !v)}
+              onClick={() => {
+                const isMobile = window.innerWidth < 640;
+                if (isMobile && emailBtnRef.current) {
+                  const r = emailBtnRef.current.getBoundingClientRect();
+                  setEmailDropdownStyle({ position: "fixed", top: r.bottom + 4, left: 8, right: 8, width: "auto" });
+                } else {
+                  setEmailDropdownStyle({});
+                }
+                setEmailMenuOpen((v) => !v);
+              }}
               disabled={emailSending}
             >
               <i className={emailSending ? "fa-regular fa-spinner-third fa-spin" : "fa-regular fa-envelope"} />
@@ -262,7 +276,7 @@ export default function ReservationDetailPage() {
               <i className="fa-regular fa-chevron-down text-xs" />
             </button>
             {emailMenuOpen && (
-              <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-max">
+              <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 sm:min-w-max" style={emailDropdownStyle}>
                 <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2" onClick={() => { if (confirm("Znovu odeslat potvrzovací e-mail zákazníkovi?")) handleResendEmail("customer"); else setEmailMenuOpen(false); }}>
                   <i className="fa-regular fa-user text-gray-400" />Znovu odeslat potvrzovací e-mail zákazníkovi
                 </button>
@@ -291,15 +305,25 @@ export default function ReservationDetailPage() {
           {(reservation.camp as Camp & { smsNotifyCustomer?: boolean })?.smsNotifyCustomer && (
             <div className="relative" ref={smsDropdownRef}>
               <button
+                ref={smsBtnRef}
                 className="px-4 py-2 rounded-lg bg-green-50 hover:bg-green-100 text-green-700 border border-green-200 text-sm font-medium transition-colors flex items-center gap-1.5"
-                onClick={() => setSmsDropdownOpen((v) => !v)}
+                onClick={() => {
+                  const isMobile = window.innerWidth < 640;
+                  if (isMobile && smsBtnRef.current) {
+                    const r = smsBtnRef.current.getBoundingClientRect();
+                    setSmsDropdownStyle({ position: "fixed", top: r.bottom + 4, left: 8, right: 8, width: "auto" });
+                  } else {
+                    setSmsDropdownStyle({});
+                  }
+                  setSmsDropdownOpen((v) => !v);
+                }}
                 disabled={smsSending}
               >
                 <i className={smsSending ? "fa-regular fa-spinner-third fa-spin" : "fa-regular fa-message-sms"} />
                 SMS
                 <i className="fa-regular fa-chevron-down text-xs" />
               </button>
-              {smsDropdownOpen && <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 min-w-max">
+              {smsDropdownOpen && <div className="absolute left-0 top-full mt-1 z-20 bg-white border border-gray-200 rounded-lg shadow-lg py-1 sm:min-w-max" style={smsDropdownStyle}>
                 <button className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed" disabled={!/^\+[1-9]\d{6,14}$/.test(reservation.phone ?? "")} onClick={() => { if (confirm("Znovu odeslat SMS zákazníkovi?")) handleResendSms(); }}>
                   <i className="fa-regular fa-user text-gray-400" />Znovu odeslat SMS zákazníkovi
                 </button>

@@ -92,7 +92,7 @@ export default function DateStep({ occupied, value, onChange, onNext, onBack, la
 
       <div className="flex gap-3 mt-2">
         <button className="btn-secondary" onClick={onBack}>{tr.back}</button>
-        <button className="btn-primary" onClick={onNext} disabled={!range?.from || !range?.to || conflict}>
+        <button className="btn-primary whitespace-nowrap" onClick={onNext} disabled={!range?.from || !range?.to || conflict}>
           {tr.next}
         </button>
       </div>

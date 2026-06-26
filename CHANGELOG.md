@@ -2,6 +2,8 @@
 
 ## 26. 6. 2026
 
+- **Opravy mobilního zobrazení** — administrace je přehledná na mobilních zařízeních
+
 - **Oprava ukládání podrobného popisu typů ubytování** — přepnutí jazyka v editoru nyní správně načte obsah pro daný jazyk; po uložení se editor aktualizuje na nově uložená data
 
 

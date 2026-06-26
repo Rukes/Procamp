@@ -86,7 +86,7 @@ export default function TypeStep({ camp, selected, onSelect, lang }: Props) {
       )}
 
       <h2 className="text-lg font-semibold text-gray-900 mb-5">{t.typeTitle}</h2>
-      <div className={`grid gap-3 ${types.length === 1 ? "grid-cols-1" : "grid-cols-2"}`}>
+      <div className={`grid gap-3 ${types.length === 1 ? "grid-cols-1" : "grid-cols-1 sm:grid-cols-2"}`}>
         {types.map((type) => {
           const available = type.capacity > 0;
           const isSelected = selected?.id === type.id;

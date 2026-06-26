@@ -158,8 +158,8 @@ export default function ConfigStep({
       </div>
 
       <div className="flex gap-3">
-        <button className="btn-secondary" onClick={onBack}>{t.back}</button>
-        <button className="btn-primary" onClick={onNext} disabled={adults === 0}>{t.next}</button>
+        <button className="btn-secondary whitespace-nowrap" onClick={onBack}>{t.back}</button>
+        <button className="btn-primary whitespace-nowrap" onClick={onNext} disabled={adults === 0}>{t.next}</button>
       </div>
     </div>
   );

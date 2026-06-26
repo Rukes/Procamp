@@ -50,8 +50,8 @@ const optional = camp.surcharges.filter((s) => s.isOptional);
       <div className="step-card">
         <h2 className="text-lg font-semibold text-gray-900 mb-1">{t.configSurchargesTitle}</h2>
         <div className="flex gap-3 mt-4">
-          <button className="btn-secondary" onClick={onBack}>{t.back}</button>
-          <button className="btn-primary" onClick={onNext}>{t.next}</button>
+          <button className="btn-secondary whitespace-nowrap" onClick={onBack}>{t.back}</button>
+          <button className="btn-primary whitespace-nowrap" onClick={onNext}>{t.next}</button>
         </div>
       </div>
     );
@@ -104,8 +104,8 @@ const optional = camp.surcharges.filter((s) => s.isOptional);
       )}
 
       <div className="flex gap-3">
-        <button className="btn-secondary" onClick={onBack}>{t.back}</button>
-        <button className="btn-primary" onClick={onNext}>{t.next}</button>
+        <button className="btn-secondary whitespace-nowrap" onClick={onBack}>{t.back}</button>
+        <button className="btn-primary whitespace-nowrap" onClick={onNext}>{t.next}</button>
       </div>
     </div>
   );

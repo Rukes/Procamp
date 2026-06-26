@@ -119,8 +119,8 @@ export default function CampsPage() {
         {(perPage === 0 ? camps : camps.slice((page - 1) * perPage, page * perPage)).map((camp) => {
           const occupancy = getOccupancy(camp);
           return (
-            <div key={camp.id} className="card p-5 flex items-center gap-4">
-              <Tooltip text="Nastavení objektu" position="top"><Link to={`/camps/${camp.id}`} className="px-3 py-2 rounded-lg border border-yellow-400 hover:bg-yellow-50 text-yellow-600 text-sm font-medium transition-colors shrink-0"><i className="fa-regular fa-gear" /></Link></Tooltip>
+            <div key={camp.id} className="card p-5 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+              <Tooltip text="Nastavení objektu" position="top"><Link to={`/camps/${camp.id}`} className="px-3 py-2 rounded-lg border border-yellow-400 hover:bg-yellow-50 text-yellow-600 text-sm font-medium transition-colors shrink-0 hidden sm:block"><i className="fa-regular fa-gear" /></Link></Tooltip>
               <div className="flex-1 min-w-0">
                 <h2 className="font-semibold text-gray-900">{camp.name}</h2>
                 <div className="flex items-center gap-2 mt-0.5">
@@ -150,10 +150,18 @@ export default function CampsPage() {
                 </div>
               </div>
               <Tooltip text="Rezervace tohoto objektu" position="top">
-                <Link to={`/reservations?camp=${camp.id}`} className="px-3 py-2 rounded-lg border border-blue-400 hover:bg-blue-50 text-blue-600 text-sm font-medium transition-colors shrink-0">
+                <Link to={`/reservations?camp=${camp.id}`} className="px-3 py-2 rounded-lg border border-blue-400 hover:bg-blue-50 text-blue-600 text-sm font-medium transition-colors shrink-0 hidden sm:flex items-center gap-1.5">
                   <i className="fa-regular fa-calendar-check mr-1.5" />Rezervace
                 </Link>
               </Tooltip>
+              <div className="flex gap-2 sm:hidden">
+                <Link to={`/camps/${camp.id}`} className="px-2.5 py-1.5 rounded-lg border border-yellow-400 hover:bg-yellow-50 text-yellow-600 text-xs font-medium transition-colors flex items-center gap-1">
+                  <i className="fa-regular fa-gear" />Nastavení
+                </Link>
+                <Link to={`/reservations?camp=${camp.id}`} className="px-2.5 py-1.5 rounded-lg border border-blue-400 hover:bg-blue-50 text-blue-600 text-xs font-medium transition-colors flex items-center gap-1">
+                  <i className="fa-regular fa-calendar-check" />Rezervace
+                </Link>
+              </div>
             </div>
           );
         })}

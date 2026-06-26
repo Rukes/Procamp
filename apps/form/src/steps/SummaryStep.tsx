@@ -57,8 +57,8 @@ export default function SummaryStep({ camp, type, checkIn, checkOut, adults, chi
       <PriceBreakdownBlock breakdown={breakdown} lang={lang} />
 
       <div className="flex gap-3 mt-6">
-        <button className="btn-secondary" onClick={onBack}>{t.back}</button>
-        <button className="btn-primary" onClick={onNext}>{t.contactTitle} →</button>
+        <button className="btn-secondary whitespace-nowrap" onClick={onBack}>{t.back}</button>
+        <button className="btn-primary whitespace-nowrap" onClick={onNext}>{t.contactTitle} →</button>
       </div>
     </div>
   );

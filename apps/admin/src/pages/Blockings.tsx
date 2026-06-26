@@ -129,7 +129,7 @@ export default function BlockingsPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <div className="flex items-center gap-2">
           <h1 className="text-2xl font-bold text-gray-900">Blokace termínů</h1>
           <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>

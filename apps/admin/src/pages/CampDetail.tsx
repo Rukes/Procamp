@@ -877,6 +877,32 @@ export default function CampDetailPage() {
   const [dragOverId, setDragOverId] = useState<string | null>(null);
   const dragId = useRef<string | null>(null);
 
+  const moveType = (id: string, dir: -1 | 1) => {
+    setTypeOrder((prev) => {
+      const next = [...prev];
+      const idx = next.indexOf(id);
+      if (idx < 0) return prev;
+      const target = idx + dir;
+      if (target < 0 || target >= next.length) return prev;
+      [next[idx], next[target]] = [next[target], next[idx]];
+      api.put(`/camps/${camp?.id}/accommodation-types/reorder`, { order: next }).catch(() => toast.error("Nepodařilo se uložit pořadí."));
+      return next;
+    });
+  };
+
+  const moveSurcharge = (id: string, dir: -1 | 1) => {
+    setSurchargeOrder((prev) => {
+      const next = [...prev];
+      const idx = next.indexOf(id);
+      if (idx < 0) return prev;
+      const target = idx + dir;
+      if (target < 0 || target >= next.length) return prev;
+      [next[idx], next[target]] = [next[target], next[idx]];
+      api.put(`/camps/${camp?.id}/surcharges/reorder`, { order: next }).catch(() => toast.error("Nepodařilo se uložit pořadí."));
+      return next;
+    });
+  };
+
   // Surcharge editor
   const [editSurcharge, setEditSurcharge] = useState<Surcharge | null | "new">(null);
 
@@ -1144,15 +1170,15 @@ export default function CampDetailPage() {
 
   return (
     <div className="p-4 md:p-8">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-2">
-          <h1 className="text-2xl font-bold text-gray-900">{camp.name}</h1>
-          <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
+      <div className="flex items-center justify-between gap-3 mb-6">
+        <div className="flex items-center gap-2 min-w-0">
+          <h1 className="text-2xl font-bold text-gray-900 truncate">{camp.name}</h1>
+          <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors shrink-0" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
         </div>
         {helpOpen && <HelpModal topic="objekty" onClose={() => setHelpOpen(false)} />}
         {helpIntegraceOpen && <HelpModal topic="integrace" onClose={() => setHelpIntegraceOpen(false)} />}
-        <a href={embedUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary">
-          <i className="fa-regular fa-arrow-up-right-from-square mr-1.5" />Otevřít formulář
+        <a href={embedUrl} target="_blank" rel="noopener noreferrer" className="btn-secondary shrink-0">
+          <i className="fa-regular fa-arrow-up-right-from-square sm:mr-1.5" /><span className="hidden sm:inline">Otevřít formulář</span>
         </a>
       </div>
 
@@ -1249,9 +1275,9 @@ export default function CampDetailPage() {
           <h3 className="font-semibold mb-3"><i className="fa-regular fa-circle-info mr-2" />Informace o objektu</h3>
           <div className="space-y-2">
             {languages.map((l) => (
-              <div key={l.code} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+              <div key={l.code} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 border-b border-gray-50 last:border-0">
                 <span className="text-sm font-medium flex items-center gap-1.5"><Flag code={l.code} /> {l.name}</span>
-                <div className="flex gap-2 items-center">
+                <div className="flex gap-2 items-center flex-wrap">
                   {infoValues[l.code] ? <span className="text-xs text-green-600"><i className="fa-regular fa-check mr-1" />nastaveno</span> : <span className="text-xs text-gray-400">prázdné</span>}
                   {infoValues[l.code] && (
                     <button className="btn-secondary text-xs py-1" onClick={() => setPreviewModal({ title: `${l.name} — Informace o objektu`, html: infoValues[l.code] })}>
@@ -1337,7 +1363,7 @@ export default function CampDetailPage() {
             return (
               <div
                 key={t.id}
-                className={`card p-5 flex items-center justify-between transition-all ${dragOverId === t.id && dragId.current !== t.id ? "ring-2 ring-blue-400 ring-offset-1" : ""}`}
+                className={`card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${dragOverId === t.id && dragId.current !== t.id ? "ring-2 ring-blue-400 ring-offset-1" : ""}`}
                 draggable={can("camps_edit")}
                 onDragStart={() => { dragId.current = t.id; }}
                 onDragOver={(e) => { e.preventDefault(); setDragOverId(t.id); }}
@@ -1358,9 +1384,13 @@ export default function CampDetailPage() {
                 }}
               >
                 <div className="flex items-center gap-3">
-                  {can("camps_edit") && (
-                    <i className="fa-regular fa-grip-dots-vertical text-gray-300 cursor-grab text-lg" />
-                  )}
+                  {can("camps_edit") && (<>
+                    <i className="fa-regular fa-grip-dots-vertical text-gray-300 cursor-grab text-lg hidden sm:block" />
+                    <div className="flex flex-col sm:hidden">
+                      <button type="button" className="text-gray-400 hover:text-gray-600 leading-none py-0.5" onClick={() => moveType(t.id, -1)}><i className="fa-regular fa-chevron-up text-xs" /></button>
+                      <button type="button" className="text-gray-400 hover:text-gray-600 leading-none py-0.5" onClick={() => moveType(t.id, 1)}><i className="fa-regular fa-chevron-down text-xs" /></button>
+                    </div>
+                  </>)}
                   <div>
                     <p className="font-semibold text-gray-900">{getTypeName(t)}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
@@ -1708,7 +1738,7 @@ export default function CampDetailPage() {
             return (
               <div
                 key={s.id}
-                className={`card p-5 flex items-center justify-between transition-all ${dragOverId === s.id && dragId.current !== s.id ? "ring-2 ring-blue-400 ring-offset-1" : ""} ${(s as Surcharge & { isHidden?: boolean }).isHidden ? "opacity-50 bg-gray-50" : ""}`}
+                className={`card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 transition-all ${dragOverId === s.id && dragId.current !== s.id ? "ring-2 ring-blue-400 ring-offset-1" : ""} ${(s as Surcharge & { isHidden?: boolean }).isHidden ? "opacity-50 bg-gray-50" : ""}`}
                 draggable={can("camps_edit")}
                 onDragStart={() => { dragId.current = s.id; }}
                 onDragOver={(e) => { e.preventDefault(); setDragOverId(s.id); }}
@@ -1729,9 +1759,13 @@ export default function CampDetailPage() {
                 }}
               >
                 <div className="flex items-center gap-3">
-                  {can("camps_edit") && (
-                    <i className="fa-regular fa-grip-dots-vertical text-gray-300 cursor-grab text-lg" />
-                  )}
+                  {can("camps_edit") && (<>
+                    <i className="fa-regular fa-grip-dots-vertical text-gray-300 cursor-grab text-lg hidden sm:block" />
+                    <div className="flex flex-col sm:hidden">
+                      <button type="button" className="text-gray-400 hover:text-gray-600 leading-none py-0.5" onClick={() => moveSurcharge(s.id, -1)}><i className="fa-regular fa-chevron-up text-xs" /></button>
+                      <button type="button" className="text-gray-400 hover:text-gray-600 leading-none py-0.5" onClick={() => moveSurcharge(s.id, 1)}><i className="fa-regular fa-chevron-down text-xs" /></button>
+                    </div>
+                  </>)}
                   <div>
                     <p className="font-semibold text-gray-900">{t.cs?.name ?? t[Object.keys(t)[0]]?.name ?? "—"}</p>
                     <p className="text-xs text-gray-400 mt-0.5">
@@ -1773,12 +1807,12 @@ export default function CampDetailPage() {
         <div className={`space-y-4 ${editTpl ? "" : "max-w-2xl"}`}>
           {editTpl ? (
             <form onSubmit={handleSaveTpl} className="space-y-4">
-              <div className="flex items-center justify-between gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <button type="button" className="text-gray-400 hover:text-gray-600" onClick={() => setEditTpl(null)}><i className="fa-regular fa-arrow-left mr-1" />Zpět</button>
-                  <h3 className="font-semibold flex items-center gap-1.5">{editTpl.type === "ADMIN_NOTIFICATION" ? "Notifikace správci" : <><span>Potvrzení zákazníkovi —</span> <Flag code={editTpl.languageCode} /> <span>{editTpl.languageCode.toUpperCase()}</span></>}</h3>
+                  <button type="button" className="text-gray-400 hover:text-gray-600 shrink-0" onClick={() => setEditTpl(null)}><i className="fa-regular fa-arrow-left mr-1" />Zpět</button>
+                  <h3 className="font-semibold flex items-center gap-1.5 flex-wrap">{editTpl.type === "ADMIN_NOTIFICATION" ? "Notifikace správci" : <><span>Potvrzení zákazníkovi —</span> <Flag code={editTpl.languageCode} /> <span>{editTpl.languageCode.toUpperCase()}</span></>}</h3>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap">
                   <button className="btn-primary" type="submit"><i className="fa-regular fa-floppy-disk mr-1.5" />Uložit šablonu</button>
                   <button className="btn-secondary" type="button" onClick={() => setEditTpl(null)}><i className="fa-regular fa-xmark mr-1.5" />Zrušit</button>
                 </div>
@@ -1805,9 +1839,9 @@ export default function CampDetailPage() {
               <div className="card p-5">
                 <h3 className="font-semibold mb-1"><i className="fa-regular fa-envelope-open-text mr-2" />Notifikace správci</h3>
                 <p className="text-xs text-gray-400 mb-3">Odesílá se vždy při každé nové rezervaci na notifikační e-mail objektu, bez ohledu na ruční potvrzení.</p>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-sm font-medium">Česky (výchozí)</span>
-                  <div className="flex gap-2 items-center">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2">
+                  <span className="text-sm font-medium flex items-center gap-1.5"><Flag code="cs" /> Česky (výchozí)</span>
+                  <div className="flex gap-2 items-center flex-wrap">
                     {(() => {
                       const tpl = templates.find((t) => t.type === "ADMIN_NOTIFICATION" && t.languageCode === "cs");
                       return (<>
@@ -1835,9 +1869,9 @@ export default function CampDetailPage() {
                     {languages.map((lang) => {
                       const tpl = templates.find((t) => t.type === "PENDING_CONFIRMATION" && t.languageCode === lang.code);
                       return (
-                        <div key={lang.code} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                        <div key={lang.code} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 border-b border-gray-50 last:border-0">
                           <span className="text-sm font-medium flex items-center gap-1.5"><Flag code={lang.code} /> {lang.name}</span>
-                          <div className="flex gap-2 items-center">
+                          <div className="flex gap-2 items-center flex-wrap">
                             {tpl ? <span className="text-xs text-green-600"><i className="fa-regular fa-check mr-1" />nastavena</span> : <span className="text-xs text-gray-400">chybí</span>}
                             {tpl && (
                               <button className="btn-secondary text-xs py-1" onClick={() => setPreviewModal({ title: `${lang.name} — Nepotvrzená rezervace`, subject: tpl.subject, html: tpl.body })}>
@@ -1863,9 +1897,9 @@ export default function CampDetailPage() {
                   {languages.map((lang) => {
                     const tpl = templates.find((t) => t.type === "CUSTOMER_CONFIRMATION" && t.languageCode === lang.code);
                     return (
-                      <div key={lang.code} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
+                      <div key={lang.code} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 py-2 border-b border-gray-50 last:border-0">
                         <span className="text-sm font-medium flex items-center gap-1.5"><Flag code={lang.code} /> {lang.name}</span>
-                        <div className="flex gap-2 items-center">
+                        <div className="flex gap-2 items-center flex-wrap">
                           {tpl ? <span className="text-xs text-green-600"><i className="fa-regular fa-check mr-1" />nastavena</span> : <span className="text-xs text-gray-400">chybí</span>}
                           {tpl && (
                             <button className="btn-secondary text-xs py-1" onClick={() => setPreviewModal({ title: `${lang.name} — Potvrzení zákazníkovi`, subject: tpl.subject, html: tpl.body })}>
