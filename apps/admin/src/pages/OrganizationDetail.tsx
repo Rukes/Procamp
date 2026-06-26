@@ -398,8 +398,11 @@ export default function OrganizationDetailPage() {
               type="button"
               className="btn-primary mt-4"
               onClick={async () => {
-                await api.put(`/organizations/${id}`, { ...(form as any) });
-                reload();
+                try {
+                  await api.put(`/organizations/${id}`, { ...(form as any) });
+                  reload();
+                  toast.success("Uloženo.");
+                } catch { toast.error("Nepodařilo se uložit."); }
               }}
             >
               Uložit
