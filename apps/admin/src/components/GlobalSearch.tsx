@@ -18,6 +18,16 @@ interface Results {
 const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
 const STATUS_CLASS: Record<string, string> = { PENDING: "text-amber-600", CONFIRMED: "text-green-600", CANCELLED: "text-red-500" };
 
+const CAMP_TABS = [
+  { key: "settings",  label: "Nastavení" },
+  { key: "types",     label: "Typy ubytování" },
+  { key: "surcharges",label: "Příplatky" },
+  { key: "emails",    label: "E-mailové šablony" },
+  { key: "embed",     label: "Vložení na web" },
+  { key: "sms",       label: "SMS" },
+  { key: "smtp",      label: "SMTP" },
+] as const;
+
 interface FlatItem { type: "reservation" | "camp" | "user" | "blocking"; id: string; href: string; title: string; subtitle?: string; meta?: string; metaClass?: string; formUrl?: string; }
 
 function toFlat(results: Results): FlatItem[] {
@@ -75,12 +85,14 @@ export default function GlobalSearch({ open, onClose }: Props) {
   const [results, setResults] = useState<FlatItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [tabExpanded, setTabExpanded] = useState<string | null>(null);
+  const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [scrollState, setScrollState] = useState({ top: true, bottom: false });
   const [visible, setVisible] = useState(false);
   const [closing, setClosing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  const activeRef = useRef<HTMLButtonElement>(null);
+  const activeRef = useRef<HTMLDivElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const navigate = useNavigate();
 
@@ -101,7 +113,7 @@ export default function GlobalSearch({ open, onClose }: Props) {
     if (open) {
       setClosing(false);
       setVisible(true);
-      setQuery(""); setResults([]); setActiveIndex(0);
+      setQuery(""); setResults([]); setActiveIndex(0); setTabExpanded(null);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
@@ -134,19 +146,32 @@ export default function GlobalSearch({ open, onClose }: Props) {
   }, [results]);
 
   useEffect(() => {
-    setActiveIndex(0);
+    setActiveIndex(0); setTabExpanded(null);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => search(query), 200);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query, search]);
 
-  const go = (href: string) => { navigate(href); handleClose(); };
+  const go = (href: string, state?: Record<string, unknown>) => { navigate(href, { state }); handleClose(); };
 
   const handleKey = (e: React.KeyboardEvent) => {
+    const activeItem = results[activeIndex];
+
+    if (tabExpanded) {
+      if (e.key === "ArrowRight") { e.preventDefault(); setActiveTabIndex((i) => (i + 1) % CAMP_TABS.length); }
+      if (e.key === "ArrowLeft")  { e.preventDefault(); setActiveTabIndex((i) => (i - 1 + CAMP_TABS.length) % CAMP_TABS.length); }
+      if (e.key === "ArrowDown")  { e.preventDefault(); setTabExpanded(null); setActiveIndex((i) => Math.min(i + 1, results.length - 1)); }
+      if (e.key === "ArrowUp")    { e.preventDefault(); setTabExpanded(null); setActiveIndex((i) => Math.max(i - 1, 0)); }
+      if (e.key === "Enter") { e.preventDefault(); go(tabExpanded, { tab: CAMP_TABS[activeTabIndex].key }); }
+      if (e.key === "Tab" || e.key === "Escape") { e.preventDefault(); setTabExpanded(null); }
+      return;
+    }
+
     if (e.key === "ArrowDown") { e.preventDefault(); setActiveIndex((i) => Math.min(i + 1, results.length - 1)); }
     if (e.key === "ArrowUp")   { e.preventDefault(); setActiveIndex((i) => Math.max(i - 1, 0)); }
-    if (e.key === "Enter" && results[activeIndex]) go(results[activeIndex].href);
-    if (e.key === "ArrowRight" && results[activeIndex]?.formUrl) { e.preventDefault(); window.open(results[activeIndex].formUrl, "_blank"); }
+    if (e.key === "Tab" && activeItem?.type === "camp") { e.preventDefault(); setTabExpanded(activeItem.href); setActiveTabIndex(0); }
+    if (e.key === "Enter" && activeItem) go(activeItem.href);
+    if (e.key === "ArrowRight" && activeItem?.formUrl) { e.preventDefault(); window.open(activeItem.formUrl, "_blank"); }
     if (e.key === "Escape") handleClose();
   };
 
@@ -209,30 +234,40 @@ export default function GlobalSearch({ open, onClose }: Props) {
                     const idx = globalIdx++;
                     const isActive = idx === activeIndex;
                     return (
-                      <div
-                        key={item.id}
-                        ref={isActive ? activeRef : null}
-                        onMouseEnter={() => setActiveIndex(idx)}
-                        className={`flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer ${isActive ? "bg-blue-50" : "hover:bg-gray-50"}`}
-                      >
-                        <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 text-xs font-bold ${cfg.bg} ${cfg.text}`}>{cfg.letter}</div>
-                        <div className="flex-1 min-w-0" onClick={() => go(item.href)}>
-                          <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-                          {item.subtitle && <p className="text-xs text-gray-400 truncate">{item.subtitle}</p>}
+                      <div key={item.id}>
+                        <div
+                          ref={isActive ? activeRef : null}
+                          onMouseEnter={() => { setActiveIndex(idx); if (tabExpanded && tabExpanded !== item.href) setTabExpanded(null); }}
+                          className={`flex items-center gap-3 px-4 py-2.5 transition-colors cursor-pointer ${isActive ? "bg-blue-50" : "hover:bg-gray-50"}`}
+                        >
+                          <div className={`w-6 h-6 rounded flex items-center justify-center shrink-0 text-xs font-bold ${cfg.bg} ${cfg.text}`}>{cfg.letter}</div>
+                          <div className="flex-1 min-w-0" onClick={() => go(item.href)}>
+                            <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
+                            {item.subtitle && <p className="text-xs text-gray-400 truncate">{item.subtitle}</p>}
+                          </div>
+                          {item.meta && <span className={`shrink-0 text-xs ${item.metaClass ?? "text-gray-400"}`} onClick={() => go(item.href)}>{item.meta}</span>}
+                          {item.formUrl && (
+                            <a href={item.formUrl} target="_blank" rel="noopener noreferrer" className="shrink-0 text-xs px-2 py-0.5 rounded border border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors">formulář</a>
+                          )}
+                          {item.type === "camp" && isActive && !tabExpanded && (
+                            <span className="shrink-0 px-1 py-0.5 rounded bg-gray-100 text-gray-400 font-mono text-[10px]">Tab</span>
+                          )}
+                          {item.formUrl && isActive && (
+                            <span className="shrink-0 px-1 py-0.5 rounded bg-blue-100 text-blue-400 font-mono text-[10px]">→</span>
+                          )}
+                          <span className={`text-xs shrink-0 font-mono ${isActive ? "text-blue-400" : "invisible"}`} onClick={() => go(item.href)}>↵</span>
                         </div>
-                        {item.meta && <span className={`shrink-0 text-xs ${item.metaClass ?? "text-gray-400"}`} onClick={() => go(item.href)}>{item.meta}</span>}
-                        {item.formUrl && (
-                          <a
-                            href={item.formUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="shrink-0 text-xs px-2 py-0.5 rounded border border-blue-300 text-blue-600 hover:bg-blue-50 transition-colors"
-                          >formulář</a>
+                        {tabExpanded === item.href && (
+                          <div className="flex items-end gap-4 px-4 pb-0 pt-0.5 border-b border-gray-100">
+                            {CAMP_TABS.map((tab, ti) => (
+                              <button
+                                key={tab.key}
+                                onClick={() => go(item.href, { tab: tab.key })}
+                                className={`text-xs pb-2 pt-1 border-b-2 transition-colors whitespace-nowrap ${activeTabIndex === ti ? "border-blue-500 text-blue-600 font-medium" : "border-transparent text-gray-400 hover:text-gray-600"}`}
+                              >{tab.label}</button>
+                            ))}
+                          </div>
                         )}
-                        {item.formUrl && isActive && (
-                          <span className="shrink-0 px-1 py-0.5 rounded bg-blue-100 text-blue-400 font-mono text-[10px]">→</span>
-                        )}
-                        <span className={`text-xs shrink-0 font-mono ${isActive ? "text-blue-400" : "invisible"}`} onClick={() => go(item.href)}>↵</span>
                       </div>
                     );
                   })}
@@ -257,6 +292,7 @@ export default function GlobalSearch({ open, onClose }: Props) {
         <div className="px-4 py-2 border-t border-gray-100 flex items-center gap-4 text-xs text-gray-400">
           <span><kbd className="border border-gray-200 rounded px-1">↑↓</kbd> navigace</span>
           <span><kbd className="border border-gray-200 rounded px-1">↵</kbd> otevřít</span>
+          <span><kbd className="border border-gray-200 rounded px-1">Tab</kbd> záložky objektu</span>
           <span><kbd className="border border-gray-200 rounded px-1">ESC</kbd> zavřít</span>
         </div>
       </div>

@@ -6,6 +6,7 @@
 - **Dynamická cena — dospělý/dítě** — při zapnuté dynamické ceně se nyní zobrazují i pole pro cenu dospělého a dítěte (ta jsou vždy pevná)
 - **Zamítnout rezervaci ze seznamu** — červené outline tlačítko přímo v řádku rezervace; potvrzení přes dialog
 - **Rychlý přechod na rezervace objektu** — tlačítko Rezervace v seznamu objektů otevře seznam rezervací předfiltrovaný na daný objekt
+- **Globální vyhledávání — záložky objektu** — ve výsledcích vyhledávání lze na řádku objektu stisknout Tab a vybrat záložku (Nastavení, Typy ubytování, Příplatky…); Enter otevře objekt přímo na vybrané záložce
 - **Globální vyhledávání — formulář objektu** — ve výsledcích objektů přibyl odkaz „formulář" (otevře v novém okně); na aktivním řádku lze formulář otevřít šipkou →
 - **Oprava výběru termínu přes obsazené dny** — formulář nyní detekuje, zda vybraný rozsah zahrnuje obsazené dny, a zablokuje tlačítko Dále
 - **Oprava časového posunu dat** — odesílaná data termínu byla kvůli UTC posunu o den posunutá; opraveno použitím lokální časové zóny

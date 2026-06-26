@@ -7,7 +7,7 @@ import xml from "highlight.js/lib/languages/xml";
 import "highlight.js/styles/github-dark-dimmed.css";
 hljs.registerLanguage("html", xml);
 import WysiwygEditorShared from "../components/WysiwygEditor";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { api } from "../api/client";
 import { Camp, Surcharge, EmailTemplate, Language, AccommodationType, AccommodationTypePrice } from "@procamp/shared";
 // SurchargePrice used via Surcharge.prices
@@ -834,7 +834,8 @@ export default function CampDetailPage() {
   const toast = useToast();
   const [camp, setCamp] = useState<Camp | null>(null);
   const [orgSlug, setOrgSlug] = useState<string | null>(null);
-  const [tab, setTab] = useState<Tab>("settings");
+  const location = useLocation();
+  const [tab, setTab] = useState<Tab>((location.state as { tab?: Tab } | null)?.tab ?? "settings");
   const [saving, setSaving] = useState(false);
   const [testingSmtp, setTestingSmtp] = useState(false);
   const [smtpTested, setSmtpTested] = useState(false);

@@ -40,6 +40,8 @@ Výsledky jsou barevně označeny písmeny **R** (rezervace), **O** (objekty), *
 
 U výsledků objektů se zobrazí odkaz **formulář** — kliknutím otevřete rezervační formulář v novém okně. Pokud je výsledek aktivní (šipkami), stiskněte **→** pro přímé otevření formuláře.
 
+U výsledků objektů stiskněte **Tab** pro zobrazení záložek — šipkami **←→** vyberte záložku (Nastavení, Typy ubytování, Příplatky…) a **Enter** vás přenese přímo na ni.
+
 ## Přehled sekcí
 
 | Sekce | K čemu slouží |
