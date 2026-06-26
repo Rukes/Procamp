@@ -30,6 +30,7 @@ model Organization {
   goSmsClientSecret   String   @default("")
   goSmsChannelId      Int?
   bookingEnabled      Boolean  @default(false)
+  hideCopyright       Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
   users               User[]

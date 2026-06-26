@@ -108,6 +108,7 @@ export async function organizationRoutes(app: FastifyInstance) {
       goSmsClientSecret: body.goSmsClientSecret !== undefined ? (body.goSmsClientSecret as string) : undefined,
       goSmsChannelId: body.goSmsChannelId !== undefined ? (body.goSmsChannelId as number | null) : undefined,
       bookingEnabled: body.bookingEnabled !== undefined ? (body.bookingEnabled as boolean) : undefined,
+      hideCopyright: body.hideCopyright !== undefined ? (body.hideCopyright as boolean) : undefined,
     };
     const before = await app.prisma.organization.findUnique({ where: { id } });
     const org = await app.prisma.organization.update({ where: { id }, data });

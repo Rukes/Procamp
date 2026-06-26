@@ -381,7 +381,7 @@ export default function OrganizationDetailPage() {
       {tab === "superadmin" && user?.isSuperAdmin && (
         <div className="space-y-4">
           <div className="card p-5">
-            <h3 className="font-semibold text-gray-900 mb-3">Integrace</h3>
+            <h3 className="font-semibold text-gray-900 mb-3">Nastavení organizace</h3>
             <label className="flex items-center gap-3 cursor-pointer">
               <input
                 type="checkbox"
@@ -393,6 +393,18 @@ export default function OrganizationDetailPage() {
             </label>
             <p className="text-xs text-gray-400 mt-1 ml-7">
               Zobrazí záložku Booking v detailu každého objektu pro nastavení iCal synchronizace.
+            </p>
+            <label className="flex items-center gap-3 cursor-pointer mt-4">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded"
+                checked={!!(form as any).hideCopyright}
+                onChange={(e) => setForm((f) => ({ ...f, hideCopyright: e.target.checked }))}
+              />
+              <span className="text-sm font-medium text-gray-700">Skrýt copyright ve formuláři</span>
+            </label>
+            <p className="text-xs text-gray-400 mt-1 ml-7">
+              Skryje patičku s logem a odkazem na MůjKemp.cz v rezervačním formuláři.
             </p>
             <button
               type="button"

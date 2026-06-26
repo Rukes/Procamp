@@ -55,6 +55,7 @@ function FormApp() {
   const gaInitialized = useRef(false);
 
   const gaTrackingId = data?.gaTrackingId ?? null;
+  const hideCopyright = data?.hideCopyright ?? false;
   useEffect(() => {
     if (!gaInitialized.current && data) {
       initAnalytics(gaTrackingId);
@@ -233,7 +234,7 @@ function FormApp() {
           />
         )}
       </div>
-      <footer className="mt-auto pt-6 pb-2 flex flex-col items-center gap-2">
+      {!hideCopyright && <footer className="mt-auto pt-6 pb-2 flex flex-col items-center gap-2">
         <img
           src={`${import.meta.env.VITE_API_URL ?? ""}/logos/logo-color-notext.png`}
           alt="MůjKemp.cz"
@@ -245,7 +246,7 @@ function FormApp() {
             MůjKemp.cz
           </a>
         </p>
-      </footer>
+      </footer>}
     </div>
   );
 }
