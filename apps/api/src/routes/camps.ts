@@ -301,11 +301,14 @@ const s = await app.prisma.surcharge.update({ where: { id }, data: { isOptional,
   // Regenerate booking export hash for a camp
   app.post("/:campId/booking/regenerate-hash", { preHandler: requirePermission("camps_edit") }, async (request) => {
     const { campId } = request.params as { campId: string };
+    const old = await app.prisma.camp.findUnique({ where: { id: campId }, select: { bookingExportHash: true } });
     const hash = randomBytes(24).toString("hex");
-    return app.prisma.camp.update({
+    const camp = await app.prisma.camp.update({
       where: { id: campId },
       data: { bookingExportHash: hash },
       select: { id: true, bookingExportHash: true },
     });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "Objekt", entityId: campId, payload: { bookingExportHash: { before: old?.bookingExportHash, after: hash } } });
+    return camp;
   });
 }

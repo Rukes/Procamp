@@ -22,6 +22,7 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
       data: { campId, translations: body.translations, capacity: body.capacity, maxAdults: body.maxAdults ?? null, maxChildren: body.maxChildren ?? null, sortOrder: body.sortOrder ?? 0 },
       include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } },
     });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "CREATE", entity: "Typ ubytování", entityId: type.id, payload: { campId, capacity: body.capacity } });
     return reply.status(201).send(type);
   });
 
@@ -29,11 +30,13 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
   app.put("/:campId/accommodation-types/:id", { preHandler: requirePermission("camps_edit") }, async (request) => {
     const { id } = request.params as { campId: string; id: string };
     const body = request.body as { translations?: Record<string, { name: string; shortDescription?: string; longDescription?: string }>; capacity?: number; maxAdults?: number | null; maxChildren?: number | null; sortOrder?: number };
-    return app.prisma.accommodationType.update({
+    const type = await app.prisma.accommodationType.update({
       where: { id },
       data: body,
       include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } },
     });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "Typ ubytování", entityId: id, payload: { capacity: body.capacity } });
+    return type;
   });
 
   // Delete type
@@ -41,7 +44,9 @@ export async function accommodationTypeRoutes(app: FastifyInstance) {
     const { id } = request.params as { campId: string; id: string };
     const inUse = await app.prisma.reservation.findFirst({ where: { accommodationTypeId: id } });
     if (inUse) return reply.status(409).send({ error: "Typ je použit v existujících rezervacích a nelze ho smazat." });
+    const type = await app.prisma.accommodationType.findUnique({ where: { id }, select: { campId: true } });
     await app.prisma.accommodationType.delete({ where: { id } });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "DELETE", entity: "Typ ubytování", entityId: id, payload: { campId: type?.campId } });
     return { success: true };
   });
 

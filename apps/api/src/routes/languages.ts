@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { requirePermission, requireAuth, orgFilter } from "../plugins/auth";
+import { logActivity } from "../services/activityLog";
 
 export async function languageRoutes(app: FastifyInstance) {
   app.get("/", { preHandler: requireAuth }, async (request) => {
@@ -120,13 +121,16 @@ export async function languageRoutes(app: FastifyInstance) {
       }
     }
 
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "CREATE", entity: "Jazyk", entityId: lang.id, payload: { code, name } });
     return reply.status(201).send({ lang, copied: { types: copiedTypes, surcharges: copiedSurcharges, templates: copiedTemplates } });
   });
 
   app.put("/:id", { preHandler: requirePermission("org_admin") }, async (request) => {
     const { id } = request.params as { id: string };
     const body = request.body as { name?: string; currencyCode?: string; currencySymbol?: string; currencyPosition?: string };
-    return app.prisma.language.update({ where: { id }, data: body });
+    const lang = await app.prisma.language.update({ where: { id }, data: body });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "Jazyk", entityId: id, payload: body });
+    return lang;
   });
 
   app.delete("/:id", { preHandler: requirePermission("org_admin") }, async (request, reply) => {
@@ -134,6 +138,7 @@ export async function languageRoutes(app: FastifyInstance) {
     const lang = await app.prisma.language.findUniqueOrThrow({ where: { id } });
     if (lang.isDefault) return reply.status(400).send({ error: "Cannot delete default language" });
     await app.prisma.language.delete({ where: { id } });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "DELETE", entity: "Jazyk", entityId: id, payload: { code: lang.code, name: lang.name } });
     return { success: true };
   });
 }

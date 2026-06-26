@@ -186,7 +186,9 @@ export async function reservationRoutes(app: FastifyInstance) {
   app.patch("/:id/internal-note", { preHandler: requirePermission("reservations_edit") }, async (request) => {
     const { id } = request.params as { id: string };
     const { internalNote } = request.body as { internalNote: string };
-    return app.prisma.reservation.update({ where: { id }, data: { internalNote: internalNote || null }, include: INCLUDE });
+    const reservation = await app.prisma.reservation.update({ where: { id }, data: { internalNote: internalNote || null }, include: INCLUDE });
+    await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "Rezervace", entityId: id, payload: { internalNote: internalNote || null } });
+    return reservation;
   });
 
   app.patch("/:id/status", { preHandler: requirePermission("reservations_edit") }, async (request) => {
