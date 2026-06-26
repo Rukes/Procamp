@@ -871,6 +871,7 @@ export default function CampDetailPage() {
 
   // Accommodation type editor
   const [editType, setEditType] = useState<AccommodationType | null | "new">(null);
+  const [translationsType, setTranslationsType] = useState<AccommodationType | null>(null);
   const [typeOrder, setTypeOrder] = useState<string[]>([]);
   const [surchargeOrder, setSurchargeOrder] = useState<string[]>([]);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -1273,6 +1274,39 @@ export default function CampDetailPage() {
       {/* Typy ubytování */}
       {tab === "types" && (
         <div className="max-w-2xl space-y-4">
+          {/* Překlady modal */}
+          {translationsType && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-8" onClick={() => setTranslationsType(null)}>
+              <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[85vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 sticky top-0 bg-white">
+                  <h2 className="font-semibold text-gray-900">Překlady — {(translationsType.translations as any)?.cs?.name ?? translationsType.id}</h2>
+                  <button className="text-gray-400 hover:text-gray-700 text-xl leading-none" onClick={() => setTranslationsType(null)}>×</button>
+                </div>
+                <div className="px-6 py-5 space-y-6">
+                  {languages.map((lang) => {
+                    const t = (translationsType.translations as Record<string, { name?: string; shortDescription?: string; longDescription?: string }>)[lang.code];
+                    return (
+                      <div key={lang.code} className="space-y-2 bg-gray-50 rounded-xl p-4">
+                        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide flex items-center gap-1.5"><Flag code={lang.code} /> {lang.name}</p>
+                        {t?.name ? (
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium text-gray-900">{t.name}</p>
+                            {t.shortDescription && <p className="text-xs text-gray-500">{t.shortDescription}</p>}
+                            {t.longDescription && (
+                              <div className="text-xs text-gray-600 border border-gray-100 rounded-lg p-3 prose prose-xs max-w-none" dangerouslySetInnerHTML={{ __html: t.longDescription }} />
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-xs text-gray-400 italic">Bez překladu</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Editor modal */}
           {editType !== null && (
             <AccommodationTypeEditor
@@ -1350,12 +1384,13 @@ export default function CampDetailPage() {
                     )}
                   </div>
                 </div>
-                {can("camps_edit") && (
-                  <div className="flex gap-2">
+                <div className="flex gap-2">
+                  <button className="btn-secondary text-xs" onClick={() => setTranslationsType(t)} title="Překlady"><i className="fa-regular fa-language" /></button>
+                  {can("camps_edit") && (<>
                     <button className="btn-secondary text-xs" onClick={() => setEditType(t)}><i className="fa-regular fa-pen mr-1" />Upravit</button>
                     <button className="btn-danger text-xs" onClick={() => handleDeleteType(t.id)}><i className="fa-regular fa-trash mr-1" />Smazat</button>
-                  </div>
-                )}
+                  </>)}
+                </div>
               </div>
             );
           })}
