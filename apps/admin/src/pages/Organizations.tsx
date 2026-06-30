@@ -16,7 +16,11 @@ interface Organization {
   ico: string;
   dic: string;
   address: string;
+  city: string;
+  zip: string;
   contactPerson: string;
+  phone: string;
+  contactEmail: string;
   billingEmail: string;
   internalNote: string | null;
   gaTrackingId: string | null;
@@ -28,7 +32,8 @@ interface Organization {
 }
 
 const EMPTY: Omit<Organization, "id" | "createdAt" | "_count"> = {
-  name: "", slug: "", billingName: "", country: "", ico: "", dic: "", address: "", contactPerson: "", billingEmail: "", internalNote: null,
+  name: "", slug: "", billingName: "", country: "Česká republika", ico: "", dic: "", address: "", city: "", zip: "", contactPerson: "", phone: "", contactEmail: "", billingEmail: "", internalNote: null,
+  gaTrackingId: null, goSmsClientId: "", goSmsChannelId: null, hideCopyright: false,
 };
 
 export default function OrganizationsPage() {
@@ -49,12 +54,17 @@ export default function OrganizationsPage() {
       const r = await fetch(`https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/${form.ico}`);
       if (!r.ok) { toast.error("IČO nenalezeno v ARES."); return; }
       const d = await r.json();
+      const s = d.sidlo;
+      const street = s ? [s.nazevUlice, [s.cisloDomovni, s.cisloOrientacni ? `/${s.cisloOrientacni}` : ""].join("")].filter(Boolean).join(" ") : "";
+      const psc = s?.psc ? String(s.psc).replace(/(\d{3})(\d{2})/, "$1 $2") : "";
       setForm((f) => ({
         ...f,
         billingName: d.obchodniJmeno ?? f.billingName,
         dic: d.dic ?? f.dic,
-        address: d.sidlo?.textovaAdresa ?? f.address,
-        country: d.sidlo?.nazevStatu ?? f.country,
+        address: street || f.address,
+        city: s?.nazevObce ?? f.city,
+        zip: psc || f.zip,
+        country: s?.nazevStatu ?? f.country,
       }));
       toast.success("Údaje načteny z ARES.");
     } catch {
@@ -71,7 +81,7 @@ export default function OrganizationsPage() {
 
   const openCreate = () => { setForm({ ...EMPTY }); setCreating(true); setModalOrg(null); };
   const openEdit = (org: Organization) => {
-    setForm({ name: org.name, slug: org.slug, billingName: org.billingName, country: org.country, ico: org.ico, dic: org.dic, address: org.address, contactPerson: org.contactPerson, billingEmail: org.billingEmail, internalNote: org.internalNote });
+    setForm({ name: org.name, slug: org.slug, billingName: org.billingName, country: org.country, ico: org.ico, dic: org.dic, address: org.address, city: org.city, zip: org.zip, contactPerson: org.contactPerson, phone: org.phone, contactEmail: org.contactEmail, billingEmail: org.billingEmail, internalNote: org.internalNote, gaTrackingId: org.gaTrackingId, goSmsClientId: org.goSmsClientId ?? "", goSmsChannelId: org.goSmsChannelId ?? null, hideCopyright: org.hideCopyright ?? false });
     setModalOrg(org);
     setCreating(false);
   };
@@ -114,7 +124,7 @@ export default function OrganizationsPage() {
     <div className="p-4 md:p-8">
       {(creating || modalOrg) && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-2 pt-4 sm:p-4 sm:pt-12" onClick={closeModal}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-semibold">{creating ? "Nová organizace" : `Upravit: ${modalOrg!.name}`}</h3>
               <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
@@ -133,43 +143,73 @@ export default function OrganizationsPage() {
                   <input className="input" value={form.slug} onChange={(e) => set("slug", e.target.value)} required pattern="[a-z0-9-]+" placeholder="nazev-organizace" />
                   <p className="text-xs text-gray-400 mt-1">Použije se v URL formuláře: /<strong>{form.slug || "slug"}</strong>/kemp-slug</p>
                 </div>
-                <div>
-                  <label className="label">Odběratel</label>
-                  <input className="input" value={form.billingName} onChange={(e) => set("billingName", e.target.value)} placeholder="Fakturační název firmy" />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="label">IČO</label>
-                    <div className="flex gap-2">
-                      <input className="input" value={form.ico} onChange={(e) => set("ico", e.target.value)} placeholder="12345678" />
-                      <Tooltip text="Načíst z ARES">
-                        <button type="button" onClick={loadAres} disabled={aresLoading} className="btn-secondary px-3 flex-shrink-0">
-                          <i className={`fa-regular fa-rotate ${aresLoading ? "animate-spin" : ""}`} />
-                        </button>
-                      </Tooltip>
+                <div className="border-t border-gray-100 pt-3 mt-1">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Fakturační údaje</p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="label">Odběratel</label>
+                      <input className="input" value={form.billingName} onChange={(e) => set("billingName", e.target.value)} placeholder="Fakturační název firmy" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="label">IČO</label>
+                        <div className="flex">
+                          <input className="input !rounded-r-none" value={form.ico} onChange={(e) => set("ico", e.target.value)} placeholder="12345678" />
+                          <Tooltip text="Načíst z ARES">
+                            <button type="button" onClick={loadAres} disabled={aresLoading} className="btn-primary px-3 flex-shrink-0 !rounded-l-none">
+                              <i className={`fa-regular fa-rotate ${aresLoading ? "animate-spin" : ""}`} />
+                            </button>
+                          </Tooltip>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="label">DIČ / VAT ID</label>
+                        <input className="input" value={form.dic} onChange={(e) => set("dic", e.target.value)} placeholder="CZ12345678" />
+                      </div>
                     </div>
                   </div>
-                  <div>
-                    <label className="label">DIČ</label>
-                    <input className="input" value={form.dic} onChange={(e) => set("dic", e.target.value)} placeholder="CZ12345678" />
+                  <div className="space-y-3 mt-3">
+                    <div>
+                      <label className="label">Ulice a číslo popisné</label>
+                      <input className="input" value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="Příkladová 123" />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="label">Město</label>
+                        <input className="input" value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="Praha" />
+                      </div>
+                      <div>
+                        <label className="label">PSČ</label>
+                        <input className="input" value={form.zip} onChange={(e) => set("zip", e.target.value)} placeholder="110 00" />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="label">Země</label>
+                      <CountrySelect value={form.country} onChange={(v) => set("country", v)} />
+                    </div>
+                    <div>
+                      <label className="label">Fakturační e-mail</label>
+                      <input className="input" type="email" value={form.billingEmail} onChange={(e) => set("billingEmail", e.target.value)} />
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <label className="label">Adresa</label>
-                  <input className="input" value={form.address} onChange={(e) => set("address", e.target.value)} placeholder="Ulice 1, 110 00 Praha" />
-                </div>
-                <div>
-                  <label className="label">Země</label>
-                  <CountrySelect value={form.country} onChange={(v) => set("country", v)} />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="label">Kontaktní osoba</label>
-                    <input className="input" value={form.contactPerson} onChange={(e) => set("contactPerson", e.target.value)} />
-                  </div>
-                  <div>
-                    <label className="label">Fakturační e-mail</label>
-                    <input className="input" type="email" value={form.billingEmail} onChange={(e) => set("billingEmail", e.target.value)} />
+                <div className="border-t border-gray-100 pt-3 mt-1">
+                  <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Kontaktní údaje</p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="label">Kontaktní osoba</label>
+                      <input className="input" value={form.contactPerson} onChange={(e) => set("contactPerson", e.target.value)} />
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="label">Telefon</label>
+                        <input className="input" type="tel" value={form.phone} onChange={(e) => set("phone", e.target.value)} placeholder="+420 123 456 789" />
+                      </div>
+                      <div>
+                        <label className="label">E-mail pro komunikaci</label>
+                        <input className="input" type="email" value={form.contactEmail} onChange={(e) => set("contactEmail", e.target.value)} />
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2">

@@ -131,17 +131,17 @@ export default function MyOrganizationPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="label">IČO</label>
-                <div className="flex gap-2">
-                  <input className="input" value={form.ico ?? ""} onChange={(e) => set("ico", e.target.value)} />
+                <div className="flex">
+                  <input className="input !rounded-r-none" value={form.ico ?? ""} onChange={(e) => set("ico", e.target.value)} />
                   <Tooltip text="Načíst z ARES">
-                    <button type="button" onClick={loadAres} disabled={aresLoading} className="btn-secondary px-3 flex-shrink-0">
+                    <button type="button" onClick={loadAres} disabled={aresLoading} className="btn-primary px-3 flex-shrink-0 !rounded-l-none">
                       <i className={`fa-regular fa-rotate ${aresLoading ? "animate-spin" : ""}`} />
                     </button>
                   </Tooltip>
                 </div>
               </div>
               <div>
-                <label className="label">DIČ</label>
+                <label className="label">DIČ / VAT ID</label>
                 <input className="input" value={form.dic ?? ""} onChange={(e) => set("dic", e.target.value)} />
               </div>
             </div>

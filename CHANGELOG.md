@@ -2,6 +2,7 @@
 
 ## 30. 6. 2026
 
+- **Fakturační údaje organizace** — adresa je nyní rozdělena na samostatná pole (Ulice, Město, PSČ, Země); přidána pole Telefon a E-mail pro komunikaci v nové sekci Kontaktní údaje; tlačítko načtení z ARES vyplní všechna adresní pole automaticky; label DIČ přejmenován na DIČ / VAT ID
 - **Screenshoty v nápovědě** — nápověda nyní obsahuje screenshoty z aplikace; kliknutím na obrázek se zobrazí zvětšená verze
 - **Dashboard — aktivní rezervace** — počty a seznam na dashboardu nyní zobrazují pouze nadcházející rezervace (bez zrušených a proběhlých)
 - **Oprava iCal exportu** — blokace importované z Booking.com se již nezahrnují do exportu pro Booking.com (zamezení duplikátů)

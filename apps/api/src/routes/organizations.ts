@@ -7,7 +7,8 @@ export async function organizationRoutes(app: FastifyInstance) {
   // Vlastní organizace přihlášeného uživatele (pro org_admin)
   const ORG_PUBLIC_SELECT = {
     id: true, name: true, slug: true, billingName: true, country: true, ico: true, dic: true,
-    address: true, contactPerson: true, billingEmail: true, termsText: true, requireTermsAcceptance: true,
+    address: true, city: true, zip: true, contactPerson: true, phone: true, contactEmail: true,
+    billingEmail: true, termsText: true, requireTermsAcceptance: true,
     defaultLanguageCode: true, thousandsSeparator: true, decimalSeparator: true, gaTrackingId: true,
     goSmsClientId: true, goSmsClientSecret: true, goSmsChannelId: true, bookingEnabled: true,
     createdAt: true, updatedAt: true,
@@ -25,7 +26,7 @@ export async function organizationRoutes(app: FastifyInstance) {
     if (!permissions?.org_admin) return reply.status(403).send({ error: "Forbidden" });
     const body = request.body as {
       name?: string; billingName?: string; country?: string; ico?: string; dic?: string;
-      address?: string; contactPerson?: string; billingEmail?: string;
+      address?: string; city?: string; zip?: string; contactPerson?: string; phone?: string; contactEmail?: string; billingEmail?: string;
       termsText?: string; defaultLanguageCode?: string; thousandsSeparator?: string; decimalSeparator?: string; gaTrackingId?: string;
     };
     const before = await app.prisma.organization.findUnique({ where: { id: organizationId } });
@@ -59,7 +60,7 @@ export async function organizationRoutes(app: FastifyInstance) {
   app.post("/", { preHandler: requireSuperAdmin() }, async (request, reply) => {
     const body = request.body as {
       name: string; slug: string; billingName?: string; country?: string; ico?: string; dic?: string;
-      address?: string; contactPerson?: string; billingEmail?: string;
+      address?: string; city?: string; zip?: string; contactPerson?: string; phone?: string; contactEmail?: string; billingEmail?: string;
     };
     const org = await app.prisma.organization.create({
       data: {
@@ -70,7 +71,11 @@ export async function organizationRoutes(app: FastifyInstance) {
         ico: body.ico ?? "",
         dic: body.dic ?? "",
         address: body.address ?? "",
+        city: body.city ?? "",
+        zip: body.zip ?? "",
         contactPerson: body.contactPerson ?? "",
+        phone: body.phone ?? "",
+        contactEmail: body.contactEmail ?? "",
         billingEmail: body.billingEmail ?? "",
       },
     });
@@ -96,7 +101,9 @@ export async function organizationRoutes(app: FastifyInstance) {
       name: body.name as string, slug: body.slug as string, billingName: body.billingName as string | undefined,
       country: body.country as string | undefined, ico: body.ico as string | undefined,
       dic: body.dic as string | undefined, address: body.address as string | undefined,
-      contactPerson: body.contactPerson as string | undefined, billingEmail: body.billingEmail as string | undefined,
+      city: body.city as string | undefined, zip: body.zip as string | undefined,
+      contactPerson: body.contactPerson as string | undefined, phone: body.phone as string | undefined,
+      contactEmail: body.contactEmail as string | undefined, billingEmail: body.billingEmail as string | undefined,
       termsText: body.termsText as string | undefined,
       requireTermsAcceptance: body.requireTermsAcceptance as boolean | undefined,
       defaultLanguageCode: body.defaultLanguageCode as string | undefined,
@@ -177,8 +184,8 @@ export async function organizationRoutes(app: FastifyInstance) {
       where: { id },
       select: {
         id: true, name: true, slug: true,
-        billingName: true, country: true, ico: true, dic: true, address: true,
-        contactPerson: true, billingEmail: true, gaTrackingId: true, internalNote: true,
+        billingName: true, country: true, ico: true, dic: true, address: true, city: true, zip: true,
+        contactPerson: true, phone: true, contactEmail: true, billingEmail: true, gaTrackingId: true, internalNote: true,
         defaultLanguageCode: true, thousandsSeparator: true, decimalSeparator: true,
         requireTermsAcceptance: true, createdAt: true,
         goSmsClientId: true, goSmsClientSecret: true, goSmsChannelId: true,

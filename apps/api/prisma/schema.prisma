@@ -17,7 +17,11 @@ model Organization {
   ico                 String   @default("")
   dic                 String   @default("")
   address             String   @default("")
+  city                String   @default("")
+  zip                 String   @default("")
   contactPerson       String   @default("")
+  phone               String   @default("")
+  contactEmail        String   @default("")
   billingEmail        String   @default("")
   termsText           String   @default("") @db.Text
   requireTermsAcceptance Boolean @default(false)

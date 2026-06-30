@@ -6,14 +6,19 @@ Sekce **Moje organizace** slouží k nastavení vašeho účtu a fakturačních 
 
 Vyplňte údaje vaší firmy nebo živnosti:
 
-- **Název** — obchodní název organizace zobrazovaný v systému
 - **Odběratel** — fakturační název (může se lišit, pokud fakturujete pod jiným jménem)
-- **IČO** — po zadání klikněte na ikonu synchronizace vedle pole a systém automaticky načte název, adresu a DIČ z veřejného registru
-- **DIČ**
-- **Adresa**
-- **Kontaktní osoba**
-- **Fakturační e-mail**
+- **IČO** — po zadání klikněte na modré tlačítko vedle pole; systém automaticky načte název firmy, DIČ a celou adresu z veřejného registru ARES
+- **DIČ / VAT ID**
+- **Ulice** — ulice a číslo popisné / orientační
+- **Město** a **PSČ**
 - **Země** — výběr z evropských zemí
+- **Fakturační e-mail**
+
+## Kontaktní údaje
+
+- **Kontaktní osoba** — jméno osoby zodpovědné za komunikaci
+- **Telefon**
+- **E-mail pro komunikaci** — může se lišit od fakturačního e-mailu
 
 ## Nastavení
 

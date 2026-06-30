@@ -18,7 +18,11 @@ interface Organization {
   ico: string;
   dic: string;
   address: string;
+  city: string;
+  zip: string;
   contactPerson: string;
+  phone: string;
+  contactEmail: string;
   billingEmail: string;
   termsText: string;
   requireTermsAcceptance: boolean;
@@ -75,12 +79,17 @@ export default function OrganizationDetailPage() {
       const r = await fetch(`https://ares.gov.cz/ekonomicke-subjekty-v-be/rest/ekonomicke-subjekty/${form.ico}`);
       if (!r.ok) { toast.error("IČO nenalezeno v ARES."); return; }
       const d = await r.json();
+      const s = d.sidlo;
+      const street = s ? [s.nazevUlice, [s.cisloDomovni, s.cisloOrientacni ? `/${s.cisloOrientacni}` : ""].join("")].filter(Boolean).join(" ") : "";
+      const psc = s?.psc ? String(s.psc).replace(/(\d{3})(\d{2})/, "$1 $2") : "";
       setForm((f) => ({
         ...f,
         billingName: d.obchodniJmeno ?? f.billingName,
         dic: d.dic ?? f.dic,
-        address: d.sidlo?.textovaAdresa ?? f.address,
-        country: d.sidlo?.nazevStatu ?? f.country,
+        address: street || f.address,
+        city: s?.nazevObce ?? f.city,
+        zip: psc || f.zip,
+        country: s?.nazevStatu ?? f.country,
       }));
       toast.success("Údaje načteny z ARES.");
     } catch {
@@ -202,43 +211,71 @@ export default function OrganizationDetailPage() {
               <input className="input" value={form.slug ?? ""} onChange={(e) => set("slug", e.target.value)} required pattern="[a-z0-9-]+" />
               <p className="text-xs text-gray-400 mt-1">URL formuláře: /<strong>{form.slug || "slug"}</strong>/kemp-slug</p>
             </div>
-            <div>
-              <label className="label">Odběratel</label>
-              <input className="input" value={form.billingName ?? ""} onChange={(e) => set("billingName", e.target.value)} placeholder="Fakturační název firmy" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="label">IČO</label>
-                <div className="flex gap-2">
-                  <input className="input" value={form.ico ?? ""} onChange={(e) => set("ico", e.target.value)} />
-                  <Tooltip text="Načíst z ARES">
-                    <button type="button" onClick={loadAres} disabled={aresLoading} className="btn-secondary px-3 flex-shrink-0">
-                      <i className={`fa-regular fa-rotate ${aresLoading ? "animate-spin" : ""}`} />
-                    </button>
-                  </Tooltip>
+            <div className="border-t border-gray-100 pt-4 mt-1">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Fakturační údaje</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="label">Odběratel</label>
+                  <input className="input" value={form.billingName ?? ""} onChange={(e) => set("billingName", e.target.value)} placeholder="Fakturační název firmy" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">IČO</label>
+                    <div className="flex">
+                      <input className="input !rounded-r-none" value={form.ico ?? ""} onChange={(e) => set("ico", e.target.value)} />
+                      <Tooltip text="Načíst z ARES">
+                        <button type="button" onClick={loadAres} disabled={aresLoading} className="btn-primary px-3 flex-shrink-0 !rounded-l-none">
+                          <i className={`fa-regular fa-rotate ${aresLoading ? "animate-spin" : ""}`} />
+                        </button>
+                      </Tooltip>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="label">DIČ / VAT ID</label>
+                    <input className="input" value={form.dic ?? ""} onChange={(e) => set("dic", e.target.value)} />
+                  </div>
+                </div>
+                <div>
+                  <label className="label">Ulice a číslo popisné</label>
+                  <input className="input" value={form.address ?? ""} onChange={(e) => set("address", e.target.value)} placeholder="Příkladová 123" />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">Město</label>
+                    <input className="input" value={form.city ?? ""} onChange={(e) => set("city", e.target.value)} placeholder="Praha" />
+                  </div>
+                  <div>
+                    <label className="label">PSČ</label>
+                    <input className="input" value={form.zip ?? ""} onChange={(e) => set("zip", e.target.value)} placeholder="110 00" />
+                  </div>
+                </div>
+                <div>
+                  <label className="label">Země</label>
+                  <CountrySelect value={form.country ?? ""} onChange={(v) => set("country", v)} />
+                </div>
+                <div>
+                  <label className="label">Fakturační e-mail</label>
+                  <input className="input" type="email" value={form.billingEmail ?? ""} onChange={(e) => set("billingEmail", e.target.value)} />
                 </div>
               </div>
-              <div>
-                <label className="label">DIČ</label>
-                <input className="input" value={form.dic ?? ""} onChange={(e) => set("dic", e.target.value)} />
-              </div>
             </div>
-            <div>
-              <label className="label">Adresa</label>
-              <input className="input" value={form.address ?? ""} onChange={(e) => set("address", e.target.value)} />
-            </div>
-            <div>
-              <label className="label">Země</label>
-              <CountrySelect value={form.country ?? ""} onChange={(v) => set("country", v)} />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="label">Kontaktní osoba</label>
-                <input className="input" value={form.contactPerson ?? ""} onChange={(e) => set("contactPerson", e.target.value)} />
-              </div>
-              <div>
-                <label className="label">Fakturační e-mail</label>
-                <input className="input" type="email" value={form.billingEmail ?? ""} onChange={(e) => set("billingEmail", e.target.value)} />
+            <div className="border-t border-gray-100 pt-4 mt-1">
+              <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">Kontaktní údaje</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="label">Kontaktní osoba</label>
+                  <input className="input" value={form.contactPerson ?? ""} onChange={(e) => set("contactPerson", e.target.value)} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="label">Telefon</label>
+                    <input className="input" type="tel" value={form.phone ?? ""} onChange={(e) => set("phone", e.target.value)} placeholder="+420 123 456 789" />
+                  </div>
+                  <div>
+                    <label className="label">E-mail pro komunikaci</label>
+                    <input className="input" type="email" value={form.contactEmail ?? ""} onChange={(e) => set("contactEmail", e.target.value)} />
+                  </div>
+                </div>
               </div>
             </div>
             {user?.isSuperAdmin && (
