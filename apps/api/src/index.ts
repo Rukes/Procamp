@@ -89,6 +89,9 @@ const start = async () => {
   const port = parseInt(process.env.PORT || "3001");
   await app.listen({ port, host: "0.0.0.0" });
   console.log(`API running on port ${port}`);
+  await app.prisma.activityLog.create({
+    data: { userEmail: "system", action: "DEPLOY", entity: "system" },
+  });
 };
 
 start().catch((err) => {
