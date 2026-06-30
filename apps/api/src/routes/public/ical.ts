@@ -23,7 +23,7 @@ export async function icalRoutes(app: FastifyInstance) {
           select: { id: true, bookingCode: true, checkIn: true, checkOut: true },
         },
         blockedPeriods: {
-          where: { source: { equals: null } },
+          where: { source: "manual" },
           select: { id: true, dateFrom: true, dateTo: true, reason: true },
         },
       },

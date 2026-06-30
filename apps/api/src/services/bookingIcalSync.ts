@@ -25,6 +25,7 @@ export async function syncType(prisma: PrismaClient, typeId: string, icalUrl: st
     const res = await fetch(icalUrl, { signal: AbortSignal.timeout(15000) });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     ical = await res.text();
+    if (!ical.trimStart().startsWith("BEGIN:VCALENDAR")) throw new Error("Odpověď není platný iCal formát");
   } catch (err) {
     throw err;
   }
