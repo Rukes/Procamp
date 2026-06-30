@@ -1,5 +1,6 @@
 import cron from "node-cron";
 import { PrismaClient } from "@prisma/client";
+import { logActivity } from "./activityLog";
 
 function parseIcalDates(ical: string): { uid: string; start: string; end: string }[] {
   const events: { uid: string; start: string; end: string }[] = [];
@@ -71,13 +72,21 @@ export async function syncAllBookingIcal(prisma: PrismaClient) {
   });
 
   await Promise.allSettled(
-    types.filter((t) => t.bookingIcalUrl).map((t) => syncType(prisma, t.id, t.bookingIcalUrl!))
-
+    types.filter((t) => t.bookingIcalUrl).map(async (t) => {
+      try {
+        const result = await syncType(prisma, t.id, t.bookingIcalUrl!);
+        if (result.added > 0 || result.updated > 0 || result.removed > 0) {
+          await logActivity(prisma, { userId: "cron", userEmail: "cron", action: "SYNC", entity: "Typ ubytování", entityId: t.id, payload: result });
+        }
+      } catch (err) {
+        await logActivity(prisma, { userId: "cron", userEmail: "cron", action: "SYNC_ERROR", entity: "Typ ubytování", entityId: t.id, payload: { error: String(err) } });
+      }
+    })
   );
 }
 
 export function startBookingCron(prisma: PrismaClient) {
-  cron.schedule("0 * * * *", () => {
+  cron.schedule("*/30 * * * *", () => {
     console.log("[booking-sync][cron] Running sync...");
     syncAllBookingIcal(prisma)
       .then(() => console.log("[booking-sync][cron] Sync done"))
