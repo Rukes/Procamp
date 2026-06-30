@@ -43,7 +43,7 @@ async function main() {
     process.exit(1);
   }
 
-  const camp = await prisma.camp.findUnique({
+  const camp = await prisma.camp.findFirst({
     where: { slug },
     include: {
       accommodationTypes: { include: { prices: true } },

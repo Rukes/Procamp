@@ -15,6 +15,7 @@ import emaily from "../help/emaily.md?raw";
 import formular from "../help/formulár.md?raw";
 import blokace from "../help/blokace.md?raw";
 import novaRezervace from "../help/nova-rezervace.md?raw";
+import integrace from "../help/integrace.md?raw";
 const TOPICS = [
   { id: "zacínáme",        label: "Začínáme",              icon: "fa-rocket",         content: zacíname },
   { id: "organizace",      label: "Organizace",             icon: "fa-building",       content: organizace },
@@ -26,6 +27,7 @@ const TOPICS = [
   { id: "jazyky",     label: "Jazyky & měny",          icon: "fa-globe",         content: jazyky },
   { id: "emaily",     label: "E-mailové šablony",      icon: "fa-envelope",      content: emaily },
   { id: "formular",   label: "Formulář na web",        icon: "fa-code",          content: formular },
+  { id: "integrace",  label: "Integrace",              icon: "fa-plug",          content: integrace },
 ];
 
 export default function HelpPage() {
@@ -34,6 +36,7 @@ export default function HelpPage() {
   const hashId = location.hash.replace("#", "") || TOPICS[0].id;
   const [activeId, setActiveId] = useState(hashId);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [lightbox, setLightbox] = useState<string | null>(null);
   const articleRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -52,8 +55,20 @@ export default function HelpPage() {
   const html = marked(topic.content) as string;
 
   useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") setLightbox(null); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
     const article = articleRef.current;
     if (!article) return;
+
+    // Lightbox na obrázky
+    article.querySelectorAll("img").forEach((img) => {
+      img.style.cursor = "zoom-in";
+      img.onclick = () => setLightbox(img.src);
+    });
 
     // Syntax highlight + reset prose overrides
     article.querySelectorAll("pre code").forEach((block) => {
@@ -128,6 +143,7 @@ export default function HelpPage() {
   );
 
   return (
+    <>
     <div className="min-h-screen flex bg-gray-50">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-60 bg-gray-900 text-white flex-col fixed top-0 left-0 h-screen z-10">
@@ -171,5 +187,12 @@ export default function HelpPage() {
         />
       </main>
     </div>
+
+      {lightbox && (
+        <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4" onClick={() => setLightbox(null)}>
+          <img src={lightbox} className="max-w-full max-h-full rounded-xl shadow-2xl" style={{ cursor: "zoom-out" }} />
+        </div>
+      )}
+    </>
   );
 }

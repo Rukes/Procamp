@@ -2,6 +2,8 @@
 
 Blokace termínů umožňuje uzavřít konkrétní dny pro rezervace — například kvůli údržbě, soukromé akci nebo sezónní přestávce. Zákazník v rezervačním formuláři zablokované dny neuvidí jako dostupné, stejně jako obsazené.
 
+![Seznam blokací termínů](/help/screenshots/blokace.png)
+
 ## Vytvoření blokace
 
 1. Přejděte do sekce **Blokace** v levém menu

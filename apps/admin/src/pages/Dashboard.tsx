@@ -152,6 +152,7 @@ export default function DashboardPage() {
             <table className="w-full text-sm min-w-[700px]">
               <thead>
                 <tr className="border-b border-gray-100 text-left text-gray-500 bg-gray-50">
+                  <th className="px-4 py-3 font-medium">Kód</th>
                   <th className="px-4 py-3 font-medium">Jméno a příjmení</th>
                   <th className="px-4 py-3 font-medium">Objekt</th>
                   <th className="px-4 py-3 font-medium">Typ</th>
@@ -168,6 +169,7 @@ export default function DashboardPage() {
                     className="hover:bg-gray-50 cursor-pointer"
                     onClick={() => navigate(`/reservations/${r.id}`)}
                   >
+                    <td className="px-4 py-3"><span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{r.bookingCode ?? "—"}</span></td>
                     <td className="px-4 py-3">
                       <div className="flex items-start justify-between gap-2">
                         <div>

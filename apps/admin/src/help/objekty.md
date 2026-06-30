@@ -2,6 +2,8 @@
 
 Objekt je kemp, chatová osada, glamping nebo jiné ubytovací zařízení. Každý objekt má vlastní rezervační formulář a vlastní nastavení e-mailů.
 
+![Detail objektu — záložky nastavení](/help/screenshots/objekt-detail.png)
+
 ## Vytvoření objektu
 
 Klikněte na **+ Nový objekt**, zadejte název, URL identifikátor (slug) a **e-mail správce** (notifikační e-mail pro oznámení o nových rezervacích). Identifikátor se použije v adrese formuláře — doporučujeme použít krátké, jednoduché označení bez diakritiky, např. `kemp-morava`.
@@ -45,6 +47,8 @@ Každý objekt může mít více typů ubytování (např. Karavan, Stan, Chatka
   - Příplatek za dítě na noc
 
 Celková cena = (cena za noc + dospělí × příplatek + děti × příplatek + příplatky) × počet nocí
+
+![Editor typu ubytování s dynamickými cenami](/help/screenshots/objekt-typ-ubytovani.png)
 
 ### Dynamická cena (cenové hladiny)
 

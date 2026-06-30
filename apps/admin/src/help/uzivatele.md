@@ -1,5 +1,7 @@
 # Uživatelé
 
+![Správa uživatelů](/help/screenshots/uzivatele.png)
+
 ## Přidání uživatele
 
 V sekci **Uživatelé** klikněte na **+ Nový uživatel**. Vyplňte jméno, e-mail a heslo. Tlačítkem vedle pole hesla lze vygenerovat náhodné bezpečné heslo — automaticky se zkopíruje do schránky, abyste ho mohli předat kolegovi.

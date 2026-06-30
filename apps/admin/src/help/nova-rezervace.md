@@ -2,6 +2,8 @@
 
 Ruční zadání rezervace správcem. Hodí se pro telefonické nebo osobní objednávky.
 
+![Formulář nové rezervace](/help/screenshots/nova-rezervace.png)
+
 ## Postup
 
 Formulář je rozdělený do dvou kroků — nejprve vyberte ubytování, poté se zobrazí zbytek.

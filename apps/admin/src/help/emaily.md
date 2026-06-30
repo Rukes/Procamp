@@ -13,6 +13,8 @@ Po každé nové rezervaci systém automaticky odešle e-maily. Které šablony 
 
 Texty všech e-mailů si můžete libovolně upravit. Šablona **Nepotvrzená rezervace** se zobrazuje v nastavení pouze pokud má objekt zapnuté ruční potvrzení rezervací.
 
+![Seznam e-mailových šablon a editor](/help/screenshots/emaily-sablony.png)
+
 ## Úprava šablon
 
 Otevřete detail objektu → záložka **E-mailové šablony**. V seznamu šablon je u každé jazykové varianty tlačítko **Náhled** (zobrazí renderovaný obsah e-mailu v modalu) a **Upravit** (otevře editor na plnou šířku). Vyberte typ e-mailu a jazyk.

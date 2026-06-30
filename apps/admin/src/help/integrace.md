@@ -2,6 +2,8 @@
 
 ## Booking.com — iCal synchronizace
 
+![Nastavení integrace Booking.com v organizaci](/help/screenshots/integrace.png)
+
 Integrace umožňuje obousměrnou synchronizaci obsazenosti mezi Booking.com a MůjKemp přes standardní iCal formát.
 
 **Import (Booking.com → MůjKemp)** — systém každou hodinu automaticky stáhne iCal feed z Booking.com a na základě obsazenosti vytvoří nebo smaže blokace v MůjKemp.

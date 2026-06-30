@@ -42,6 +42,8 @@ U výsledků objektů se zobrazí odkaz **formulář** — kliknutím otevřete 
 
 U výsledků objektů stiskněte **Tab** pro zobrazení záložek — šipkami **←→** vyberte záložku (Nastavení, Typy ubytování, Příplatky…) a **Enter** vás přenese přímo na ni.
 
+![Dashboard — přehled rezervací a obsazenosti](/help/screenshots/dashboard.png)
+
 ## Přehled sekcí
 
 | Sekce | K čemu slouží |

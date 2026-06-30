@@ -38,6 +38,10 @@ Pokud máte v nastavení objektu vyplněny **Informace o objektu**, zobrazí se 
 
 ## Co zákazník v formuláři vyplňuje
 
+![Výběr termínu v rezervačním formuláři](/help/screenshots/formular-termin.png)
+
+![Souhrn rezervace před odesláním](/help/screenshots/formular-souhrn.png)
+
 1. **Termín** — výběr příjezdu a odjezdu z kalendáře (obsazené dny jsou automaticky šedé)
 2. **Typ ubytování** — pokud máte více typů, zákazník si vybere; při jednom typu se tento krok přeskočí
 3. **Příplatky** — zákazník zaškrtne volitelné příplatky které chce
