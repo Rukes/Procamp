@@ -2,6 +2,7 @@
 
 ## 30. 6. 2026
 
+- **Dashboard — aktivní rezervace** — počty a seznam na dashboardu nyní zobrazují pouze nadcházející rezervace (bez zrušených a proběhlých)
 - **Oprava iCal exportu** — blokace importované z Booking.com se již nezahrnují do exportu pro Booking.com (zamezení duplikátů)
 - **Synchronizace Booking.com** — cron nyní běží každých 30 minut (dříve každou hodinu); změny ze synchronizace se zapisují do logu aktivit
 

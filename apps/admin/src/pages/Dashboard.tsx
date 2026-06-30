@@ -88,9 +88,11 @@ export default function DashboardPage() {
     load();
   };
 
-  const pending = reservations.filter((r) => r.status === "PENDING").length;
-  const confirmed = reservations.filter((r) => r.status === "CONFIRMED").length;
-  const recent = [...reservations].slice(0, 10);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const active = reservations.filter((r) => r.status !== "CANCELLED" && new Date(r.checkOut) > today);
+  const pending = active.filter((r) => r.status === "PENDING").length;
+  const confirmed = active.filter((r) => r.status === "CONFIRMED").length;
+  const recent = active.slice(0, 10);
 
   return (
     <div className="p-4 md:p-8">
@@ -99,7 +101,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-3 gap-3 mb-8 max-w-lg">
         <div className="rounded-xl px-4 py-4 bg-blue-100 border border-blue-200">
           <p className="text-xs text-blue-600"><span className="hidden sm:inline">Celkem rezervací</span><span className="sm:hidden">Celkem</span></p>
-          <p className="text-2xl font-bold mt-0.5 text-blue-800">{reservations.length}</p>
+          <p className="text-2xl font-bold mt-0.5 text-blue-800">{active.length}</p>
         </div>
         <div className="rounded-xl px-4 py-4 bg-yellow-100 border border-yellow-200">
           <p className="text-xs text-yellow-700">Čekajících</p>
