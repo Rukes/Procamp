@@ -75,8 +75,8 @@ export async function syncAllBookingIcal(prisma: PrismaClient) {
     types.filter((t) => t.bookingIcalUrl).map(async (t) => {
       try {
         const result = await syncType(prisma, t.id, t.bookingIcalUrl!);
-        if (result.added > 0 || result.updated > 0 || result.removed > 0) {
-          await logActivity(prisma, { userId: "cron", userEmail: "cron", action: "SYNC", entity: "Typ ubytování", entityId: t.id, payload: result });
+        if (result.added > 0 || result.removed > 0) {
+          await logActivity(prisma, { userId: "cron", userEmail: "cron", action: "SYNC", entity: "Typ ubytování", entityId: t.id, payload: { added: result.added, removed: result.removed } });
         }
       } catch (err) {
         await logActivity(prisma, { userId: "cron", userEmail: "cron", action: "SYNC_ERROR", entity: "Typ ubytování", entityId: t.id, payload: { error: String(err) } });
