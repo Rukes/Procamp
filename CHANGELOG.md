@@ -1,5 +1,10 @@
 # Changelog
 
+## 30. 6. 2026
+
+- **Oprava iCal exportu** — blokace importované z Booking.com se již nezahrnují do exportu pro Booking.com (zamezení duplikátů)
+- **Synchronizace Booking.com** — cron nyní běží každých 30 minut (dříve každou hodinu); změny ze synchronizace se zapisují do logu aktivit
+
 ## 26. 6. 2026
 
 - **Opravy mobilního zobrazení** — administrace je přehledná na mobilních zařízeních
