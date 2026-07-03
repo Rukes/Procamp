@@ -59,8 +59,8 @@ export default function LoginPage() {
           </button>
           {infoOpen && (
             <div className="mt-3 text-xs text-gray-500 text-left space-y-2">
-              <p><strong>Registrace</strong> do systému je pouze na pozvánku, prosím, v případě zájmu nás <a href="https://www.mujkemp.cz/#kontakt" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">kontaktujte</a>.</p>
-              <p>V případě <strong>zapomenutého hesla</strong> taktéž <a href="https://www.mujkemp.cz/#kontakt" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">kontaktujte</a> správce.</p>
+              <p><strong>Registrace</strong> do systému je pouze na pozvánku, prosím, v případě zájmu nás <a href="https://www.ubysoft.cz/#kontakt" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">kontaktujte</a>.</p>
+              <p>V případě <strong>zapomenutého hesla</strong> taktéž <a href="https://www.ubysoft.cz/#kontakt" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">kontaktujte</a> správce.</p>
             </div>
           )}
         </div>

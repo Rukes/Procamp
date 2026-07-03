@@ -42,7 +42,7 @@ export async function icalRoutes(app: FastifyInstance) {
     for (const r of type.reservations) {
       lines.push(
         "BEGIN:VEVENT",
-        `UID:reservation-${r.id}@mujkemp.cz`,
+        `UID:reservation-${r.id}@ubysoft.cz`,
         `DTSTART;VALUE=DATE:${new Date(r.checkIn).toISOString().slice(0, 10).replace(/-/g, "")}`,
         `DTEND;VALUE=DATE:${new Date(r.checkOut).toISOString().slice(0, 10).replace(/-/g, "")}`,
         `SUMMARY:Rezervace${r.bookingCode ? ` ${r.bookingCode}` : ""}`,
@@ -54,7 +54,7 @@ export async function icalRoutes(app: FastifyInstance) {
     for (const b of type.blockedPeriods) {
       lines.push(
         "BEGIN:VEVENT",
-        `UID:blocking-${b.id}@mujkemp.cz`,
+        `UID:blocking-${b.id}@ubysoft.cz`,
         `DTSTART;VALUE=DATE:${new Date(b.dateFrom).toISOString().slice(0, 10).replace(/-/g, "")}`,
         `DTEND;VALUE=DATE:${new Date(b.dateTo).toISOString().slice(0, 10).replace(/-/g, "")}`,
         `SUMMARY:${b.reason || "Blokace"}`,

@@ -12,7 +12,7 @@ Zkopírujte kód a vložte ho do HTML kódu vaší stránky na místo kde má fo
 
 ```html
 <iframe
-  src="https://form.mujkemp.cz/form/muj-kemp/kemp-morava"
+  src="https://form.ubysoft.cz/form/muj-kemp/kemp-morava"
   width="100%"
   height="700"
   frameborder="0"

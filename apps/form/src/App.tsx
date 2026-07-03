@@ -242,8 +242,8 @@ function FormApp() {
         />
         <p className="text-xs text-gray-400">
           Rezervační systém{" "}
-          <a href="https://mujkemp.cz" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-gray-600 transition-colors">
-            MůjKemp.cz
+          <a href="https://ubysoft.cz" target="_blank" rel="noopener noreferrer" className="font-semibold hover:text-gray-600 transition-colors">
+            Ubysoft.cz
           </a>
         </p>
       </footer>}
