@@ -20,7 +20,7 @@ function icalDateToDate(s: string): Date {
 
 export type SyncResult = { added: number; updated: number; removed: number };
 
-export async function syncType(prisma: PrismaClient, typeId: string, icalUrl: string): Promise<SyncResult> {
+export async function syncType(prisma: PrismaClient, typeId: string, icalUrl: string, source = "booking"): Promise<SyncResult> {
   let ical: string;
   try {
     const res = await fetch(icalUrl, { signal: AbortSignal.timeout(15000) });
@@ -33,7 +33,7 @@ export async function syncType(prisma: PrismaClient, typeId: string, icalUrl: st
 
   const events = parseIcalDates(ical);
   const existing = await prisma.blockedPeriod.findMany({
-    where: { accommodationTypeId: typeId, source: "booking" },
+    where: { accommodationTypeId: typeId, source },
     select: { id: true, externalUid: true },
   });
 
@@ -55,8 +55,9 @@ export async function syncType(prisma: PrismaClient, typeId: string, icalUrl: st
       if (!type) continue;
       const now = new Date();
       const internalNote = `Vloženo: ${now.toLocaleDateString("cs-CZ")} ${now.toLocaleTimeString("cs-CZ", { hour: "2-digit", minute: "2-digit" })}`;
+      const label = source.charAt(0).toUpperCase() + source.slice(1).toLowerCase();
       await prisma.blockedPeriod.create({
-        data: { campId: type.campId, accommodationTypeId: typeId, dateFrom, dateTo, reason: "Booking.com", source: "booking", externalUid: event.uid, internalNote },
+        data: { campId: type.campId, accommodationTypeId: typeId, dateFrom, dateTo, reason: label, source, externalUid: event.uid, internalNote },
       });
       added++;
     }
@@ -65,6 +66,27 @@ export async function syncType(prisma: PrismaClient, typeId: string, icalUrl: st
   return { added, updated, removed: toDelete.length };
 }
 
+export async function syncAllExternalCalendars(prisma: PrismaClient) {
+  const calendars = await prisma.externalCalendar.findMany({
+    where: { icalImportUrl: { not: null } },
+    select: { id: true, accommodationTypeId: true, icalImportUrl: true, source: true },
+  });
+
+  await Promise.allSettled(
+    calendars.filter((c) => c.icalImportUrl).map(async (c) => {
+      try {
+        const result = await syncType(prisma, c.accommodationTypeId, c.icalImportUrl!, c.source.toLowerCase());
+        if (result.added > 0 || result.removed > 0) {
+          await logActivity(prisma, { userId: "cron", userEmail: "cron", action: "SYNC", entity: "ExternalCalendar", entityId: c.id, payload: { source: c.source, added: result.added, removed: result.removed } });
+        }
+      } catch (err) {
+        await logActivity(prisma, { userId: "cron", userEmail: "cron", action: "SYNC_ERROR", entity: "ExternalCalendar", entityId: c.id, payload: { source: c.source, error: String(err) } });
+      }
+    })
+  );
+}
+
+// Zachováno pro zpětnou kompatibilitu — synkuje staré bookingIcalUrl pole
 export async function syncAllBookingIcal(prisma: PrismaClient) {
   const types = await prisma.accommodationType.findMany({
     where: { bookingIcalUrl: { not: null } },
@@ -74,7 +96,7 @@ export async function syncAllBookingIcal(prisma: PrismaClient) {
   await Promise.allSettled(
     types.filter((t) => t.bookingIcalUrl).map(async (t) => {
       try {
-        const result = await syncType(prisma, t.id, t.bookingIcalUrl!);
+        const result = await syncType(prisma, t.id, t.bookingIcalUrl!, "booking");
         if (result.added > 0 || result.removed > 0) {
           await logActivity(prisma, { userId: "cron", userEmail: "cron", action: "SYNC", entity: "Typ ubytování", entityId: t.id, payload: { added: result.added, removed: result.removed } });
         }
@@ -87,10 +109,10 @@ export async function syncAllBookingIcal(prisma: PrismaClient) {
 
 export function startBookingCron(prisma: PrismaClient) {
   cron.schedule("*/30 * * * *", () => {
-    console.log("[booking-sync][cron] Running sync...");
-    syncAllBookingIcal(prisma)
-      .then(() => console.log("[booking-sync][cron] Sync done"))
-      .catch((err) => console.error("[booking-sync][cron] error:", err));
+    console.log("[ical-sync][cron] Running sync...");
+    syncAllExternalCalendars(prisma)
+      .then(() => console.log("[ical-sync][cron] Sync done"))
+      .catch((err) => console.error("[ical-sync][cron] error:", err));
   });
-  console.log("[booking-sync] Cron started — syncing every hour");
+  console.log("[ical-sync] Cron started — syncing every 30 min");
 }

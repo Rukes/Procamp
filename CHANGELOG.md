@@ -1,5 +1,9 @@
 # Changelog
 
+## 7. 7. 2026
+
+- **iCal integrace** — podpora více externích kalendářů per typ ubytování (Booking.com, Airbnb…); každé napojení má vlastní import URL, exportní URL s hashem a volbu co exportovat; při startu se stávající Booking.com napojení migrují automaticky; záložka přejmenována z „Booking" na „iCal integrace"
+
 ## 6. 7. 2026
 
 - **Kalendář** — nová stránka s časovou osou rezervací a blokací podle ubytovacích jednotek; kliknutím nebo tažením přes dny vytvoříte novou rezervaci s předvyplněným termínem; drag & drop pro přesun rezervace; blokace z externích zdrojů (Booking.com) zvýrazněny modře

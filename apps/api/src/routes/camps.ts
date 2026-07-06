@@ -28,7 +28,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, bookingEnabled: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, icalEnabled: true } } },
       orderBy: { createdAt: "asc" },
     });
   });
@@ -43,7 +43,7 @@ export async function campRoutes(app: FastifyInstance) {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
       },
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, bookingEnabled: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, icalEnabled: true } } },
     });
   });
 
@@ -152,7 +152,7 @@ export async function campRoutes(app: FastifyInstance) {
     const camp = await app.prisma.camp.update({
       where: { id },
       data,
-      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, bookingEnabled: true } } },
+      include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, icalEnabled: true } } },
     });
     if (before) {
       const afterSnap = { name: camp.name, slug: camp.slug, notificationEmail: camp.notificationEmail, smtpHost: camp.smtpHost, smtpPort: camp.smtpPort, smtpUser: camp.smtpUser, smtpFrom: camp.smtpFrom, smtpReplyTo: camp.smtpReplyTo, requiresConfirmation: camp.requiresConfirmation, useCustomSmtp: camp.useCustomSmtp, hideAdults: camp.hideAdults, hideChildren: camp.hideChildren, info: camp.info, smsNotifyCustomer: camp.smsNotifyCustomer, smsNotifyAdmin: camp.smsNotifyAdmin, smsAdminPhones: camp.smsAdminPhones, smsTemplates: camp.smsTemplates };

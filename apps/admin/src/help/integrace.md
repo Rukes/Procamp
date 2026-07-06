@@ -1,45 +1,58 @@
-# Integrace
+# Integrace externích kalendářů
 
-## Booking.com — iCal synchronizace
+![Nastavení integrace v organizaci](/help/screenshots/integrace.png)
 
-![Nastavení integrace Booking.com v organizaci](/help/screenshots/integrace.png)
+Ubysoft podporuje obousměrnou synchronizaci obsazenosti s externími portály (Booking.com, Airbnb a dalšími) přes standardní iCal formát.
 
-Integrace umožňuje obousměrnou synchronizaci obsazenosti mezi Booking.com a Ubysoft přes standardní iCal formát.
+**Import (portál → Ubysoft)** — systém každých 30 minut automaticky stáhne iCal feed z portálu a vytvoří nebo smaže odpovídající blokace v Ubysoftu.
 
-**Import (Booking.com → Ubysoft)** — systém každou hodinu automaticky stáhne iCal feed z Booking.com a na základě obsazenosti vytvoří nebo smaže blokace v Ubysoft.
-
-**Export (Ubysoft → Booking.com)** — pro každý typ ubytování lze vygenerovat veřejnou URL, kterou zadáte do Booking.com extranetu. Booking.com si ji pravidelně stahuje (obvykle každých 30–60 minut) a blokuje termíny.
+**Export (Ubysoft → portál)** — pro každé napojení lze vygenerovat veřejnou URL, kterou zadáte do extranetu portálu. Portál si ji pravidelně stahuje a blokuje termíny.
 
 ---
 
-### Aktivace
+## Aktivace
 
-Integraci aktivuje správce systému v detailu organizace (záložka Super Admin). Teprve po aktivaci se v detailu každého objektu zobrazí záložka **Booking**.
-
----
-
-### Nastavení importu
-
-1. V extranetu Booking.com přejděte na: **Kalendář → Synchronizovat → Exportovat kalendář**
-2. Zkopírujte URL ve formátu `https://ical.booking.com/v1/export?t=…`
-3. Vložte ji do pole **Import z Booking.com** u příslušného typu ubytování a uložte
-
-Každý typ ubytování má vlastní URL — na Booking.com odpovídá každému typu pokoje.
+Integraci aktivuje správce systému v detailu organizace (záložka Super Admin → **Povolit iCal integrace**). Teprve po aktivaci se v detailu každého objektu zobrazí záložka **iCal integrace**.
 
 ---
 
-### Nastavení exportu
+## Přidání napojení
 
-1. Klikněte na **Vygenerovat hash** — vytvoří se sdílený bezpečnostní klíč pro celý objekt
-2. U každého typu ubytování se zobrazí exportní URL — zkopírujte ji
-3. V extranetu Booking.com: **Kalendář → Synchronizovat → Importovat kalendář** → vložte URL
-4. Zaškrtněte **Aktivní** u daného typu — teprve pak je URL funkční
+1. V záložce **iCal integrace** u objektu vyberte typ ubytování
+2. Klikněte na **Přidat napojení**
+3. Vyberte portál (Booking.com, Airbnb…)
+4. Vyplňte **Import URL** — iCal feed z extranetu portálu
+5. Zkopírujte **Export URL** a zadejte ji do extranetu portálu
 
-Přegenerováním hashe se zneplatní všechny stávající exportní URL najednou.
+Každý typ ubytování může mít napojení na více portálů zároveň.
 
 ---
 
-### Podmínky pro iCal synchronizaci na Booking.com
+## Import URL
+
+Kde najít import URL v extranetu portálu:
+
+- **Booking.com** — Kalendář → Synchronizovat → Exportovat kalendář → URL ve formátu `https://ical.booking.com/v1/export?t=…`
+- **Airbnb** — Kalendář → Exportovat kalendář → zkopírovat odkaz
+
+---
+
+## Export URL
+
+Exportní URL je unikátní pro každé napojení. Zadejte ji do extranetu portálu jako „import kalendáře".
+
+Pomocí tlačítka **↺** vedle URL lze hash přegenerovat — stávající URL tím přestane fungovat a je potřeba aktualizovat ji v portálu.
+
+### Co exportovat
+
+| Nastavení | Co portál dostane |
+|-----------|-------------------|
+| **Vše kromě daného portálu** | Naše rezervace + blokace ze všech ostatních zdrojů (ostatní portály, manuální blokace) — doporučené, zabraňuje dvojímu obsazení |
+| **Vlastní rezervace + manuální blokace** | Pouze to co vzniklo přímo v Ubysoftu, bez blokací z jiných portálů — vhodné pokud portál má vlastní propojení s ostatními kanály |
+
+---
+
+## Podmínky pro iCal synchronizaci na Booking.com
 
 iCal synchronizace je dostupná pouze pokud nemovitost:
 

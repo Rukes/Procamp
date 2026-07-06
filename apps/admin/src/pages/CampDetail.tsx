@@ -634,190 +634,265 @@ function AccommodationTypeEditor({ type, languages, campId, hideAdults, hideChil
   );
 }
 
-const BOOKING_CONDITIONS = `iCal synchronizace je na Booking.com dostupná pouze pokud nemovitost:
-• je otevřená a rezervovatelná
-• nemá napojený Connectivity provider (channel manager jako Prievio apod.)
-• má max. 20 typů pokojů, každý s max. 1 jednotkou
+// --- Integrace externích kalendářů ---
 
-Změny v Booking.com se synchronizují přibližně každou hodinu. Booking.com si náš export stahuje obvykle do 30 minut až několika hodin.`;
+interface ExternalCalendar {
+  id: string;
+  accommodationTypeId: string;
+  source: string;
+  label: string;
+  icalImportUrl: string | null;
+  exportEnabled: boolean;
+  exportMode: "OWN_ONLY" | "ALL_EXCEPT_SOURCE";
+  exportHash: string;
+}
 
-// --- Booking záložka ---
+const PORTALS: { source: string; label: string; badge: string }[] = [
+  { source: "BOOKING", label: "Booking.com", badge: "bg-blue-100 text-blue-700 border-blue-200" },
+  { source: "AIRBNB",  label: "Airbnb",       badge: "bg-pink-100 text-pink-700 border-pink-200" },
+];
+
+function portalInfo(source: string) {
+  return PORTALS.find((p) => p.source === source) ?? { source, label: source, badge: "bg-gray-100 text-gray-600 border-gray-200" };
+}
+
 function BookingTab({ camp, campId, onRefresh, onHelp }: { camp: Camp; campId: string; onRefresh: () => void; onHelp: () => void }) {
   const toast = useToast();
-  const { user } = useAuth();
-  const [saving, setSaving] = useState<string | null>(null);
-  const [syncing, setSyncing] = useState<string | null>(null);
-  const [regeneratingHash, setRegeneratingHash] = useState(false);
-  const [conditionsOpen, setConditionsOpen] = useState(false);
-  const [icalUrls, setIcalUrls] = useState<Record<string, string>>(() => {
-    const map: Record<string, string> = {};
-    for (const t of camp.accommodationTypes ?? []) map[t.id] = (t as any).bookingIcalUrl ?? "";
-    return map;
-  });
-
   const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
-  const campHash = (camp as any).bookingExportHash as string | null | undefined;
+  const types = (camp.accommodationTypes ?? []) as AccommodationType[];
 
-  const handleSave = async (typeId: string) => {
-    setSaving(typeId);
+  const [calendars, setCalendars] = useState<ExternalCalendar[]>([]);
+  const [syncing, setSyncing] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState<string | null>(null);
+  // addForm: typeId → form state
+  const [addForm, setAddForm] = useState<Record<string, { source: string; icalImportUrl: string; exportMode: "OWN_ONLY" | "ALL_EXCEPT_SOURCE" } | null>>({});
+  const [adding, setAdding] = useState<string | null>(null);
+  // editState per calendar id
+  const [editUrl, setEditUrl] = useState<Record<string, string>>({});
+
+  const loadCalendars = async () => {
     try {
-      await api.put(`/camps/${campId}/accommodation-types/${typeId}/booking`, { bookingIcalUrl: icalUrls[typeId] || null });
-      toast.success("Uloženo.");
-      onRefresh();
-    } catch { toast.error("Nepodařilo se uložit."); } finally { setSaving(null); }
+      const res = await api.get("/external-calendars", { params: { accommodationTypeId: undefined } });
+      // Filtrujeme jen typy tohoto objektu
+      const typeIds = new Set(types.map((t) => t.id));
+      setCalendars((res.data as ExternalCalendar[]).filter((c) => typeIds.has(c.accommodationTypeId)));
+    } catch { /* silent */ }
   };
 
-  const handleSync = async (typeId: string) => {
-    setSyncing(typeId);
+  useEffect(() => { loadCalendars(); }, [campId]);
+
+  const handleSync = async (calId: string) => {
+    setSyncing(calId);
     try {
-      const res = await api.post(`/camps/${campId}/accommodation-types/${typeId}/booking/sync`);
+      const res = await api.post(`/external-calendars/${calId}/sync`);
       const { added, updated, removed } = res.data;
-      toast.success(`Sync dokončen: +${added} přidáno, ~${updated} aktualizováno, -${removed} smazáno`);
+      toast.success(`Sync: +${added} přidáno, ~${updated} aktualizováno, -${removed} smazáno`);
+      loadCalendars();
     } catch (err: any) {
       toast.error(err?.response?.data?.error ?? "Sync selhal.");
-    } finally {
-      setSyncing(null);
-      onRefresh();
-    }
+    } finally { setSyncing(null); }
   };
 
-  const handleToggleExport = async (typeId: string, enabled: boolean) => {
-    if (enabled && !campHash) { toast.error("Nejprve vygenerujte exportní hash objektu."); return; }
+  const handleDelete = async (calId: string) => {
+    if (!confirm("Smazat toto napojení? Smažou se i importované blokace.")) return;
+    setDeleting(calId);
     try {
-      await api.put(`/camps/${campId}/accommodation-types/${typeId}/booking`, { bookingExportEnabled: enabled });
-      toast.success(enabled ? "Export aktivován." : "Export deaktivován.");
-      onRefresh();
+      await api.delete(`/external-calendars/${calId}`);
+      toast.success("Napojení smazáno.");
+      loadCalendars();
+    } catch { toast.error("Nepodařilo se smazat."); } finally { setDeleting(null); }
+  };
+
+  const handleToggleExport = async (cal: ExternalCalendar, enabled: boolean) => {
+    try {
+      await api.patch(`/external-calendars/${cal.id}`, { exportEnabled: enabled });
+      loadCalendars();
     } catch { toast.error("Nepodařilo se změnit stav."); }
   };
 
-  const handleRegenerateHash = async (isFirst: boolean) => {
-    if (!isFirst && !confirm("Přegenerovat hash? Všechny exportní URL přestanou fungovat.")) return;
-    setRegeneratingHash(true);
+  const handleSaveUrl = async (cal: ExternalCalendar) => {
     try {
-      await api.post(`/camps/${campId}/booking/regenerate-hash`);
-      toast.success(isFirst ? "Hash vygenerován." : "Hash přegenerován.");
-      onRefresh();
-    } catch { toast.error("Nepodařilo se přegenerovat hash."); } finally { setRegeneratingHash(false); }
+      await api.patch(`/external-calendars/${cal.id}`, { icalImportUrl: editUrl[cal.id] || null });
+      toast.success("URL uložena.");
+      loadCalendars();
+    } catch { toast.error("Nepodařilo se uložit."); }
   };
 
-  const types = (camp.accommodationTypes ?? []) as (AccommodationType & { bookingIcalUrl?: string | null; bookingExportEnabled?: boolean })[];
+  const handleAdd = async (typeId: string) => {
+    const form = addForm[typeId];
+    if (!form) return;
+    setAdding(typeId);
+    try {
+      await api.post("/external-calendars", {
+        accommodationTypeId: typeId,
+        source: form.source,
+        label: portalInfo(form.source).label,
+        icalImportUrl: form.icalImportUrl || null,
+        exportMode: form.exportMode,
+      });
+      toast.success("Napojení přidáno.");
+      setAddForm((prev) => ({ ...prev, [typeId]: null }));
+      loadCalendars();
+    } catch { toast.error("Nepodařilo se přidat."); } finally { setAdding(null); }
+  };
 
   return (
     <div className="space-y-6 max-w-3xl">
-
-      {/* Podmínky + nápověda — jedna linie */}
-      <div>
-        <div className="flex items-center justify-between">
-          <button
-            type="button"
-            className="flex items-center gap-1 text-xs text-amber-600 hover:text-amber-700 font-medium"
-            onClick={() => setConditionsOpen((v) => !v)}
-          >
-            <i className={`fa-regular fa-chevron-${conditionsOpen ? "up" : "down"} text-[10px]`} />
-            Podmínky iCal synchronizace s Booking.com
-          </button>
-          <button type="button" onClick={onHelp} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600">
-            <i className="fa-regular fa-circle-question" />
-            Nápověda k integraci
-          </button>
-        </div>
-        {conditionsOpen && (
-          <div className="mt-2 rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 text-xs text-amber-800 whitespace-pre-line">
-            {BOOKING_CONDITIONS}
-          </div>
-        )}
+      <div className="flex justify-end">
+        <button type="button" onClick={onHelp} className="flex items-center gap-1.5 text-sm text-gray-400 hover:text-gray-600">
+          <i className="fa-regular fa-circle-question" />
+          Nápověda k integraci
+        </button>
       </div>
 
-      {/* Hash na úrovni objektu */}
-      <div className="card p-5">
-        <h4 className="font-semibold text-gray-900 mb-1">Exportní hash objektu</h4>
-        <p className="text-xs text-gray-400 mb-3">
-          Jeden sdílený hash pro všechny exportní URL tohoto objektu. Přegenerováním se zneplatní všechny stávající URL.
-        </p>
-        {campHash ? (
-          <div className="flex items-center gap-2">
-            <input
-              className="input flex-1 font-mono text-xs text-gray-400 bg-gray-50"
-              readOnly
-              value={campHash}
-              onClick={(e) => (e.target as HTMLInputElement).select()}
-            />
-            <button
-              type="button"
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 whitespace-nowrap text-gray-600"
-              disabled={regeneratingHash}
-              onClick={() => handleRegenerateHash(false)}
-            >
-              {regeneratingHash ? "Generuji…" : "Přegenerovat"}
-            </button>
-          </div>
-        ) : (
-          <button type="button" className="btn-secondary" disabled={regeneratingHash} onClick={() => handleRegenerateHash(true)}>
-            {regeneratingHash ? "Generuji…" : "Vygenerovat hash"}
-          </button>
-        )}
-      </div>
-
-      {/* Per typ */}
       {types.map((type) => {
         const name = (type.translations as any)?.cs?.name ?? (type.translations as any)?.[Object.keys(type.translations as any)[0]]?.name ?? "Typ ubytování";
-        const exportUrl = campHash ? `${apiBase}/api/public/ical/${type.id}/${campHash}` : null;
+        const typeCals = calendars.filter((c) => c.accommodationTypeId === type.id);
+        const form = addForm[type.id];
+        const usedSources = new Set(typeCals.map((c) => c.source));
+        const availablePortals = PORTALS.filter((p) => !usedSources.has(p.source));
+
         return (
           <div key={type.id} className="card p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <h4 className="font-semibold text-gray-900">{name}</h4>
-              {user?.isSuperAdmin && (type as any).bookingIcalUrl && (
-                <Tooltip text="Spustit synchronizaci nyní" position="left">
-                  <button
-                    type="button"
-                    className="text-gray-400 hover:text-blue-600 transition-colors disabled:opacity-40"
-                    disabled={syncing === type.id}
-                    onClick={() => handleSync(type.id)}
-                  >
-                    <i className={`fa-regular fa-arrows-rotate ${syncing === type.id ? "animate-spin" : ""}`} />
-                  </button>
-                </Tooltip>
-              )}
-            </div>
+            <h4 className="font-semibold text-gray-900">{name}</h4>
 
-            {/* Import */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Import z Booking.com (iCal URL)</label>
-              <p className="text-xs text-gray-400 mb-2">Najdete v extranetu Booking.com: Kalendář → Synchronizovat → Exportovat kalendář</p>
-              <div className="flex gap-2">
-                <input
-                  className="input flex-1 font-mono text-sm"
-                  placeholder="https://ical.booking.com/v1/export?t=..."
-                  value={icalUrls[type.id] ?? ""}
-                  onChange={(e) => setIcalUrls((prev) => ({ ...prev, [type.id]: e.target.value }))}
-                />
-                <button type="button" className="btn-primary whitespace-nowrap" disabled={saving === type.id} onClick={() => handleSave(type.id)}>
-                  {saving === type.id ? "Ukládám…" : "Uložit"}
-                </button>
-              </div>
-            </div>
+            {typeCals.length === 0 && !form && (
+              <p className="text-sm text-gray-400 italic">Žádné napojení</p>
+            )}
 
-            {/* Export */}
-            <div className="border-t pt-4">
-              <label className="block text-sm font-medium text-gray-700 mb-1">Export do Booking.com</label>
-              <p className="text-xs text-gray-400 mb-3">Tuto URL zadejte v extranetu Booking.com: Kalendář → Synchronizovat → Importovat kalendář</p>
-              {exportUrl ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <input className="input flex-1 font-mono text-xs text-gray-500 bg-gray-50" readOnly value={exportUrl} onClick={(e) => (e.target as HTMLInputElement).select()} />
-                    <button type="button" className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50" onClick={() => navigator.clipboard.writeText(exportUrl).then(() => toast.success("Zkopírováno!"))}>
-                      <i className="fa-regular fa-copy" />
-                    </button>
+            {typeCals.map((cal) => {
+              const portal = portalInfo(cal.source);
+              const exportUrl = `${apiBase}/api/public/ical/ext/${cal.exportHash}`;
+              const currentUrl = editUrl[cal.id] ?? cal.icalImportUrl ?? "";
+              return (
+                <div key={cal.id} className="border border-gray-200 rounded-xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${portal.badge}`}>
+                      {portal.label}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      {cal.icalImportUrl && (
+                        <Tooltip text="Spustit synchronizaci nyní" position="left">
+                          <button type="button" className="text-gray-400 hover:text-blue-600 disabled:opacity-40 transition-colors" disabled={syncing === cal.id} onClick={() => handleSync(cal.id)}>
+                            <i className={`fa-regular fa-arrows-rotate ${syncing === cal.id ? "animate-spin" : ""}`} />
+                          </button>
+                        </Tooltip>
+                      )}
+                      <button type="button" className="text-gray-400 hover:text-red-500 disabled:opacity-40 transition-colors" disabled={deleting === cal.id} onClick={() => handleDelete(cal.id)}>
+                        <i className="fa-regular fa-trash" />
+                      </button>
+                    </div>
                   </div>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" className="w-4 h-4 rounded" checked={!!type.bookingExportEnabled} onChange={(e) => handleToggleExport(type.id, e.target.checked)} />
-                    <span className="text-sm text-gray-700">Aktivní</span>
-                  </label>
+
+                  {/* Import URL */}
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Import URL (iCal z {portal.label})</label>
+                    <div className="flex gap-2">
+                      <input
+                        className="input flex-1 font-mono text-xs"
+                        placeholder="https://ical.booking.com/v1/export?t=..."
+                        value={currentUrl}
+                        onChange={(e) => setEditUrl((prev) => ({ ...prev, [cal.id]: e.target.value }))}
+                      />
+                      <button type="button" className="btn-secondary whitespace-nowrap text-sm" onClick={() => handleSaveUrl(cal)}>Uložit</button>
+                    </div>
+                  </div>
+
+                  {/* Export */}
+                  <div className="border-t pt-3 space-y-2">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Export URL (zadej v {portal.label})</label>
+                    <div className="flex items-center gap-2">
+                      <input className="input flex-1 font-mono text-xs text-gray-500 bg-gray-50" readOnly value={exportUrl} onClick={(e) => (e.target as HTMLInputElement).select()} />
+                      <button type="button" className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50" onClick={() => navigator.clipboard.writeText(exportUrl).then(() => toast.success("Zkopírováno!"))}>
+                        <i className="fa-regular fa-copy" />
+                      </button>
+                      <Tooltip text="Přegenerovat hash — stávající URL přestane fungovat" position="left">
+                        <button
+                          type="button"
+                          className="px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 text-gray-500"
+                          onClick={async () => {
+                            if (!confirm("Přegenerovat hash? Stávající exportní URL přestane fungovat.")) return;
+                            await api.patch(`/external-calendars/${cal.id}`, { regenerateHash: true });
+                            toast.success("Hash přegenerován.");
+                            loadCalendars();
+                          }}
+                        >
+                          <i className="fa-regular fa-arrows-rotate" />
+                        </button>
+                      </Tooltip>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="checkbox" className="w-4 h-4 rounded" checked={cal.exportEnabled} onChange={(e) => handleToggleExport(cal, e.target.checked)} />
+                        <span className="text-sm text-gray-700">Export aktivní</span>
+                      </label>
+                      <select
+                        className="input text-xs py-1 max-w-[200px]"
+                        value={cal.exportMode}
+                        onChange={async (e) => {
+                          await api.patch(`/external-calendars/${cal.id}`, { exportMode: e.target.value });
+                          loadCalendars();
+                        }}
+                      >
+                        <option value="ALL_EXCEPT_SOURCE">Vše kromě {portal.label}</option>
+                        <option value="OWN_ONLY">Vlastní rezervace + manuální blokace</option>
+                      </select>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      {cal.exportMode === "ALL_EXCEPT_SOURCE"
+                        ? "Exportuje všechny rezervace a blokace z Ubysoftu (i ostatních portálů)"
+                        : "Exportuje všechny rezervace a blokace pouze z Ubysoftu"}
+                    </p>
+                  </div>
                 </div>
-              ) : (
-                <p className="text-xs text-gray-400 italic">Nejprve vygenerujte exportní hash objektu výše.</p>
-              )}
-            </div>
+              );
+            })}
+
+            {/* Přidat napojení */}
+            {!form ? (
+              availablePortals.length > 0 && (
+                <button
+                  type="button"
+                  className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 font-medium"
+                  onClick={() => setAddForm((prev) => ({ ...prev, [type.id]: { source: availablePortals[0].source, icalImportUrl: "", exportMode: "ALL_EXCEPT_SOURCE" } }))}
+                >
+                  <i className="fa-regular fa-plus" />
+                  Přidat napojení
+                </button>
+              )
+            ) : (
+              <div className="border border-blue-200 rounded-xl p-4 bg-blue-50/40 space-y-3">
+                <h5 className="text-sm font-semibold text-gray-800">Nové napojení</h5>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Portál</label>
+                  <select className="input text-sm" value={form.source} onChange={(e) => setAddForm((prev) => ({ ...prev, [type.id]: { ...form, source: e.target.value } }))}>
+                    {availablePortals.map((p) => <option key={p.source} value={p.source}>{p.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Import URL (iCal z portálu)</label>
+                  <input
+                    className="input w-full font-mono text-xs"
+                    placeholder="https://..."
+                    value={form.icalImportUrl}
+                    onChange={(e) => setAddForm((prev) => ({ ...prev, [type.id]: { ...form, icalImportUrl: e.target.value } }))}
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Co exportovat tomuto portálu</label>
+                  <select className="input text-sm" value={form.exportMode} onChange={(e) => setAddForm((prev) => ({ ...prev, [type.id]: { ...form, exportMode: e.target.value as any } }))}>
+                    <option value="ALL_EXCEPT_SOURCE">Vše kromě blokací z tohoto portálu</option>
+                    <option value="OWN_ONLY">Vlastní rezervace + manuální blokace</option>
+                  </select>
+                </div>
+                <div className="flex gap-2">
+                  <button type="button" className="btn-primary text-sm" disabled={adding === type.id} onClick={() => handleAdd(type.id)}>
+                    {adding === type.id ? "Přidávám…" : "Přidat"}
+                  </button>
+                  <button type="button" className="btn-secondary text-sm" onClick={() => setAddForm((prev) => ({ ...prev, [type.id]: null }))}>Zrušit</button>
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
@@ -1119,7 +1194,7 @@ export default function CampDetailPage() {
     ? `${import.meta.env.VITE_FORM_BASE_URL}/form/${orgSlug}/${camp.slug}`
     : `${import.meta.env.VITE_FORM_BASE_URL}/form/${camp.slug}`;
 
-  const bookingEnabled = !!(camp as any)?.organization?.bookingEnabled;
+  const icalEnabled = !!(camp as any)?.organization?.icalEnabled;
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "settings", label: "Nastavení" },
@@ -1129,7 +1204,7 @@ export default function CampDetailPage() {
     { key: "embed", label: "Vložení na web" },
     { key: "sms", label: "SMS" },
     { key: "smtp", label: "SMTP" },
-    ...(bookingEnabled ? [{ key: "booking" as Tab, label: "Booking" }] : []),
+    ...(icalEnabled ? [{ key: "booking" as Tab, label: "iCal integrace" }] : []),
   ];
 
   const SMS_VAR_EXAMPLES: Record<string, string> = {
@@ -1974,7 +2049,7 @@ export default function CampDetailPage() {
           )}
         </div>
       )}
-      {tab === "booking" && bookingEnabled && (
+      {tab === "booking" && icalEnabled && (
         <BookingTab camp={camp!} campId={id!} onRefresh={load} onHelp={() => setHelpIntegraceOpen(true)} />
       )}
       {previewModal && (

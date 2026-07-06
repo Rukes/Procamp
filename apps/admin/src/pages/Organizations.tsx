@@ -285,7 +285,7 @@ export default function OrganizationsPage() {
                       </span>
                     </>
                   )}
-                  {(org as any).bookingEnabled && (
+                  {(org as any).icalEnabled && (
                     <>
                       <span className="text-xs text-gray-300">·</span>
                       <span className="text-xs text-blue-700">

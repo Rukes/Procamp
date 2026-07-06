@@ -33,7 +33,7 @@ model Organization {
   goSmsClientId       String   @default("")
   goSmsClientSecret   String   @default("")
   goSmsChannelId      Int?
-  bookingEnabled      Boolean  @default(false)
+  icalEnabled         Boolean  @default(false) @map("bookingEnabled")
   hideCopyright       Boolean  @default(false)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
@@ -134,6 +134,26 @@ model AccommodationType {
   nightTiers       NightTier[]
   reservations     Reservation[]
   blockedPeriods   BlockedPeriod[]
+  externalCalendars ExternalCalendar[]
+}
+
+enum ExportMode {
+  OWN_ONLY
+  ALL_EXCEPT_SOURCE
+}
+
+model ExternalCalendar {
+  id                  String            @id @default(cuid())
+  accommodationTypeId String
+  accommodationType   AccommodationType @relation(fields: [accommodationTypeId], references: [id], onDelete: Cascade)
+  source              String
+  label               String
+  icalImportUrl       String?
+  exportEnabled       Boolean           @default(true)
+  exportMode          ExportMode        @default(ALL_EXCEPT_SOURCE)
+  exportHash          String            @unique
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
 }
 
 model NightTier {

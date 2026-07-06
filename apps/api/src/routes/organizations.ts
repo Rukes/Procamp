@@ -10,7 +10,7 @@ export async function organizationRoutes(app: FastifyInstance) {
     address: true, city: true, zip: true, contactPerson: true, phone: true, contactEmail: true,
     billingEmail: true, termsText: true, requireTermsAcceptance: true,
     defaultLanguageCode: true, thousandsSeparator: true, decimalSeparator: true, gaTrackingId: true,
-    goSmsClientId: true, goSmsClientSecret: true, goSmsChannelId: true, bookingEnabled: true,
+    goSmsClientId: true, goSmsClientSecret: true, goSmsChannelId: true, icalEnabled: true,
     createdAt: true, updatedAt: true,
   };
 
@@ -114,7 +114,7 @@ export async function organizationRoutes(app: FastifyInstance) {
       goSmsClientId: body.goSmsClientId !== undefined ? (body.goSmsClientId as string) : undefined,
       goSmsClientSecret: body.goSmsClientSecret !== undefined ? (body.goSmsClientSecret as string) : undefined,
       goSmsChannelId: body.goSmsChannelId !== undefined ? (body.goSmsChannelId as number | null) : undefined,
-      bookingEnabled: body.bookingEnabled !== undefined ? (body.bookingEnabled as boolean) : undefined,
+      icalEnabled: body.icalEnabled !== undefined ? (body.icalEnabled as boolean) : undefined,
       hideCopyright: body.hideCopyright !== undefined ? (body.hideCopyright as boolean) : undefined,
     };
     const before = await app.prisma.organization.findUnique({ where: { id } });

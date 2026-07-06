@@ -16,12 +16,44 @@ import { systemSettingsRoutes } from "./routes/system-settings";
 import { organizationRoutes } from "./routes/organizations";
 import { activityLogRoutes } from "./routes/activity-logs";
 import { blockedPeriodRoutes } from "./routes/blocked-periods";
+import { externalCalendarRoutes } from "./routes/external-calendars";
 import { searchRoutes } from "./routes/search";
 import { motdRoutes } from "./routes/motd";
 import { publicFormRoutes } from "./routes/public/form";
 import { icalRoutes } from "./routes/public/ical";
 import { startBookingCron } from "./services/bookingIcalSync";
 import { PrismaClient } from "@prisma/client";
+import { randomBytes } from "crypto";
+
+async function migrateBookingIcalToExternalCalendar(prisma: PrismaClient) {
+  const types = await prisma.accommodationType.findMany({
+    where: { bookingIcalUrl: { not: null } },
+    select: { id: true, bookingIcalUrl: true },
+  });
+  if (types.length === 0) return;
+
+  let migrated = 0;
+  for (const t of types) {
+    const exists = await prisma.externalCalendar.findFirst({
+      where: { accommodationTypeId: t.id, source: "BOOKING" },
+    });
+    if (exists) continue;
+
+    await prisma.externalCalendar.create({
+      data: {
+        accommodationTypeId: t.id,
+        source: "BOOKING",
+        label: "Booking.com",
+        icalImportUrl: t.bookingIcalUrl,
+        exportEnabled: true,
+        exportMode: "ALL_EXCEPT_SOURCE",
+        exportHash: randomBytes(16).toString("hex"),
+      },
+    });
+    migrated++;
+  }
+  if (migrated > 0) console.log(`[migration] ExternalCalendar: migrováno ${migrated} Booking.com napojení`);
+}
 
 async function migrateBookingCodes(prisma: PrismaClient) {
   const reservations = await prisma.reservation.findMany({
@@ -78,6 +110,7 @@ const start = async () => {
   await app.register(organizationRoutes, { prefix: "/api/organizations" });
   await app.register(activityLogRoutes, { prefix: "/api/activity-logs" });
   await app.register(blockedPeriodRoutes, { prefix: "/api/blocked-periods" });
+  await app.register(externalCalendarRoutes, { prefix: "/api/external-calendars" });
   await app.register(searchRoutes, { prefix: "/api/search" });
   await app.register(motdRoutes, { prefix: "/api/motd" });
 
@@ -85,6 +118,9 @@ const start = async () => {
 
   // Migrace: doplnění bookingCode pro existující rezervace
   await migrateBookingCodes(app.prisma);
+
+  // Migrace: bookingIcalUrl → ExternalCalendar
+  await migrateBookingIcalToExternalCalendar(app.prisma);
 
   startBookingCron(app.prisma);
 

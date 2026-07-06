@@ -34,7 +34,7 @@ interface Organization {
   goSmsClientId?: string;
   goSmsClientSecret?: string;
   goSmsChannelId?: number | null;
-  bookingEnabled?: boolean;
+  icalEnabled?: boolean;
   _count: { camps: number; users: number };
 }
 
@@ -423,13 +423,13 @@ export default function OrganizationDetailPage() {
               <input
                 type="checkbox"
                 className="w-4 h-4 rounded"
-                checked={!!(form as any).bookingEnabled}
-                onChange={(e) => setForm((f) => ({ ...f, bookingEnabled: e.target.checked }))}
+                checked={!!(form as any).icalEnabled}
+                onChange={(e) => setForm((f) => ({ ...f, icalEnabled: e.target.checked }))}
               />
-              <span className="text-sm font-medium text-gray-700">Povolit Booking.com integraci</span>
+              <span className="text-sm font-medium text-gray-700">Povolit iCal integrace</span>
             </label>
             <p className="text-xs text-gray-400 mt-1 ml-7">
-              Zobrazí záložku Booking v detailu každého objektu pro nastavení iCal synchronizace.
+              Zobrazí záložku iCal integrace v detailu každého objektu pro napojení externích kalendářů (Booking.com, Airbnb…).
             </p>
             <label className="flex items-center gap-3 cursor-pointer mt-4">
               <input
