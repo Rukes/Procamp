@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { api } from "../api/client";
 import { useToast } from "../contexts/ToastContext";
 import WysiwygEditor from "../components/WysiwygEditor";
+import DateTimePicker from "../components/DateTimePicker";
 
 interface MotdItem {
   id: string;
@@ -167,7 +168,7 @@ export default function MotdPage() {
 
       {modal && (
         <div className="fixed inset-0 bg-black/40 z-50 flex items-start justify-center p-2 pt-4 sm:p-4 sm:pt-8" onClick={closeModal}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[92dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-3xl max-h-[95dvh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
               <h3 className="font-semibold">{modal === "new" ? "Nová zpráva" : "Upravit zprávu"}</h3>
               <button type="button" onClick={closeModal} className="text-gray-400 hover:text-gray-700"><i className="fa-regular fa-xmark text-lg" /></button>
@@ -203,14 +204,18 @@ export default function MotdPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="label">Platnost od *</label>
-                  <input className="input" type="datetime-local" value={form.validFrom} onChange={(e) => setForm((f) => ({ ...f, validFrom: e.target.value }))} required />
-                </div>
-                <div>
-                  <label className="label">Platnost do *</label>
-                  <input className="input" type="datetime-local" value={form.validTo} onChange={(e) => setForm((f) => ({ ...f, validTo: e.target.value }))} required />
-                </div>
+                <DateTimePicker
+                  label="Platnost od"
+                  required
+                  value={form.validFrom}
+                  onChange={(v) => setForm((f) => ({ ...f, validFrom: v }))}
+                />
+                <DateTimePicker
+                  label="Platnost do"
+                  required
+                  value={form.validTo}
+                  onChange={(v) => setForm((f) => ({ ...f, validTo: v }))}
+                />
               </div>
 
               <div className="border-t border-gray-100 pt-3">
