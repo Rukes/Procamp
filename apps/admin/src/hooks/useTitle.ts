@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 export function useTitle(page: string) {
   useEffect(() => {
-    document.title = `${page} | MůjKemp.cz`;
-    return () => { document.title = "MůjKemp.cz"; };
+    document.title = `${page} | Ubysoft.cz`;
+    return () => { document.title = "Ubysoft.cz"; };
   }, [page]);
 }
