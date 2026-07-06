@@ -1,5 +1,9 @@
 # Changelog
 
+## 6. 7. 2026
+
+- **Rebrand na Ubysoft.cz** — systém přejmenován z MůjKemp.cz na Ubysoft.cz; nová loga, nový název v titulku adminu a formuláře, přesměrování starých domén (app/api/form.mujkemp.cz → ubysoft.cz)
+
 ## 30. 6. 2026
 
 - **Log startu serveru** — každý start API serveru zapíše záznam do logu aktivit
