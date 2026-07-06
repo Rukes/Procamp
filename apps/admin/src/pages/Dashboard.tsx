@@ -4,11 +4,12 @@ import { api } from "../api/client";
 import { Reservation, Camp } from "@procamp/shared";
 import { format } from "date-fns";
 import { cs } from "date-fns/locale";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useOrg } from "../contexts/OrgContext";
 import { Flag } from "../utils/langFlag";
 import ReservationCalendar from "../components/ReservationCalendar";
 import { MotdBannerDashboard } from "../components/MotdBanner";
+import ReservationModal from "../components/ReservationModal";
 
 function NotePopover({ note, internal = false }: { note: string; internal?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -57,8 +58,8 @@ function isOngoing(r: { status: string; checkIn: string; checkOut: string }): bo
 
 export default function DashboardPage() {
   useTitle("Dashboard");
-  const navigate = useNavigate();
   const { selectedOrgId } = useOrg();
+  const [modalId, setModalId] = useState<string | null>(null);
   const [reservations, setReservations] = useState<(Reservation & { camp: Camp })[]>([]);
   const [camps, setCamps] = useState<Camp[]>([]);
 
@@ -169,7 +170,7 @@ export default function DashboardPage() {
                   <tr
                     key={r.id}
                     className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/reservations/${r.id}`)}
+                    onClick={() => setModalId(r.id)}
                   >
                     <td className="px-4 py-3"><span className="font-mono text-xs bg-gray-100 px-1.5 py-0.5 rounded">{r.bookingCode ?? "—"}</span></td>
                     <td className="px-4 py-3">
@@ -206,14 +207,15 @@ export default function DashboardPage() {
                   </tr>
                 ))}
                 {recent.length === 0 && (
-                  <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">Žádné rezervace</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400">Žádné rezervace</td></tr>
                 )}
               </tbody>
             </table>
           </div>
         </div>
-        <ReservationCalendar reservations={reservations} showAllLink className="order-2 lg:order-1" />
+        <ReservationCalendar reservations={reservations} showAllLink className="order-2 lg:order-1" onReservationClick={setModalId} />
       </div>
+      <ReservationModal reservationId={modalId} onClose={() => setModalId(null)} onChanged={load} />
     </div>
   );
 }

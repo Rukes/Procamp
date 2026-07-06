@@ -35,6 +35,16 @@ export async function blockedPeriodRoutes(app: FastifyInstance) {
     return reply.status(201).send(period);
   });
 
+  app.get("/:id", { preHandler: requirePermission("blockings_view") }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const period = await app.prisma.blockedPeriod.findUnique({
+      where: { id },
+      include: { camp: true, accommodationType: true },
+    });
+    if (!period) return reply.status(404).send({ error: "Not found" });
+    return period;
+  });
+
   app.patch("/:id", { preHandler: requirePermission("blockings_edit") }, async (request) => {
     const { id } = request.params as { id: string };
     const { accommodationTypeId, dateFrom, dateTo, reason, internalNote } = request.body as any;

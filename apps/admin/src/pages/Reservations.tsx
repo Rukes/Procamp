@@ -10,6 +10,8 @@ import { useAuth } from "../contexts/AuthContext";
 import { Flag } from "../utils/langFlag";
 import Pagination from "../components/Pagination";
 import ReservationCalendar from "../components/ReservationCalendar";
+import ReservationModal from "../components/ReservationModal";
+import Tooltip from "../components/Tooltip";
 
 function NotePopover({ note, internal = false }: { note: string; internal?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -85,6 +87,7 @@ export default function ReservationsPage() {
   const { can } = useAuth();
   const navigate = useNavigate();
   const [helpOpen, setHelpOpen] = useState(false);
+  const [modalId, setModalId] = useState<string | null>(null);
   const [reservations, setReservations] = useState<(Reservation & { camp: Camp })[]>([]);
   const [camps, setCamps] = useState<Camp[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -297,6 +300,7 @@ export default function ReservationsPage() {
           <table className="w-full text-sm min-w-[700px]">
             <thead>
               <tr className="border-b border-gray-100 text-left text-gray-500 bg-gray-50">
+                <th className="px-2 py-3 w-8"></th>
                 <th className="px-4 py-3 font-medium">Kód</th>
                 <Th k="name">Jméno a příjmení</Th>
                 <Th k="camp">Objekt</Th>
@@ -317,6 +321,14 @@ export default function ReservationsPage() {
                     className={`cursor-pointer ${isOngoing(r) ? "bg-green-50 hover:bg-green-100" : es === "COMPLETED" || es === "CANCELLED" || es === "EXPIRED" ? "opacity-60 hover:bg-gray-50" : "hover:bg-gray-50"}`}
                     onClick={() => navigate(`/reservations/${r.id}`)}
                   >
+                    <td className="px-2 py-3 w-8">
+                      <Tooltip text="Otevřít detail">
+                        <button
+                          className="text-gray-400 hover:text-blue-600 transition-colors"
+                          onClick={(e) => { e.stopPropagation(); setModalId(r.id); }}
+                        ><i className="fa-regular fa-eye" /></button>
+                      </Tooltip>
+                    </td>
                     <td className="px-4 py-3">
                       <code className="text-xs font-mono bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{r.bookingCode ?? "—"}</code>
                     </td>
@@ -362,7 +374,7 @@ export default function ReservationsPage() {
                 );
               })}
               {reservations.length === 0 && (
-                <tr><td colSpan={9} className="px-4 py-10 text-center text-gray-400">Žádné rezervace</td></tr>
+                <tr><td colSpan={10} className="px-4 py-10 text-center text-gray-400">Žádné rezervace</td></tr>
               )}
             </tbody>
           </table>
@@ -372,6 +384,7 @@ export default function ReservationsPage() {
         <ReservationCalendar reservations={sorted} />
       )}
       <Pagination page={page} total={sorted.length} perPage={perPage} onChange={setPage} onPerPageChange={setPerPage} />
+      <ReservationModal reservationId={modalId} onClose={() => setModalId(null)} onChanged={() => api.get("/reservations").then(r => setReservations(r.data)).catch(() => {})} />
     </div>
   );
 }

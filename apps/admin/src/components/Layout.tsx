@@ -22,6 +22,7 @@ function MotdBannerGlobalWrapper() {
 const nav: { to: string; label: string; icon: string; perm?: keyof Permission; newLink?: string }[] = [
   { to: "/dashboard", label: "Dashboard", icon: "fa-chart-bar" },
   { to: "/reservations", label: "Rezervace", icon: "fa-calendar", perm: "reservations_view", newLink: "/reservations/new" },
+  { to: "/calendar", label: "Kalendář", icon: "fa-calendar-days", perm: "reservations_view" },
   { to: "/blockings", label: "Blokace", icon: "fa-calendar-xmark", perm: "blockings_view" },
   { to: "/camps", label: "Objekty", icon: "fa-tent", perm: "camps_view" },
   { to: "/users", label: "Uživatelé", icon: "fa-user", perm: "users_manage" },

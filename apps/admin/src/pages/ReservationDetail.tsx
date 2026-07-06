@@ -12,9 +12,12 @@ import { ARRIVAL_TIMES } from "../utils/arrivalTimes";
 
 const STATUS_LABEL: Record<string, string> = { PENDING: "Čeká na potvrzení", CONFIRMED: "Potvrzena", CANCELLED: "Zrušena" };
 const STATUS_CLASS: Record<string, string> = { PENDING: "badge-pending", CONFIRMED: "badge-confirmed", CANCELLED: "badge-cancelled" };
-export default function ReservationDetailPage() {
+interface Props { id?: string; onClose?: () => void; onChanged?: () => void }
+
+export function ReservationDetailContent({ id: idProp, onClose, onChanged }: Props) {
   useTitle("Detail rezervace");
-  const { id } = useParams<{ id: string }>();
+  const params = useParams<{ id: string }>();
+  const id = idProp ?? params.id;
   const { can } = useAuth();
   const toast = useToast();
   const [reservation, setReservation] = useState<(Reservation & { camp: Camp }) | null>(null);
@@ -171,6 +174,7 @@ export default function ReservationDetailPage() {
       toast.success("Rezervace byla upravena.");
       setEditing(false);
       load();
+      onChanged?.();
     } catch {
       toast.error("Nepodařilo se uložit změny.");
     }
@@ -181,7 +185,7 @@ export default function ReservationDetailPage() {
     try {
       await api.delete(`/reservations/${id}`);
       toast.success("Rezervace byla smazána.");
-      window.history.back();
+      if (onClose) onClose(); else window.history.back();
     } catch {
       toast.error("Nepodařilo se smazat rezervaci.");
     }
@@ -208,6 +212,7 @@ export default function ReservationDetailPage() {
       await api.patch(`/reservations/${id}/status`, { status });
       toast.success(STATUS_TOAST[status] ?? "Status byl změněn.");
       load();
+      onChanged?.();
     } catch {
       toast.error("Nepodařilo se změnit status rezervace.");
     }
@@ -237,7 +242,13 @@ export default function ReservationDetailPage() {
   return (
     <div className="p-4 md:p-8">
       <div className="flex flex-wrap items-center gap-2 mb-6">
-        <Link to="/reservations" className="flex items-center gap-1.5 text-gray-400 hover:text-gray-600"><i className="fa-regular fa-arrow-left" /> Rezervace</Link>
+        {onClose
+          ? <button onClick={onClose} className="flex items-center gap-1.5 text-gray-400 hover:text-gray-600"><i className="fa-regular fa-arrow-left" /> Zpět</button>
+          : <Link to="/reservations" className="flex items-center gap-1.5 text-gray-400 hover:text-gray-600"><i className="fa-regular fa-arrow-left" /> Rezervace</Link>
+        }
+        {onClose && id && (
+          <Link to={`/reservations/${id}`} className="ml-auto flex items-center gap-1.5 text-sm text-blue-600 hover:text-blue-800 font-medium"><i className="fa-regular fa-arrow-up-right-from-square" /> Otevřít detail</Link>
+        )}
         <span className="text-gray-300">/</span>
         <span className="text-gray-900 font-medium"><Flag code={reservation.languageCode} className="mr-1" /> {reservation.firstName} {reservation.lastName}</span>
         <span className={STATUS_CLASS[reservation.status]}>{STATUS_LABEL[reservation.status]}</span>
@@ -586,4 +597,8 @@ export default function ReservationDetailPage() {
       </div>
     </div>
   );
+}
+
+export default function ReservationDetailPage() {
+  return <ReservationDetailContent />;
 }

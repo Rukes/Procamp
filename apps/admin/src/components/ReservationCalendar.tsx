@@ -13,9 +13,10 @@ interface Props {
   reservations: (Reservation & { camp?: Camp })[];
   showAllLink?: boolean;
   className?: string;
+  onReservationClick?: (id: string) => void;
 }
 
-export default function ReservationCalendar({ reservations, showAllLink = false, className }: Props) {
+export default function ReservationCalendar({ reservations, showAllLink = false, className, onReservationClick }: Props) {
   const navigate = useNavigate();
   const [month, setMonth] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(new Date());
@@ -94,7 +95,7 @@ export default function ReservationCalendar({ reservations, showAllLink = false,
               {selectedReservations.map((r) => (
                 <div
                   key={r.id}
-                  onClick={() => navigate(`/reservations/${r.id}`)}
+                  onClick={() => onReservationClick ? onReservationClick(r.id) : navigate(`/reservations/${r.id}`)}
                   className="flex items-center justify-between gap-2 text-xs px-2 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 cursor-pointer transition-colors"
                 >
                   <div className="min-w-0">

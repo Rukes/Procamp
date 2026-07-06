@@ -357,4 +357,54 @@ export async function reservationRoutes(app: FastifyInstance) {
     reply.header("Content-Disposition", "attachment; filename=rezervace.csv");
     return [header, ...rows].join("\n");
   });
+
+  // Timeline — data pro konkrétní kemp a měsíc
+  app.get("/timeline", { preHandler: requirePermission("reservations_view") }, async (request) => {
+    const { campId, year, month } = request.query as Record<string, string>;
+    const orgId = orgFilter(request);
+    const allowedCampIds = campFilter(request);
+
+    if (!campId || !year || !month) return { accommodationTypes: [], reservations: [], blockedPeriods: [] };
+
+    const y = parseInt(year), m = parseInt(month) - 1;
+    const from = new Date(y, m, 1);
+    const to = new Date(y, m + 1, 0, 23, 59, 59);
+
+    const camp = await app.prisma.camp.findFirst({
+      where: {
+        id: campId,
+        ...(orgId ? { organizationId: orgId } : {}),
+        ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
+      },
+      select: { accommodationTypes: { select: { id: true, translations: true }, orderBy: { sortOrder: "asc" } } },
+    });
+    if (!camp) return { accommodationTypes: [], reservations: [], blockedPeriods: [] };
+
+    const reservations = await app.prisma.reservation.findMany({
+      where: {
+        campId,
+        status: { not: "CANCELLED" },
+        OR: [
+          { checkIn: { gte: from, lte: to } },
+          { checkOut: { gte: from, lte: to } },
+          { AND: [{ checkIn: { lte: from } }, { checkOut: { gte: to } }] },
+        ],
+      },
+      select: { id: true, bookingCode: true, firstName: true, lastName: true, checkIn: true, checkOut: true, status: true, accommodationTypeId: true, languageCode: true },
+    });
+
+    const blockedPeriods = await app.prisma.blockedPeriod.findMany({
+      where: {
+        campId,
+        OR: [
+          { dateFrom: { gte: from, lte: to } },
+          { dateTo: { gte: from, lte: to } },
+          { AND: [{ dateFrom: { lte: from } }, { dateTo: { gte: to } }] },
+        ],
+      },
+      select: { id: true, reason: true, dateFrom: true, dateTo: true, accommodationTypeId: true },
+    });
+
+    return { accommodationTypes: camp.accommodationTypes, reservations, blockedPeriods };
+  });
 }

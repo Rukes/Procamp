@@ -1,7 +1,7 @@
 import { useTitle } from "../hooks/useTitle";
 import { useEffect, useState, useMemo } from "react";
 import HelpModal from "../components/HelpModal";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { api } from "../api/client";
 import { Camp, AccommodationType, Language, Surcharge, formatPrice, getEffectivePricePerNight } from "@procamp/shared";
 import { useToast } from "../contexts/ToastContext";
@@ -15,18 +15,24 @@ import "react-day-picker/dist/style.css";
 export default function ReservationNewPage() {
   useTitle("Nová rezervace");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const toast = useToast();
   const { can } = useAuth();
   const [helpOpen, setHelpOpen] = useState(false);
   const [camps, setCamps] = useState<Camp[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
-  const [campId, setCampId] = useState("");
+  const [campId, setCampId] = useState(searchParams.get("campId") ?? "");
   const [types, setTypes] = useState<AccommodationType[]>([]);
   const [surcharges, setSurcharges] = useState<Surcharge[]>([]);
   const [selectedSurchargeIds, setSelectedSurchargeIds] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
-  const [range, setRange] = useState<DateRange | undefined>(undefined);
+  const [range, setRange] = useState<DateRange | undefined>(() => {
+    const ci = searchParams.get("checkIn");
+    const co = searchParams.get("checkOut");
+    if (ci && co) return { from: new Date(ci), to: new Date(co) };
+    return undefined;
+  });
 
   const handleRangeSelect = (r: DateRange | undefined) => {
     setRange(r);
@@ -41,9 +47,9 @@ export default function ReservationNewPage() {
     : 0;
 
   const [form, setForm] = useState({
-    accommodationTypeId: "",
-    checkIn: "",
-    checkOut: "",
+    accommodationTypeId: searchParams.get("typeId") ?? "",
+    checkIn: searchParams.get("checkIn") ?? "",
+    checkOut: searchParams.get("checkOut") ?? "",
     adults: 1,
     children: 0,
     firstName: "",
@@ -63,20 +69,31 @@ export default function ReservationNewPage() {
   const [availWarnings, setAvailWarnings] = useState<{ booked: number; capacity: number; blocks: { reason?: string; dateFrom: string; dateTo: string }[] } | null>(null);
 
   useEffect(() => {
-    api.get("/camps").then((r) => { setCamps(r.data); if (r.data.length === 1) setCampId(r.data[0].id); }).catch(() => {});
+    api.get("/camps").then((r) => {
+      setCamps(r.data);
+      const preCampId = searchParams.get("campId");
+      if (preCampId && r.data.some((c: Camp) => c.id === preCampId)) setCampId(preCampId);
+      else if (r.data.length === 1) setCampId(r.data[0].id);
+    }).catch(() => {});
     api.get("/languages").then((r) => setLanguages(r.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
     if (!campId) { setTypes([]); setSurcharges([]); return; }
-    api.get(`/camps/${campId}/accommodation-types`).then((r) => setTypes(r.data)).catch(() => {});
+    api.get(`/camps/${campId}/accommodation-types`).then((r) => {
+      setTypes(r.data);
+      const preTypeId = searchParams.get("typeId");
+      if (preTypeId && r.data.some((t: AccommodationType) => t.id === preTypeId)) {
+        setForm((f) => ({ ...f, accommodationTypeId: preTypeId }));
+      }
+    }).catch(() => {});
     api.get(`/camps/${campId}`).then((r) => {
       const s: Surcharge[] = r.data.surcharges ?? [];
       setSurcharges(s);
       setSelectedSurchargeIds(s.filter((x) => !x.isOptional).map((x) => x.id));
       setCampSmsEnabled(r.data.smsNotifyCustomer ?? false);
     }).catch(() => {});
-    setForm((f) => ({ ...f, accommodationTypeId: "" }));
+    if (!searchParams.get("typeId")) setForm((f) => ({ ...f, accommodationTypeId: "" }));
     setAvailWarnings(null);
   }, [campId]);
 
