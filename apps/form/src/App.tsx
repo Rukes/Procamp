@@ -237,7 +237,7 @@ function FormApp() {
       {!hideCopyright && <footer className="mt-auto pt-6 pb-2 flex flex-col items-center gap-2">
         <img
           src={`${import.meta.env.VITE_API_URL ?? ""}/logos/logo-color-notext.png`}
-          alt="MůjKemp.cz"
+          alt="Ubysoft.cz"
           className="h-10 w-auto opacity-80"
         />
         <p className="text-xs text-gray-400">

@@ -108,7 +108,7 @@ export default function HelpPage() {
     <>
       <div className="px-4 py-4 border-b border-gray-700 flex items-center justify-between">
         <div>
-          <span className="text-lg font-bold text-blue-400">MůjKemp.cz</span>
+          <span className="text-lg font-bold text-blue-400">Ubysoft.cz</span>
           <p className="text-xs text-gray-400 mt-0.5">Nápověda</p>
         </div>
         <button className="md:hidden text-gray-400 hover:text-white" onClick={() => setDrawerOpen(false)}>

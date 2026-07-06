@@ -441,7 +441,7 @@ export default function OrganizationDetailPage() {
               <span className="text-sm font-medium text-gray-700">Skrýt copyright ve formuláři</span>
             </label>
             <p className="text-xs text-gray-400 mt-1 ml-7">
-              Skryje patičku s logem a odkazem na MůjKemp.cz v rezervačním formuláři.
+              Skryje patičku s logem a odkazem na Ubysoft.cz v rezervačním formuláři.
             </p>
             <button
               type="button"

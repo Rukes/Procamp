@@ -1,10 +1,10 @@
 # Začínáme
 
-Vítejte v MůjKemp.cz administraci. Tato stránka vás provede prvním nastavením od začátku až po spuštění rezervačního formuláře na vašem webu.
+Vítejte v Ubysoft.cz administraci. Tato stránka vás provede prvním nastavením od začátku až po spuštění rezervačního formuláře na vašem webu.
 
 ## Poznámka k platbám
 
-MůjKemp.cz je systém pro správu rezervací — záměrně **neobsahuje platební bránu** ani žádné napojení na online platby. Zákazníkům nevzniká žádná výzva k platbě kartou ani převodem přes systém. Platby za pobyt si každý provozovatel řeší po vlastní ose — ať už platbou na místě při příjezdu, převodem na základě zaslané faktury nebo jiným způsobem, který mu vyhovuje. Systém do toho nijak nezasahuje a záměrně to tak necháváme.
+Ubysoft.cz je systém pro správu rezervací — záměrně **neobsahuje platební bránu** ani žádné napojení na online platby. Zákazníkům nevzniká žádná výzva k platbě kartou ani převodem přes systém. Platby za pobyt si každý provozovatel řeší po vlastní ose — ať už platbou na místě při příjezdu, převodem na základě zaslané faktury nebo jiným způsobem, který mu vyhovuje. Systém do toho nijak nezasahuje a záměrně to tak necháváme.
 
 ## Doporučený postup
 

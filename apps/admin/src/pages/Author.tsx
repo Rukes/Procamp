@@ -11,7 +11,7 @@ export default function AuthorPage() {
 
       <div className="max-w-2xl bg-white rounded-xl border border-gray-200 p-8 space-y-6 text-gray-700 leading-relaxed">
         <p>
-          Cílem rezervačního systému <strong>MůjKemp.cz</strong> je naprogramovat běžným pronajímatelům
+          Cílem rezervačního systému <strong>Ubysoft.cz</strong> je naprogramovat běžným pronajímatelům
           jednoduchý systém pouze za provozní poplatek. Vývoj obdobného systému stojí desetitisíce
           až statisíce korun a je následně náročný na údržbu. Rozhodl jsem se na popud známého
           takový systém vytvořit jako open source, protože je celý naprogramovaný pomocí Anthropic Claude.
