@@ -16,12 +16,14 @@ import formular from "../help/formulár.md?raw";
 import blokace from "../help/blokace.md?raw";
 import novaRezervace from "../help/nova-rezervace.md?raw";
 import integrace from "../help/integrace.md?raw";
+import kalendar from "../help/kalendar.md?raw";
 const TOPICS = [
   { id: "zacínáme",        label: "Začínáme",              icon: "fa-rocket",         content: zacíname },
   { id: "organizace",      label: "Organizace",             icon: "fa-building",       content: organizace },
   { id: "objekty",         label: "Objekty",                icon: "fa-tent",           content: objekty },
   { id: "rezervace",       label: "Rezervace",              icon: "fa-calendar",       content: rezervace },
   { id: "nova-rezervace",  label: "Nová rezervace",         icon: "fa-calendar-plus",  content: novaRezervace },
+  { id: "kalendar",        label: "Kalendář",               icon: "fa-calendar-days",  content: kalendar },
   { id: "blokace",         label: "Blokace termínů",        icon: "fa-calendar-xmark", content: blokace },
   { id: "uzivatele",  label: "Uživatelé & oprávnění",  icon: "fa-user",          content: uzivatele },
   { id: "jazyky",     label: "Jazyky & měny",          icon: "fa-globe",         content: jazyky },

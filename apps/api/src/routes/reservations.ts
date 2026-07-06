@@ -402,7 +402,7 @@ export async function reservationRoutes(app: FastifyInstance) {
           { AND: [{ dateFrom: { lte: from } }, { dateTo: { gte: to } }] },
         ],
       },
-      select: { id: true, reason: true, dateFrom: true, dateTo: true, accommodationTypeId: true },
+      select: { id: true, reason: true, dateFrom: true, dateTo: true, accommodationTypeId: true, source: true },
     });
 
     return { accommodationTypes: camp.accommodationTypes, reservations, blockedPeriods };

@@ -182,8 +182,13 @@ export default function Layout() {
         </div>
       </div>
 
+    </>
+  );
+
+  return (
+    <div className="min-h-screen flex">
       {changelogOpen && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/50 pt-8 px-4" onClick={() => setChangelogOpen(false)}>
+        <div className="fixed inset-0 z-[200] flex items-start justify-center bg-black/50 pt-8 px-4" onClick={() => setChangelogOpen(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b">
               <h2 className="text-lg font-semibold">Changelog</h2>
@@ -196,11 +201,7 @@ export default function Layout() {
           </div>
         </div>
       )}
-    </>
-  );
 
-  return (
-    <div className="min-h-screen flex">
       {/* Desktop sidebar */}
       <aside className="hidden md:flex w-60 bg-gray-900 text-white flex-col fixed top-0 left-0 h-screen z-10">
         {sidebarContent}

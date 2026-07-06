@@ -12,6 +12,7 @@ import formular from "../help/formulár.md?raw";
 import blokace from "../help/blokace.md?raw";
 import novaRezervace from "../help/nova-rezervace.md?raw";
 import integrace from "../help/integrace.md?raw";
+import kalendar from "../help/kalendar.md?raw";
 
 const TOPICS: Record<string, string> = {
   "zacínáme": zacíname,
@@ -25,6 +26,7 @@ const TOPICS: Record<string, string> = {
   "emaily": emaily,
   "formular": formular,
   "integrace": integrace,
+  "kalendar": kalendar,
 };
 
 interface Props {

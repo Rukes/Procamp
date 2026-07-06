@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useTitle } from "../hooks/useTitle";
 import { api } from "../api/client";
 import ReservationModal from "../components/ReservationModal";
+import HelpModal from "../components/HelpModal";
 import { getDaysInMonth, format, addDays } from "date-fns";
 import { useNavigate } from "react-router-dom";
 import { DayPicker } from "react-day-picker";
@@ -20,7 +21,13 @@ interface BlockedPeriod {
   id: string; reason: string;
   dateFrom: string; dateTo: string;
   accommodationTypeId: string | null;
+  source?: string | null;
 }
+
+const SOURCE_COLOR: Record<string, string> = {
+  BOOKING: "bg-blue-100 text-blue-800 border-blue-300",
+  AIRBNB:  "bg-pink-100 text-pink-800 border-pink-300",
+};
 interface Camp { id: string; name: string }
 
 const DAY_NAMES = ["ne","po","út","st","čt","pá","so"];
@@ -45,6 +52,14 @@ const STATUS_LABEL: Record<string, string> = {
 
 const CELL_W = 38;
 const UNIT_COL_W = 150;
+const LANE_H = 32;
+const LANE_PAD = 4;
+
+// Timezone-safe: parse date string "YYYY-MM-DD..." as local date
+const parseDate = (s: string) => {
+  const d = new Date(s);
+  return { year: d.getFullYear(), month: d.getMonth() + 1, day: d.getDate() };
+};
 
 interface PopoverState {
   block: { id: string; label: string; languageCode?: string; status?: string; checkIn?: string; checkOut?: string; bookingCode?: string | null };
@@ -265,6 +280,7 @@ function ReservationPopover({ state, onClose, onOpen }: {
 export default function CalendarPage() {
   useTitle("Kalendář");
   const navigate = useNavigate();
+  const [helpOpen, setHelpOpen] = useState(false);
   const [modalId, setModalId] = useState<string | null>(null);
   const [blockingModalId, setBlockingModalId] = useState<string | null>(null);
   const [popover, setPopover] = useState<PopoverState | null>(null);
@@ -272,6 +288,7 @@ export default function CalendarPage() {
   const [dragState, setDragState] = useState<{ reservationId: string; origCheckIn: string; origCheckOut: string } | null>(null);
   const [dragOverDay, setDragOverDay] = useState<{ typeId: string; day: number } | null>(null);
   const [cellSel, setCellSel] = useState<{ typeId: string; startDay: number; endDay: number } | null>(null);
+  const [hoverCell, setHoverCell] = useState<{ typeId: string; day: number } | null>(null);
   const [selMousePos, setSelMousePos] = useState<{ x: number; y: number } | null>(null);
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -285,6 +302,7 @@ export default function CalendarPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const [cellW, setCellW] = useState(CELL_W);
 
   useEffect(() => {
     api.get("/camps/for-filter").then((r) => {
@@ -395,51 +413,85 @@ export default function CalendarPage() {
   const dim = getDaysInMonth(new Date(year, month - 1));
   const todayDay = now.getFullYear() === year && now.getMonth() + 1 === month ? now.getDate() : -1;
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const update = () => {
+      if (!scrollRef.current) return;
+      const avail = scrollRef.current.clientWidth - UNIT_COL_W;
+      setCellW(Math.max(CELL_W, Math.floor(avail / dim)));
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(scrollRef.current);
+    return () => ro.disconnect();
+  }, [dim]);
+
   function getBlocksForRow(typeId: string) {
-    const result: { id: string; label: string; from: number; to: number; kind: "reservation" | "blocked"; status?: string; rId?: string; languageCode?: string; checkIn?: string; checkOut?: string; bookingCode?: string | null }[] = [];
+    type RawBlock = { id: string; label: string; from: number; to: number; kind: "reservation" | "blocked"; status?: string; rId?: string; languageCode?: string; checkIn?: string; checkOut?: string; bookingCode?: string | null; startsThisMonth?: boolean; endsThisMonth?: boolean; source?: string | null };
+    const raw: RawBlock[] = [];
 
     reservations
       .filter(r => r.accommodationTypeId === typeId)
       .forEach(r => {
-        const ci = new Date(r.checkIn);
-        const co = new Date(r.checkOut);
-        const toDate = new Date(co); toDate.setDate(toDate.getDate() - 1);
-        const ciMonth = ci.getMonth() + 1; const coMonth = co.getMonth() + 1;
-        const startDay = ciMonth === month && ci.getFullYear() === year ? ci.getDate() : 1;
-        const endDay = coMonth === month && co.getFullYear() === year ? toDate.getDate() : dim;
+        const ci = parseDate(r.checkIn);
+        const co = parseDate(r.checkOut);
+        const startsThisMonth = ci.month === month && ci.year === year;
+        const endsThisMonth = co.month === month && co.year === year;
+        const startDay = startsThisMonth ? ci.day : (ci.year < year || (ci.year === year && ci.month < month)) ? 1 : dim + 1;
+        const endDay = endsThisMonth ? co.day : (co.year > year || (co.year === year && co.month > month)) ? dim : 0;
         if (startDay > dim || endDay < 1) return;
-        result.push({
+        raw.push({
           id: r.id, rId: r.id,
           label: `${r.firstName} ${r.lastName[0]}.`,
           from: Math.max(startDay, 1), to: Math.min(endDay, dim),
           kind: "reservation", status: r.status, languageCode: r.languageCode,
           checkIn: r.checkIn, checkOut: r.checkOut, bookingCode: r.bookingCode,
+          startsThisMonth, endsThisMonth,
         });
       });
 
     blocked
       .filter(b => b.accommodationTypeId === typeId || b.accommodationTypeId === null)
       .forEach(b => {
-        const df = new Date(b.dateFrom); const dt = new Date(b.dateTo);
-        const startDay = df.getMonth() + 1 === month && df.getFullYear() === year ? df.getDate() : 1;
-        const endDay = dt.getMonth() + 1 === month && dt.getFullYear() === year ? dt.getDate() : dim;
+        const df = parseDate(b.dateFrom); const dt = parseDate(b.dateTo);
+        const startDay = df.month === month && df.year === year ? df.day : (df.year < year || (df.year === year && df.month < month)) ? 1 : dim + 1;
+        const endDay = dt.month === month && dt.year === year ? dt.day : (dt.year > year || (dt.year === year && dt.month > month)) ? dim : 0;
         if (startDay > dim || endDay < 1) return;
-        result.push({
+        const bStartsThisMonth = df.month === month && df.year === year;
+        const bEndsThisMonth = dt.month === month && dt.year === year;
+        raw.push({
           id: b.id, label: b.reason || "Blokace",
           from: Math.max(startDay, 1), to: Math.min(endDay, dim),
           kind: "blocked",
           checkIn: b.dateFrom, checkOut: b.dateTo,
+          startsThisMonth: bStartsThisMonth, endsThisMonth: bEndsThisMonth,
+          source: b.source,
         });
       });
 
-    return result;
+    // Lane assignment — greedy, sort by from
+    const sorted = [...raw].sort((a, b) => a.from - b.from || a.to - b.to);
+    const laneEnds: number[] = []; // laneEnds[i] = 'to' of last block in lane i
+    const withLane = sorted.map(block => {
+      // Dva bloky se překrývají pokud from_A < to_B && from_B < to_A
+      let lane = laneEnds.findIndex(end => end <= block.from);
+      if (lane === -1) lane = laneEnds.length;
+      laneEnds[lane] = block.to;
+      return { ...block, lane };
+    });
+
+    const laneCount = Math.max(1, laneEnds.length);
+    return { blocks: withLane, laneCount, rowH: laneCount * LANE_H + LANE_PAD * 2 };
   }
 
   return (
+    <>
     <div className="p-4 md:p-8">
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <h1 className="text-2xl font-bold text-gray-900">Kalendář</h1>
+        <button onClick={() => setHelpOpen(true)} className="text-gray-400 hover:text-blue-500 transition-colors" title="Nápověda"><i className="fa-regular fa-circle-question text-lg" /></button>
         <div className="flex-1" />
         {camps.length > 1 && (
           <select className="input max-w-[200px]" value={campId} onChange={e => setCampId(e.target.value)}>
@@ -497,149 +549,170 @@ export default function CalendarPage() {
 
       {/* Grid */}
       <div className="rounded-xl border border-gray-200 overflow-hidden bg-white">
-        <div ref={scrollRef} className="overflow-x-auto">
-          <table className="border-collapse" style={{ width: "max-content", minWidth: "100%" }}>
-            <thead>
-              <tr className="bg-gray-50 border-b border-gray-200">
-                <th className="sticky left-0 z-20 bg-gray-50 border-r border-gray-200 text-left px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide" style={{ minWidth: UNIT_COL_W, width: UNIT_COL_W }}>
-                  Jednotka
-                </th>
-                {Array.from({ length: dim }, (_, i) => i + 1).map(d => {
-                  const dow = new Date(year, month - 1, d).getDay();
-                  const isWe = dow === 0 || dow === 6;
-                  const isToday = d === todayDay;
-                  return (
-                    <th
-                      key={d}
-                      id={isToday ? "today-col" : undefined}
-                      className={`text-center px-0 border-r border-gray-100 last:border-r-0 ${isToday ? "bg-red-50" : isWe ? "bg-gray-50" : ""}`}
-                      style={{ minWidth: CELL_W, width: CELL_W }}
-                    >
-                      <span className={`block text-xs font-bold ${isToday ? "text-red-600" : "text-gray-700"}`}>{d}</span>
-                      <span className={`block text-[10px] ${isToday ? "text-red-400" : "text-gray-400"}`}>{DAY_NAMES[dow]}</span>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {loading && (
-                <tr>
-                  <td colSpan={dim + 1} className="text-center text-gray-400 text-sm py-12">
-                    <i className="fa-regular fa-spinner animate-spin mr-2" />Načítám…
-                  </td>
-                </tr>
-              )}
-              {!loading && accTypes.length === 0 && (
-                <tr>
-                  <td colSpan={dim + 1} className="text-center text-gray-400 text-sm py-12">
-                    {campId ? "Žádné ubytovací jednotky." : "Vyberte objekt."}
-                  </td>
-                </tr>
-              )}
-              {!loading && accTypes.map((type, ti) => {
-                const blocks = getBlocksForRow(type.id);
-                const rowBg = ti % 2 === 1;
+        <div ref={scrollRef} className="overflow-x-auto [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+          <div style={{ width: "max-content", minWidth: "100%" }}>
+
+            {/* Header row */}
+            <div className="flex bg-gray-50 border-b border-gray-200">
+              <div
+                className="sticky left-0 z-20 bg-gray-50 border-r border-gray-200 flex items-center px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide flex-shrink-0"
+                style={{ width: UNIT_COL_W, height: 40 }}
+              >
+                Jednotka
+              </div>
+              {Array.from({ length: dim }, (_, i) => i + 1).map(d => {
+                const dow = new Date(year, month - 1, d).getDay();
+                const isWe = dow === 0 || dow === 6;
+                const isToday = d === todayDay;
                 return (
-                  <tr key={type.id} className={`border-t border-gray-100 ${rowBg ? "bg-gray-50/50" : ""}`}>
-                    <td
-                      className={`sticky left-0 z-10 border-r border-gray-200 px-3 py-0 ${rowBg ? "bg-gray-50" : "bg-white"}`}
-                      style={{ minWidth: UNIT_COL_W, width: UNIT_COL_W, height: 44 }}
-                    >
-                      <span className="text-sm font-medium text-gray-800 truncate block">{typeName(type)}</span>
-                    </td>
+                  <div
+                    key={d}
+                    className={`flex-shrink-0 text-center border-r border-gray-200 last:border-r-0 flex flex-col justify-center ${isToday ? "bg-red-50" : isWe ? "bg-gray-100/60" : ""}`}
+                    style={{ width: cellW, height: 40 }}
+                  >
+                    <span className={`block text-xs font-bold leading-tight ${isToday ? "text-red-600" : "text-gray-700"}`}>{d}</span>
+                    <span className={`block text-[10px] leading-tight ${isToday ? "text-red-400" : "text-gray-400"}`}>{DAY_NAMES[dow]}</span>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Loading / empty */}
+            {loading && (
+              <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
+                <i className="fa-regular fa-spinner animate-spin mr-2" />Načítám…
+              </div>
+            )}
+            {!loading && accTypes.length === 0 && (
+              <div className="flex items-center justify-center py-12 text-gray-400 text-sm">
+                {campId ? "Žádné ubytovací jednotky." : "Vyberte objekt."}
+              </div>
+            )}
+
+            {/* Data rows */}
+            {!loading && accTypes.map((type, ti) => {
+              const { blocks, rowH } = getBlocksForRow(type.id);
+
+              return (
+                <div key={type.id} className="flex border-t border-gray-100" style={{ height: rowH }}>
+
+                  {/* Sticky label */}
+                  <div
+                    className="sticky left-0 z-10 border-r border-gray-200 px-3 flex items-center flex-shrink-0 bg-white"
+                    style={{ width: UNIT_COL_W, height: rowH }}
+                  >
+                    <span className="text-sm font-medium text-gray-800 truncate">{typeName(type)}</span>
+                  </div>
+
+                  {/* Day cells + block overlay */}
+                  <div className="relative flex flex-1" style={{ height: rowH, minWidth: dim * cellW }}>
+
+                    {/* Day cells — background colours, today line, drag/drop/select */}
                     {Array.from({ length: dim }, (_, i) => i + 1).map(d => {
                       const dow = new Date(year, month - 1, d).getDay();
                       const isWe = dow === 0 || dow === 6;
                       const isToday = d === todayDay;
-                      const block = blocks.find(b => b.from === d);
+                      const hasAnyBlock = blocks.some(b => b.from <= d && b.to >= d);
                       return (
-                        <td
+                        <div
                           key={d}
-                          className={`relative border-r border-gray-100 last:border-r-0 p-0 transition-colors select-none ${
+                          className={`relative border-r border-gray-200 last:border-r-0 flex-shrink-0 select-none transition-colors ${
                             cellSel?.typeId === type.id && d >= Math.min(cellSel.startDay, cellSel.endDay) && d <= Math.max(cellSel.startDay, cellSel.endDay)
                               ? "bg-blue-100"
                               : dragOverDay?.typeId === type.id && dragOverDay?.day === d
                               ? "bg-blue-100"
-                              : isToday ? "bg-red-50" : isWe ? "bg-gray-50/70" : ""
+                              : isToday ? "bg-red-50"
+                              : !cellSel && !dragState && hoverCell && (hoverCell.typeId === type.id || hoverCell.day === d)
+                              ? hoverCell.typeId === type.id && hoverCell.day === d ? "bg-blue-100/40" : "bg-blue-50/50"
+                              : isWe ? "bg-gray-100/70" : ""
                           }`}
-                          style={{ minWidth: CELL_W, width: CELL_W, height: 44 }}
-                          onMouseDown={() => { if (!block && !dragState) setCellSel({ typeId: type.id, startDay: d, endDay: d }); }}
-                          onMouseEnter={() => { if (cellSel && cellSel.typeId === type.id && !block) setCellSel(s => s ? { ...s, endDay: d } : s); }}
+                          style={{ width: cellW, height: rowH }}
+                          onMouseDown={() => { if (!dragState) setCellSel({ typeId: type.id, startDay: d, endDay: d }); }}
+                          onMouseEnter={() => {
+                            if (cellSel?.typeId === type.id) setCellSel(s => s ? { ...s, endDay: d } : s);
+                            setHoverCell({ typeId: type.id, day: d });
+                          }}
+                          onMouseLeave={() => setHoverCell(null)}
                           onDragOver={(e) => { if (dragState) { e.preventDefault(); setDragOverDay({ typeId: type.id, day: d }); } }}
                           onDragLeave={() => setDragOverDay(null)}
                           onDrop={(e) => { e.preventDefault(); handleDrop(type.id, d); }}
                         >
-                          {/* Today vertical accent */}
-                          {isToday && <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-red-400 z-20" />}
-
-                          {/* Empty cell cursor hint */}
-                          {!block && <div className="absolute inset-0 cursor-crosshair" />}
-
-                          {block && (() => {
-                            const span = block.to - block.from + 1;
-                            const w = span * CELL_W - 3;
-                            if (block.kind === "blocked") {
-                              const isTouch = () => !window.matchMedia("(hover: hover)").matches;
-                              const openBlockingPopover = (e: React.MouseEvent<HTMLDivElement>) => {
-                                const r = e.currentTarget.getBoundingClientRect();
-                                setBlockingPopover({ id: block.id, reason: block.label, dateFrom: block.checkIn ?? "", dateTo: block.checkOut ?? "", top: r.bottom + 6, left: r.left });
-                              };
-                              return (
-                                <div
-                                  className="absolute top-[7px] bottom-[7px] rounded flex items-center px-2 text-[11px] font-medium text-gray-500 bg-gray-100 border border-dashed border-gray-300 overflow-hidden whitespace-nowrap cursor-pointer hover:bg-gray-200 transition-colors z-10"
-                                  style={{ left: 2, width: w }}
-                                  onMouseEnter={(e) => { if (!isTouch()) openBlockingPopover(e); }}
-                                  onMouseLeave={() => { if (!isTouch()) setBlockingPopover(null); }}
-                                  onClick={(e) => { e.stopPropagation(); setBlockingPopover(null); setBlockingModalId(block.id); }}
-                                >
-                                  {span > 1 ? block.label : ""}
-                                </div>
-                              );
-                            }
-                            const cls = STATUS_COLOR[block.status ?? "CONFIRMED"] ?? STATUS_COLOR.CONFIRMED;
-                            const isTouch = () => !window.matchMedia("(hover: hover)").matches;
-                            const openPopover = (e: React.MouseEvent<HTMLDivElement>) => {
-                              const r = e.currentTarget.getBoundingClientRect();
-                              setPopover({ block: { id: block.id, label: block.label, languageCode: block.languageCode, status: block.status, checkIn: block.checkIn, checkOut: block.checkOut, bookingCode: block.bookingCode }, top: r.bottom + 6, left: r.left });
-                            };
-                            return (
-                              <div
-                                className={`absolute top-[7px] bottom-[7px] rounded flex items-center px-2 text-[11px] font-medium overflow-hidden whitespace-nowrap cursor-grab active:cursor-grabbing z-10 border ${cls} hover:brightness-95 transition-all`}
-                                style={{ left: 2, width: w }}
-                                draggable={block.kind === "reservation"}
-                                onDragStart={() => {
-                                  if (block.kind === "reservation" && block.rId) {
-                                    setDragState({ reservationId: block.rId, origCheckIn: block.checkIn!, origCheckOut: block.checkOut! });
-                                  }
-                                }}
-                                onDragEnd={() => { setDragState(null); setDragOverDay(null); }}
-                                onMouseEnter={(e) => { if (!isTouch()) openPopover(e); }}
-                                onMouseLeave={() => { if (!isTouch()) setPopover(null); }}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  if (isTouch()) {
-                                    setPopover(p => p?.block.id === block.id ? null : null);
-                                    openPopover(e);
-                                  } else {
-                                    setPopover(null);
-                                    block.rId && setModalId(block.rId);
-                                  }
-                                }}
-                              >
-                                {block.languageCode && <Flag code={block.languageCode} className="mr-1 flex-shrink-0" />}
-                                {span > 2 ? block.label : span === 2 ? block.label.split(" ")[0] : block.label.split(" ").map(w => w[0]).join("")}
-                              </div>
-                            );
-                          })()}
-                        </td>
+                          {isToday && <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-0.5 bg-red-400 z-[5] pointer-events-none" />}
+                          <div className="absolute inset-0 cursor-crosshair" />
+                        </div>
                       );
                     })}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+
+                    {/* Blocks — absolutely positioned over day cells, no clipping */}
+                    {blocks.map(block => {
+                      const leftOff = block.startsThisMonth ? cellW / 2 + 3 : 1;
+                      const rightOff = block.endsThisMonth ? cellW / 2 - 3 : cellW - 1;
+                      const span = block.to - block.from;
+                      const w = span * cellW + rightOff - leftOff - 1;
+                      const blockLeft = (block.from - 1) * cellW + leftOff;
+                      const labelSpan = span;
+                      const blockTop = LANE_PAD + block.lane * LANE_H + 2;
+                      const height = LANE_H - 4;
+
+                      if (block.kind === "blocked") {
+                        const src = (block.source ?? "").toUpperCase();
+                        const srcCls = SOURCE_COLOR[src] ?? "bg-gray-200 text-gray-600 border-gray-400";
+                        const isTouch = () => !window.matchMedia("(hover: hover)").matches;
+                        const openBlockingPopover = (e: React.MouseEvent<HTMLDivElement>) => {
+                          const r = e.currentTarget.getBoundingClientRect();
+                          setBlockingPopover({ id: block.id, reason: block.label, dateFrom: block.checkIn ?? "", dateTo: block.checkOut ?? "", top: r.bottom + 6, left: r.left });
+                        };
+                        return (
+                          <div
+                            key={block.id}
+                            className={`absolute rounded flex items-center px-2 text-[11px] font-medium border border-dashed overflow-hidden whitespace-nowrap cursor-pointer transition-colors z-10 hover:brightness-95 ${srcCls}`}
+                            style={{ left: blockLeft, width: w, top: blockTop, height }}
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onMouseEnter={(e) => { if (!isTouch()) openBlockingPopover(e); }}
+                            onMouseLeave={() => { if (!isTouch()) setBlockingPopover(null); }}
+                            onClick={(e) => { e.stopPropagation(); setBlockingPopover(null); setBlockingModalId(block.id); }}
+                          >
+                            {labelSpan > 1 ? block.label : ""}
+                          </div>
+                        );
+                      }
+
+                      const cls = STATUS_COLOR[block.status ?? "CONFIRMED"] ?? STATUS_COLOR.CONFIRMED;
+                      const isTouch = () => !window.matchMedia("(hover: hover)").matches;
+                      const openPopover = (e: React.MouseEvent<HTMLDivElement>) => {
+                        const r = e.currentTarget.getBoundingClientRect();
+                        setPopover({ block: { id: block.id, label: block.label, languageCode: block.languageCode, status: block.status, checkIn: block.checkIn, checkOut: block.checkOut, bookingCode: block.bookingCode }, top: r.bottom + 6, left: r.left });
+                      };
+                      return (
+                        <div
+                          key={block.id}
+                          className={`absolute rounded flex items-center px-2 text-[11px] font-medium overflow-hidden whitespace-nowrap cursor-grab active:cursor-grabbing border z-10 ${cls} hover:brightness-95 transition-all`}
+                          style={{ left: blockLeft, width: w, top: blockTop, height }}
+                          draggable
+                          onDragStart={() => {
+                            if (block.rId) setDragState({ reservationId: block.rId, origCheckIn: block.checkIn!, origCheckOut: block.checkOut! });
+                          }}
+                          onDragEnd={() => { setDragState(null); setDragOverDay(null); }}
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onMouseEnter={(e) => { if (!isTouch()) openPopover(e); }}
+                          onMouseLeave={() => { if (!isTouch()) setPopover(null); }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (isTouch()) { openPopover(e); }
+                            else { setPopover(null); block.rId && setModalId(block.rId); }
+                          }}
+                        >
+                          {block.languageCode && <Flag code={block.languageCode} className="mr-1 flex-shrink-0" />}
+                          {labelSpan > 2 ? block.label : labelSpan >= 1 ? block.label.split(" ")[0] : block.label.split(" ").map(w => w[0]).join("")}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+          </div>
         </div>
       </div>
 
@@ -677,12 +750,13 @@ export default function CalendarPage() {
       <ReservationModal reservationId={modalId} onClose={() => setModalId(null)} onChanged={loadTimeline} />
       {blockingModalId && <BlockingModal id={blockingModalId} onClose={() => setBlockingModalId(null)} />}
 
-      {/* Legend */}
-      <div className="flex flex-wrap gap-4 mt-3">
+      {/* Legend + hint */}
+      <div className="flex items-center justify-between flex-wrap gap-2 mt-3">
+      <div className="flex flex-wrap gap-4">
         {[
           { cls: "bg-green-100 border-green-200", label: "Potvrzeno" },
           { cls: "bg-yellow-100 border-yellow-200", label: "Čeká na potvrzení" },
-          { cls: "bg-gray-100 border-dashed border-gray-300", label: "Blokace" },
+          { cls: "bg-gray-200 border-dashed border-gray-400", label: "Blokace" },
         ].map(l => (
           <div key={l.label} className="flex items-center gap-1.5">
             <div className={`w-4 h-3 rounded border ${l.cls}`} />
@@ -690,6 +764,13 @@ export default function CalendarPage() {
           </div>
         ))}
       </div>
+      <span className="text-xs text-gray-400 flex items-center gap-1.5">
+        <i className="fa-regular fa-hand-pointer" />
+        Kliknutím nebo tažením přes dny vytvoříte novou rezervaci
+      </span>
+      </div>
     </div>
+    {helpOpen && <HelpModal topic="kalendar" onClose={() => setHelpOpen(false)} />}
+    </>
   );
 }

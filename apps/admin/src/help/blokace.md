@@ -21,6 +21,10 @@ V seznamu blokací klikněte na **Upravit** pro změnu údajů, nebo na **Smazat
 
 Blokace označené **Booking.com** jsou vloženy automaticky ze synchronizace s Booking.com — nelze je ručně upravit ani smazat. Spravují se výhradně přes Booking.com extranet.
 
+## Zobrazení v kalendáři
+
+V sekci **Kalendář** jsou blokace zobrazeny šedě šrafovaně. Blokace synchronizované z externích zdrojů (Booking.com) jsou zvýrazněny modře. Najetím myší zobrazíte tooltip s důvodem a datumy, kliknutím otevřete detail.
+
 ## Jak blokace funguje
 
 Blokace funguje jako "virtuální obsazení" — systém ji bere v úvahu stejně jako skutečné rezervace:

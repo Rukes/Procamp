@@ -1,16 +1,10 @@
 # Changelog
 
-## 6. 7. 2026 (2)
-
-- **Kalendář rezervací** — nová stránka s časovou osou podle ubytovacích jednotek; barevné odlišení statusů (zelená/žlutá), červený sloupec dnešního dne, navigace po měsících s výběrem datumu přes picker
-- **Kalendář — interakce** — klik nebo tažení přes prázdné buňky vytvoří novou rezervaci s předvyplněnými daty; tooltip při tažení zobrazí rozsah a počet nocí; drag & drop pro přesun existující rezervace
-- **Kalendář — detail rezervace** — najetí myší zobrazí popover se jménem, vlajkou, statusem a datumy; klik otevře modal s plným detailem včetně editace
-- **Kalendář — blokace** — blokace zobrazeny šrafovaně; hover ukáže tooltip s důvodem a datumy; klik otevře detail blokace
-- **Modal detailu rezervace** — detail rezervace lze otevřít jako modal kdekoliv v aplikaci; obsahuje tlačítko „Otevřít detail" pro přechod na plnou stránku; dostupný na dashboardu (klik na řádek nebo v mini kalendáři) a v kalendáři
-- **Detail blokace** — nový endpoint a modal pro zobrazení detailu blokace (důvod, poznámka, datumy, délka, objekt, jednotka, zdroj)
-
 ## 6. 7. 2026
 
+- **Kalendář** — nová stránka s časovou osou rezervací a blokací podle ubytovacích jednotek; kliknutím nebo tažením přes dny vytvoříte novou rezervaci s předvyplněným termínem; drag & drop pro přesun rezervace; blokace z externích zdrojů (Booking.com) zvýrazněny modře
+- **Modal detailu rezervace** — detail rezervace lze otevřít jako modal kdekoliv v aplikaci; dostupný na dashboardu a v kalendáři
+- **Detail blokace** — nový modal pro zobrazení detailu blokace (důvod, poznámka, datumy, délka, objekt, jednotka, zdroj)
 - **MOTD (Message of the Day)** — správci mohou zobrazovat zprávy uživatelům; podpora barev (primární, upozornění, kritická, úspěch, neutrální), umístění (dashboard, všude, menu), platnosti od/do, zavíratelnosti a volitelného odkazu; správa v SA sekci
 - **Rebrand na Ubysoft.cz** — systém přejmenován z MůjKemp.cz na Ubysoft.cz; nová loga, nový název v titulku adminu a formuláře, přesměrování starých domén (app/api/form.mujkemp.cz → ubysoft.cz)
 
