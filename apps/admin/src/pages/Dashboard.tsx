@@ -8,6 +8,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useOrg } from "../contexts/OrgContext";
 import { Flag } from "../utils/langFlag";
 import ReservationCalendar from "../components/ReservationCalendar";
+import { MotdBannerDashboard } from "../components/MotdBanner";
 
 function NotePopover({ note, internal = false }: { note: string; internal?: boolean }) {
   const [open, setOpen] = useState(false);
@@ -96,6 +97,7 @@ export default function DashboardPage() {
 
   return (
     <div className="p-4 md:p-8">
+      <MotdBannerDashboard />
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Dashboard</h1>
 
       <div className="grid grid-cols-3 gap-3 mb-8 max-w-lg">

@@ -17,6 +17,7 @@ import { organizationRoutes } from "./routes/organizations";
 import { activityLogRoutes } from "./routes/activity-logs";
 import { blockedPeriodRoutes } from "./routes/blocked-periods";
 import { searchRoutes } from "./routes/search";
+import { motdRoutes } from "./routes/motd";
 import { publicFormRoutes } from "./routes/public/form";
 import { icalRoutes } from "./routes/public/ical";
 import { startBookingCron } from "./services/bookingIcalSync";
@@ -78,6 +79,7 @@ const start = async () => {
   await app.register(activityLogRoutes, { prefix: "/api/activity-logs" });
   await app.register(blockedPeriodRoutes, { prefix: "/api/blocked-periods" });
   await app.register(searchRoutes, { prefix: "/api/search" });
+  await app.register(motdRoutes, { prefix: "/api/motd" });
 
   app.get("/api/health", async () => ({ status: "ok" }));
 

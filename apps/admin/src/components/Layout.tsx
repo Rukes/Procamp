@@ -7,6 +7,17 @@ import { Permission } from "@procamp/shared";
 import Tooltip from "./Tooltip";
 import { marked } from "marked";
 import GlobalSearch from "./GlobalSearch";
+import { MotdBannerMenu, MotdBannerGlobal } from "./MotdBanner";
+
+function MotdBannerGlobalWrapper() {
+  const location = useLocation();
+  if (location.pathname === "/dashboard") return null;
+  return (
+    <div className="px-4 md:px-8 pt-4">
+      <MotdBannerGlobal />
+    </div>
+  );
+}
 
 const nav: { to: string; label: string; icon: string; perm?: keyof Permission; newLink?: string }[] = [
   { to: "/dashboard", label: "Dashboard", icon: "fa-chart-bar" },
@@ -20,6 +31,7 @@ const nav: { to: string; label: string; icon: string; perm?: keyof Permission; n
 const superAdminNav = [
   { to: "/organizations", label: "Organizace", icon: "fa-building" },
   { to: "/all-users", label: "Uživatelé", icon: "fa-users" },
+  { to: "/motd", label: "MOTD", icon: "fa-bullhorn" },
   { to: "/logs", label: "Logy", icon: "fa-list-check" },
   { to: "/system", label: "Systém", icon: "fa-gears" },
 ];
@@ -72,6 +84,8 @@ export default function Layout() {
           className="h-[52px] w-auto md:h-[58px]"
         />
       </div>
+
+      <MotdBannerMenu />
 
       <div className="px-3 pt-3 pb-1">
         <button
@@ -215,6 +229,7 @@ export default function Layout() {
       )}
 
       <main className="flex-1 overflow-auto md:ml-60 mt-14 md:mt-0">
+        <MotdBannerGlobalWrapper />
         <Outlet />
       </main>
 

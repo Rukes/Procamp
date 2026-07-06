@@ -23,6 +23,7 @@ import LogsPage from "./pages/Logs";
 import AllUsersPage from "./pages/AllUsers";
 import HelpPage from "./pages/Help";
 import AuthorPage from "./pages/Author";
+import MotdPage from "./pages/Motd";
 
 function Guard({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -58,6 +59,7 @@ export default function App() {
           <Route path="all-users" element={<AllUsersPage />} />
           <Route path="system" element={<SystemPage />} />
           <Route path="author" element={<AuthorPage />} />
+          <Route path="motd" element={<MotdPage />} />
         </Route>
         <Route path="help" element={<Guard><HelpPage /></Guard>} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

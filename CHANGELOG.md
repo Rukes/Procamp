@@ -2,6 +2,7 @@
 
 ## 6. 7. 2026
 
+- **MOTD (Message of the Day)** — správci mohou zobrazovat zprávy uživatelům; podpora barev (primární, upozornění, kritická, úspěch, neutrální), umístění (dashboard, všude, menu), platnosti od/do, zavíratelnosti a volitelného odkazu; správa v SA sekci
 - **Rebrand na Ubysoft.cz** — systém přejmenován z MůjKemp.cz na Ubysoft.cz; nová loga, nový název v titulku adminu a formuláře, přesměrování starých domén (app/api/form.mujkemp.cz → ubysoft.cz)
 
 ## 30. 6. 2026

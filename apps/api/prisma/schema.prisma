@@ -251,6 +251,24 @@ model BlockedPeriod {
   updatedAt           DateTime           @updatedAt
 }
 
+model Motd {
+  id            String   @id @default(cuid())
+  title         String
+  body          String   @db.Text
+  color         String   @default("primary")
+  closeable     Boolean  @default(true)
+  showDashboard Boolean  @default(true)
+  showGlobal    Boolean  @default(false)
+  showMenu      Boolean  @default(false)
+  linkUrl       String?
+  linkLabel     String?
+  active        Boolean  @default(true)
+  validFrom     DateTime
+  validTo       DateTime
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 model ActivityLog {
   id        String   @id @default(cuid())
   userId    String?
