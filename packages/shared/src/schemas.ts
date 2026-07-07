@@ -7,6 +7,7 @@ export const createReservationSchema = z.object({
   adults: z.number().int().min(1),
   children: z.number().int().min(0),
   selectedSurchargeIds: z.array(z.string()),
+  surchargeQuantities: z.record(z.string(), z.number().int().min(1)).optional(),
   firstName: z.string().min(1),
   lastName: z.string().min(1),
   email: z.string().email(),

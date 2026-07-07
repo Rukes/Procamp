@@ -45,6 +45,7 @@ function FormApp() {
   const [adults, setAdults] = useState(1);
   const [children, setChildren] = useState(0);
   const [selectedSurchargeIds, setSelectedSurchargeIds] = useState<string[]>([]);
+  const [surchargeQuantities, setSurchargeQuantities] = useState<Record<string, number>>({});
   const [submitting, setSubmitting] = useState(false);
   const [confirmed, setConfirmed] = useState<{ totalPrice: number; nights: number; bookingCode?: string; status?: string } | null>(null);
   const [serverError, setServerError] = useState("");
@@ -104,7 +105,7 @@ function FormApp() {
 
   const breakdown =
     type && checkIn && checkOut
-      ? calcBreakdown(camp, type, checkIn, checkOut, adults, children, selectedSurchargeIds, langObj, t)
+      ? calcBreakdown(camp, type, checkIn, checkOut, adults, children, selectedSurchargeIds, langObj, t, surchargeQuantities)
       : null;
 
   const handleSubmit = async (contact: ContactData) => {
@@ -119,6 +120,7 @@ function FormApp() {
         adults,
         children,
         selectedSurchargeIds,
+        surchargeQuantities,
         ...contact,
         languageCode: lang,
       });
@@ -205,6 +207,8 @@ function FormApp() {
             onChangeAdults={setAdults}
             onChangeChildren={setChildren}
             onChangeSurcharges={setSelectedSurchargeIds}
+            surchargeQuantities={surchargeQuantities}
+            onChangeSurchargeQuantities={setSurchargeQuantities}
             onNext={() => setStep(3)}
             onBack={() => setStep(1)}
           />

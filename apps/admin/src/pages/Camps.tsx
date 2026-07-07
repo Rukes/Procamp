@@ -149,14 +149,22 @@ export default function CampsPage() {
                   )}
                 </div>
               </div>
+              <Tooltip text="Kalendář tohoto objektu" position="top">
+                <Link to={`/calendar?campId=${camp.id}`} className="px-3 py-2 rounded-lg border border-blue-400 hover:bg-blue-50 text-blue-600 text-sm font-medium transition-colors shrink-0 whitespace-nowrap hidden sm:flex items-center gap-1.5">
+                  <i className="fa-regular fa-calendar-days" />Kalendář
+                </Link>
+              </Tooltip>
               <Tooltip text="Rezervace tohoto objektu" position="top">
-                <Link to={`/reservations?camp=${camp.id}`} className="px-3 py-2 rounded-lg border border-blue-400 hover:bg-blue-50 text-blue-600 text-sm font-medium transition-colors shrink-0 hidden sm:flex items-center gap-1.5">
-                  <i className="fa-regular fa-calendar-check mr-1.5" />Rezervace
+                <Link to={`/reservations?camp=${camp.id}`} className="px-3 py-2 rounded-lg border border-blue-400 hover:bg-blue-50 text-blue-600 text-sm font-medium transition-colors shrink-0 whitespace-nowrap hidden sm:flex items-center gap-1.5">
+                  <i className="fa-regular fa-calendar-check" />Rezervace
                 </Link>
               </Tooltip>
               <div className="flex gap-2 sm:hidden">
                 <Link to={`/camps/${camp.id}`} className="px-2.5 py-1.5 rounded-lg border border-yellow-400 hover:bg-yellow-50 text-yellow-600 text-xs font-medium transition-colors flex items-center gap-1">
                   <i className="fa-regular fa-gear" />Nastavení
+                </Link>
+                <Link to={`/calendar?campId=${camp.id}`} className="px-2.5 py-1.5 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-600 text-xs font-medium transition-colors flex items-center gap-1">
+                  <i className="fa-regular fa-calendar-days" />Kalendář
                 </Link>
                 <Link to={`/reservations?camp=${camp.id}`} className="px-2.5 py-1.5 rounded-lg border border-blue-400 hover:bg-blue-50 text-blue-600 text-xs font-medium transition-colors flex items-center gap-1">
                   <i className="fa-regular fa-calendar-check" />Rezervace

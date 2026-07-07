@@ -28,6 +28,8 @@ Po výběru obou polí se zobrazí zbytek formuláře.
 
 Povinné příplatky jsou přidány automaticky. Volitelné příplatky lze zaškrtnout — vliv na celkovou cenu je vidět okamžitě v kalkulaci.
 
+Pokud má příplatek nastavené maximální množství > 1 (např. počet psů), zobrazí se číselné pole pro výběr množství. Cena se přepočítá automaticky.
+
 ### Kontaktní údaje
 
 Vyplňte jméno, příjmení, e-mail a telefon zákazníka. Pod polem e-mail jsou volby pro odeslání notifikací:

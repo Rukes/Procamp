@@ -35,6 +35,10 @@ Blokace jsou zobrazeny šedě šrafovaně. Blokace synchronizované z externích
 
 Najetím myší se zobrazí tooltip s důvodem a datumy. Kliknutím se otevře detail blokace.
 
+## Rezervace a blokace přes měsíc
+
+Pokud rezervace nebo blokace přesahuje do sousedního měsíce, blok má na straně přechodu rovný okraj bez zaoblení — vizuálně indikuje, že pokračuje v předchozím nebo následujícím měsíci. Přechodem do sousedního měsíce uvidíte druhou část bloku se stejným otevřeným okrajem.
+
 ## Více rezervací v jednom řádku
 
 Pokud se rezervace nebo blokace v jednom řádku překrývají (různí hosté ve stejný termín), systém je automaticky rozdělí do samostatných pruhů pod sebou. Výška řádku se podle toho přizpůsobí.

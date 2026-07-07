@@ -255,9 +255,9 @@ export async function campRoutes(app: FastifyInstance) {
 
   app.post("/:campId/surcharges", { preHandler: requirePermission("camps_edit") }, async (request, reply) => {
     const { campId } = request.params as { campId: string };
-    const { isOptional, isHidden, translations, applicableTypeIds } = request.body as { isOptional?: boolean; isHidden?: boolean; translations: Record<string, { name: string; note?: string }>; applicableTypeIds?: string[] };
+    const { isOptional, isHidden, translations, applicableTypeIds, pricingType, maxQuantity } = request.body as { isOptional?: boolean; isHidden?: boolean; translations: Record<string, { name: string; note?: string; quantityLabel?: string }>; applicableTypeIds?: string[]; pricingType?: string; maxQuantity?: number };
     const s = await app.prisma.surcharge.create({
-      data: { campId, isOptional: isOptional ?? true, isHidden: isHidden ?? false, translations, applicableTypeIds: applicableTypeIds ?? [] },
+      data: { campId, isOptional: isOptional ?? true, isHidden: isHidden ?? false, translations, applicableTypeIds: applicableTypeIds ?? [], pricingType: (pricingType as "PER_NIGHT" | "PER_STAY") ?? "PER_NIGHT", maxQuantity: maxQuantity ?? 1 },
       include: { prices: true },
     });
     await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "CREATE", entity: "surcharge", entityId: s.id, payload: { campId, translations } });
@@ -274,19 +274,20 @@ export async function campRoutes(app: FastifyInstance) {
 
   app.put("/:campId/surcharges/:id", { preHandler: requirePermission("camps_edit") }, async (request) => {
     const { id } = request.params as { campId: string; id: string };
-    const { isOptional, isHidden, translations, applicableTypeIds } = request.body as { isOptional?: boolean; isHidden?: boolean; translations: Record<string, { name: string; note?: string }>; applicableTypeIds?: string[] };
-const s = await app.prisma.surcharge.update({ where: { id }, data: { isOptional, ...(isHidden !== undefined ? { isHidden } : {}), translations, ...(applicableTypeIds !== undefined ? { applicableTypeIds } : {}) }, include: { prices: true } });
+    const { isOptional, isHidden, translations, applicableTypeIds, pricingType, maxQuantity } = request.body as { isOptional?: boolean; isHidden?: boolean; translations: Record<string, { name: string; note?: string; quantityLabel?: string }>; applicableTypeIds?: string[]; pricingType?: string; maxQuantity?: number };
+    const s = await app.prisma.surcharge.update({ where: { id }, data: { isOptional, ...(isHidden !== undefined ? { isHidden } : {}), translations, ...(applicableTypeIds !== undefined ? { applicableTypeIds } : {}), ...(pricingType !== undefined ? { pricingType: pricingType as "PER_NIGHT" | "PER_STAY" } : {}), ...(maxQuantity !== undefined ? { maxQuantity } : {}) }, include: { prices: true } });
     await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "surcharge", entityId: id, payload: { translations } });
     return s;
   });
 
   app.put("/:campId/surcharges/:surchargeId/prices/:langCode", { preHandler: requirePermission("camps_edit") }, async (request) => {
     const { surchargeId, langCode } = request.params as { campId: string; surchargeId: string; langCode: string };
-    const { pricePerNight } = request.body as { pricePerNight: number };
+    const { price, pricePerNight } = request.body as { price?: number; pricePerNight?: number };
+    const priceValue = price ?? pricePerNight ?? 0;
     return app.prisma.surchargePrice.upsert({
       where: { surchargeId_languageCode: { surchargeId, languageCode: langCode } },
-      update: { pricePerNight },
-      create: { surchargeId, languageCode: langCode, pricePerNight },
+      update: { price: priceValue },
+      create: { surchargeId, languageCode: langCode, price: priceValue },
     });
   });
 

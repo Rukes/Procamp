@@ -158,7 +158,7 @@ function SurchargeEditor({ surcharge, languages, campId, accommodationTypes, onS
     const t = surcharge.translations as Record<string, { name: string }>;
     return Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v.name]));
   });
-  const isOptional = true;
+  const [isOptional, setIsOptional] = useState<boolean>((surcharge as (Surcharge & { isOptional?: boolean }) | null)?.isOptional ?? true);
   const [notes, setNotes] = useState<Record<string, string>>(() => {
     if (!surcharge) return {};
     const t = surcharge.translations as Record<string, { name: string; note?: string }>;
@@ -166,8 +166,15 @@ function SurchargeEditor({ surcharge, languages, campId, accommodationTypes, onS
   });
   const [prices, setPrices] = useState<Record<string, string>>(() => {
     if (!surcharge) return {};
-    return Object.fromEntries(surcharge.prices.map((p) => [p.languageCode, String(p.pricePerNight)]));
+    return Object.fromEntries(surcharge.prices.map((p) => [(p as { languageCode: string; price?: number; pricePerNight?: number }).languageCode, String((p as { price?: number; pricePerNight?: number }).price ?? (p as { pricePerNight?: number }).pricePerNight ?? 0)]));
   });
+  const [quantityLabels, setQuantityLabels] = useState<Record<string, string>>(() => {
+    if (!surcharge) return {};
+    const t = surcharge.translations as Record<string, { quantityLabel?: string }>;
+    return Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v.quantityLabel ?? ""]));
+  });
+  const [pricingType, setPricingType] = useState<"PER_NIGHT" | "PER_STAY">((surcharge as (Surcharge & { pricingType?: string }) | null)?.pricingType as "PER_NIGHT" | "PER_STAY" ?? "PER_NIGHT");
+  const [maxQuantity, setMaxQuantity] = useState<number>((surcharge as (Surcharge & { maxQuantity?: number }) | null)?.maxQuantity ?? 1);
   const [applicableTypeIds, setApplicableTypeIds] = useState<string[]>(
     (surcharge as (Surcharge & { applicableTypeIds?: string[] }) | null)?.applicableTypeIds ?? []
   );
@@ -184,18 +191,19 @@ function SurchargeEditor({ surcharge, languages, campId, accommodationTypes, onS
         Object.entries(names).filter(([, v]) => v.trim()).map(([k, v]) => [k, {
           name: v.trim(),
           ...(notes[k]?.trim() ? { note: notes[k].trim() } : {}),
+          ...(quantityLabels[k]?.trim() ? { quantityLabel: quantityLabels[k].trim() } : {}),
         }])
       );
       let surchargeId: string;
       if (surcharge) {
-        await api.put(`/camps/${campId}/surcharges/${surcharge.id}`, { isOptional, isHidden, translations, applicableTypeIds });
+        await api.put(`/camps/${campId}/surcharges/${surcharge.id}`, { isOptional, isHidden, translations, applicableTypeIds, pricingType, maxQuantity });
         surchargeId = surcharge.id;
       } else {
-        const res = await api.post(`/camps/${campId}/surcharges`, { isOptional, isHidden, translations, applicableTypeIds });
+        const res = await api.post(`/camps/${campId}/surcharges`, { isOptional, isHidden, translations, applicableTypeIds, pricingType, maxQuantity });
         surchargeId = res.data.id;
       }
       for (const [lang, price] of Object.entries(prices)) {
-        await api.put(`/camps/${campId}/surcharges/${surchargeId}/prices/${lang}`, { pricePerNight: parseFloat(price) || 0 });
+        await api.put(`/camps/${campId}/surcharges/${surchargeId}/prices/${lang}`, { price: parseFloat(price) || 0 });
       }
       toast.success("Příplatek uložen.");
       onSave();
@@ -236,7 +244,7 @@ function SurchargeEditor({ surcharge, languages, campId, accommodationTypes, onS
                 <input className="input" value={names[activeLang] ?? ""} onChange={(e) => setNames({ ...names, [activeLang]: e.target.value })} placeholder="Např. Turistická daň, Pes…" />
               </div>
               <div>
-                <label className="label">Cena / noc {sym && <span className="text-gray-400">({sym})</span>}</label>
+                <label className="label">{pricingType === "PER_STAY" ? "Cena / rezervaci" : "Cena / noc"} {sym && <span className="text-gray-400">({sym})</span>}</label>
                 <input className="input" type="number" min="0" step="0.01"
                   value={prices[activeLang] ?? ""}
                   onChange={(e) => setPrices({ ...prices, [activeLang]: e.target.value })}
@@ -249,6 +257,32 @@ function SurchargeEditor({ surcharge, languages, campId, accommodationTypes, onS
             <label className="label">Poznámka <span className="text-gray-400 font-normal">(nepovinné — zobrazí se v formuláři po najetí na <code>i</code>)</span></label>
             <input className="input" value={notes[activeLang] ?? ""} onChange={(e) => setNotes({ ...notes, [activeLang]: e.target.value })} placeholder="Např. cena za jednoho psa za noc…" />
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="label">Typ ceny</label>
+              <select className="input" value={pricingType} onChange={(e) => setPricingType(e.target.value as "PER_NIGHT" | "PER_STAY")}>
+                <option value="PER_NIGHT">Za noc</option>
+                <option value="PER_STAY">Fixně za celou rezervaci</option>
+              </select>
+            </div>
+            <div>
+              <label className="label">Max. množství <span className="text-gray-400 font-normal">(1 = bez výběru)</span></label>
+              <input className="input" type="number" min="1" max="99" value={maxQuantity} onChange={(e) => setMaxQuantity(parseInt(e.target.value) || 1)} />
+            </div>
+          </div>
+
+          {maxQuantity > 1 && (
+            <div>
+              <label className="label">Popisek množství <span className="text-gray-400 font-normal">(zobrazí se u výběru, např. „Počet psů")</span></label>
+              <input className="input" value={quantityLabels[activeLang] ?? ""} onChange={(e) => setQuantityLabels({ ...quantityLabels, [activeLang]: e.target.value })} placeholder="Např. Počet psů…" />
+            </div>
+          )}
+
+          <label className="flex items-center gap-2.5 cursor-pointer">
+            <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-blue-600" checked={!isOptional} onChange={(e) => setIsOptional(!e.target.checked)} />
+            <span className="text-sm font-medium text-gray-700">Povinný příplatek <span className="text-gray-400 font-normal">(zákazník ho nemůže odebrat)</span></span>
+          </label>
 
           <label className="flex items-center gap-2.5 cursor-pointer">
             <input type="checkbox" className="w-4 h-4 rounded border-gray-300 text-red-600" checked={isHidden} onChange={(e) => setIsHidden(e.target.checked)} />
@@ -1842,10 +1876,13 @@ export default function CampDetailPage() {
                     </div>
                   </>)}
                   <div>
-                    <p className="font-semibold text-gray-900">{t.cs?.name ?? t[Object.keys(t)[0]]?.name ?? "—"}</p>
+                    <p className="font-semibold text-gray-900 flex items-center gap-2">
+                      {t.cs?.name ?? t[Object.keys(t)[0]]?.name ?? "—"}
+                      {!(s as Surcharge & { isOptional?: boolean }).isOptional && <span className="text-xs font-normal text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">Povinný</span>}
+                    </p>
                     <p className="text-xs text-gray-400 mt-0.5">
                       {(s as Surcharge & { isHidden?: boolean }).isHidden && <span className="text-amber-500 block">Skryto ve formuláři</span>}
-                      {csPrice ? `${csPrice.pricePerNight} Kč / noc` : ""}
+                      {csPrice ? (() => { const maxQ = (s as Surcharge & { maxQuantity?: number }).maxQuantity ?? 1; const pt = (s as Surcharge & { pricingType?: string }).pricingType; const priceVal = (csPrice as { price?: number; pricePerNight?: number }).price ?? (csPrice as { pricePerNight?: number }).pricePerNight ?? 0; return `${priceVal} Kč ${pt === "PER_STAY" ? "/ pobyt" : "/ noc"}${maxQ > 1 ? ` (${maxQ} max)` : ""}`; })() : ""}
                       {(() => {
                         const ids = (s as Surcharge & { applicableTypeIds?: string[] }).applicableTypeIds;
                         const allTypes = camp.accommodationTypes ?? [];

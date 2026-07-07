@@ -168,7 +168,10 @@ export default function Layout() {
           <i className="fa-regular fa-arrow-right-from-bracket" /> Odhlásit se
         </button>
         {user?.isSuperAdmin && import.meta.env.VITE_COMMIT_HASH && import.meta.env.VITE_COMMIT_HASH !== "unknown" && (
-          <p className="text-xs text-gray-600 font-mono">v {import.meta.env.VITE_COMMIT_HASH}</p>
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <i className="fa-regular fa-gears w-4 text-center" />
+            <span className="font-mono">{import.meta.env.VITE_COMMIT_HASH}</span>
+          </div>
         )}
       </div>
       <div className="px-4 py-4 border-t border-gray-700 space-y-2">

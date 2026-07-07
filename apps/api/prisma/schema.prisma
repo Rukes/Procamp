@@ -190,6 +190,11 @@ model AccommodationTypePrice {
   @@unique([accommodationTypeId, languageCode])
 }
 
+enum PricingType {
+  PER_NIGHT
+  PER_STAY
+}
+
 model Surcharge {
   id            String               @id @default(cuid())
   campId        String
@@ -199,6 +204,8 @@ model Surcharge {
   translations         Json                 @default("{}")
   sortOrder            Int                  @default(0)
   applicableTypeIds    String[]             @default([])
+  pricingType          PricingType          @default(PER_NIGHT)
+  maxQuantity          Int                  @default(1)
   createdAt     DateTime             @default(now())
   prices        SurchargePrice[]
   reservationSurcharges ReservationSurcharge[]
@@ -209,7 +216,7 @@ model SurchargePrice {
   surchargeId  String
   surcharge    Surcharge @relation(fields: [surchargeId], references: [id], onDelete: Cascade)
   languageCode String
-  pricePerNight Float    @default(0)
+  price        Float     @default(0) @map("pricePerNight")
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -251,6 +258,7 @@ model ReservationSurcharge {
   surchargeId   String
   surcharge     Surcharge   @relation(fields: [surchargeId], references: [id], onDelete: Restrict)
   priceSnapshot Float
+  quantity      Int         @default(1)
 
   @@unique([reservationId, surchargeId])
 }

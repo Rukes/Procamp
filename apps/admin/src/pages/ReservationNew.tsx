@@ -25,6 +25,7 @@ export default function ReservationNewPage() {
   const [types, setTypes] = useState<AccommodationType[]>([]);
   const [surcharges, setSurcharges] = useState<Surcharge[]>([]);
   const [selectedSurchargeIds, setSelectedSurchargeIds] = useState<string[]>([]);
+  const [surchargeQuantities, setSurchargeQuantities] = useState<Record<string, number>>({});
   const [saving, setSaving] = useState(false);
 
   const [range, setRange] = useState<DateRange | undefined>(() => {
@@ -140,10 +141,14 @@ export default function ReservationNewPage() {
     const activeSurcharges = surcharges.filter((s) => selectedSurchargeIds.includes(s.id));
     const surchargeLines = activeSurcharges.map((s) => {
       const sp = (s.prices ?? []).find((p) => p.languageCode === form.languageCode) ?? (s.prices ?? [])[0];
-      const price = sp?.pricePerNight ?? 0;
+      const unitPrice = (sp as { price?: number; pricePerNight?: number } | undefined)?.price ?? (sp as { pricePerNight?: number } | undefined)?.pricePerNight ?? 0;
+      const pricingType = (s as Surcharge & { pricingType?: string }).pricingType ?? "PER_NIGHT";
+      const maxQty = (s as Surcharge & { maxQuantity?: number }).maxQuantity ?? 1;
+      const qty = Math.min(surchargeQuantities[s.id] ?? 1, maxQty);
       const name = (s.translations as Record<string, { name: string }>)?.[form.languageCode]?.name
         ?? (s.translations as Record<string, { name: string }>)?.cs?.name ?? "Příplatek";
-      return { name, pricePerNight: price, total: price * nights };
+      const total = pricingType === "PER_STAY" ? unitPrice * qty : unitPrice * qty * nights;
+      return { name, unitPrice, qty, pricingType, maxQty, total };
     });
 
     const surchargesTotal = surchargeLines.reduce((a, b) => a + b.total, 0);
@@ -153,7 +158,12 @@ export default function ReservationNewPage() {
     if (base > 0 && langObj) lines.push({ label: `${getTypeName(selectedType!)} — ${formatPrice(base, langObj)} × ${nights} nocí`, amount: base * nights });
     if (adultPrice > 0 && form.adults > 0 && langObj) lines.push({ label: `${form.adults}× dospělý — ${formatPrice(adultPrice, langObj)} × ${nights} nocí`, amount: form.adults * adultPrice * nights });
     if (childPrice > 0 && form.children > 0 && langObj) lines.push({ label: `${form.children}× dítě — ${formatPrice(childPrice, langObj)} × ${nights} nocí`, amount: form.children * childPrice * nights });
-    surchargeLines.forEach((s) => langObj && lines.push({ label: `${s.name} — ${formatPrice(s.pricePerNight, langObj)} × ${nights} nocí`, amount: s.total }));
+    surchargeLines.forEach((s) => {
+      if (!langObj) return;
+      const qtyPart = s.maxQty > 1 ? ` × ${s.qty}` : "";
+      const nightsPart = s.pricingType === "PER_NIGHT" ? ` × ${nights} nocí` : "";
+      lines.push({ label: `${s.name} — ${formatPrice(s.unitPrice, langObj)}${qtyPart}${nightsPart}`, amount: s.total });
+    });
 
     return { lines, total };
   }, [priceRow, selectedType, nights, form.adults, form.children, form.languageCode, selectedSurchargeIds, surcharges, langObj]);
@@ -166,6 +176,7 @@ export default function ReservationNewPage() {
         campId,
         ...form,
         selectedSurchargeIds,
+        surchargeQuantities,
         sendCustomerEmail: sendCustomer,
         sendAdminEmail: sendAdmin,
         sendCustomerSms: sendCustomerSms,
@@ -362,12 +373,23 @@ export default function ReservationNewPage() {
                   const name = (s.translations as Record<string, { name: string }>)?.[form.languageCode]?.name
                     ?? (s.translations as Record<string, { name: string }>)?.cs?.name ?? "Příplatek";
                   const sp = (s.prices ?? []).find((p) => p.languageCode === form.languageCode) ?? (s.prices ?? [])[0];
+                  const unitPrice = (sp as { price?: number; pricePerNight?: number } | undefined)?.price ?? (sp as { pricePerNight?: number } | undefined)?.pricePerNight ?? 0;
+                  const pricingType = (s as Surcharge & { pricingType?: string }).pricingType ?? "PER_NIGHT";
+                  const maxQty = (s as Surcharge & { maxQuantity?: number }).maxQuantity ?? 1;
+                  const qty = surchargeQuantities[s.id] ?? 1;
                   return (
-                    <div key={s.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg text-sm">
-                      <span className="text-gray-700">{name}</span>
-                      <div className="flex items-center gap-2">
-                        {langObj && sp && <span className="text-gray-500">{formatPrice(sp.pricePerNight, langObj)} / noc</span>}
+                    <div key={s.id} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg text-sm gap-2">
+                      <span className="text-gray-700 flex-1 flex items-center gap-2 pl-6">
+                        {name}
                         <span className="text-xs text-gray-400 bg-gray-200 px-2 py-0.5 rounded">Povinný</span>
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {maxQty > 1 && (
+                          <input type="number" min="1" max={maxQty} value={qty}
+                            onChange={(e) => setSurchargeQuantities((q) => ({ ...q, [s.id]: Math.min(parseInt(e.target.value) || 1, maxQty) }))}
+                            className="input w-16 py-1 text-center" />
+                        )}
+                        {langObj && sp && <span className="text-gray-500">{formatPrice(unitPrice, langObj)} {pricingType === "PER_STAY" ? "/ pobyt" : "/ noc"}</span>}
                       </div>
                     </div>
                   );
@@ -376,15 +398,27 @@ export default function ReservationNewPage() {
                   const name = (s.translations as Record<string, { name: string }>)?.[form.languageCode]?.name
                     ?? (s.translations as Record<string, { name: string }>)?.cs?.name ?? "Příplatek";
                   const sp = (s.prices ?? []).find((p) => p.languageCode === form.languageCode) ?? (s.prices ?? [])[0];
+                  const unitPrice = (sp as { price?: number; pricePerNight?: number } | undefined)?.price ?? (sp as { pricePerNight?: number } | undefined)?.pricePerNight ?? 0;
+                  const pricingType = (s as Surcharge & { pricingType?: string }).pricingType ?? "PER_NIGHT";
+                  const maxQty = (s as Surcharge & { maxQuantity?: number }).maxQuantity ?? 1;
+                  const qty = surchargeQuantities[s.id] ?? 1;
                   const checked = selectedSurchargeIds.includes(s.id);
                   return (
-                    <label key={s.id} className={`flex items-center justify-between py-2 px-3 rounded-lg text-sm cursor-pointer transition-colors ${checked ? "bg-blue-50" : "bg-gray-50 hover:bg-gray-100"}`}>
-                      <div className="flex items-center gap-2">
+                    <div key={s.id} className={`flex items-center justify-between py-2 px-3 rounded-lg text-sm transition-colors ${checked ? "bg-blue-50" : "bg-gray-50"}`}>
+                      <label className="flex items-center gap-2 cursor-pointer flex-1">
                         <input type="checkbox" checked={checked} onChange={() => toggleSurcharge(s.id)} className="w-4 h-4 rounded border-gray-300 text-blue-600" />
                         <span className="text-gray-700">{name}</span>
+                      </label>
+                      <div className="flex items-center gap-2">
+                        {checked && maxQty > 1 && (
+                          <input type="number" min="1" max={maxQty} value={qty}
+                            onClick={(e) => e.stopPropagation()}
+                            onChange={(e) => setSurchargeQuantities((q) => ({ ...q, [s.id]: Math.min(parseInt(e.target.value) || 1, maxQty) }))}
+                            className="input w-16 py-1 text-center" />
+                        )}
+                        {langObj && sp && <span className="text-gray-500">{formatPrice(unitPrice, langObj)} {pricingType === "PER_STAY" ? "/ pobyt" : "/ noc"}</span>}
                       </div>
-                      {langObj && sp && <span className="text-gray-500">{formatPrice(sp.pricePerNight, langObj)} / noc</span>}
-                    </label>
+                    </div>
                   );
                 })}
               </div>

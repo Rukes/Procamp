@@ -2,6 +2,10 @@
 
 ## 7. 7. 2026
 
+- **Příplatky — rozšíření** — příplatek lze nastavit jako „za pobyt" (fixní částka nezávislá na počtu nocí) nebo „za noc" (výchozí); lze nastavit maximální množství (např. počet psů) — zákazník si pak vybírá číslo v rezervačním formuláři; popisek množství (např. „Počet psů") lze nastavit per jazyk; příplatky lze označit jako povinné přímo v adminu (dříve pouze přes databázi)
+- **Kalendář — bloky přes měsíc** — rezervace a blokace přesahující do jiného měsíce mají otevřený okraj na straně přechodu; jasně indikuje pokračování v předchozím nebo následujícím měsíci
+- **Kalendář — opravy** — prázdné šedé bubliny blokací bez názvu se již nezobrazují pro jednodnní blokace bez důvodu; na mobilních zařízeních se sloupec s názvy jednotek scrolluje normálně (odstraněno sticky chování způsobující překryv)
+- **Seznam objektů** — přidáno tlačítko Kalendář pro rychlý přechod na kalendář daného objektu
 - **iCal integrace** — podpora více externích kalendářů per typ ubytování (Booking.com, Airbnb…); každé napojení má vlastní import URL, exportní URL s hashem a volbu co exportovat; při startu se stávající Booking.com napojení migrují automaticky; záložka přejmenována z „Booking" na „iCal integrace"
 
 ## 6. 7. 2026

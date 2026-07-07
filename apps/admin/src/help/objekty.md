@@ -68,12 +68,18 @@ Zákazník ve formuláři vidí na kartičce typu minimální cenu a ikonu 💲 
 Volitelné nebo povinné položky připočítané k ceně rezervace. Příklady: elektřina, pes, klimatizace, snídaně.
 
 - **Název** — pro každý aktivní jazyk
-- **Poznámka** — doplňující text zobrazený zákazníkovi u příplatku
-- **Volitelný / povinný** — volitelné zákazník zaškrtne sám, povinné jsou vždy součástí ceny
-- **Cena za noc** — pro každý jazyk (měnu) zvlášť
-- **Nezobrazovat ve formuláři** — příplatek se skryje zákazníkům v rezervačním formuláři; v administraci zůstane viditelný (hodí se např. pro interní položky nebo dočasně deaktivované příplatky)
+- **Poznámka** — doplňující text zobrazený zákazníkovi u příplatku (zobrazí se jako tooltip u `i`)
+- **Typ ceny** — výběr jak se cena počítá:
+  - *Za noc* — cena se násobí počtem nocí (výchozí)
+  - *Fixně za celou rezervaci* — pevná částka bez ohledu na délku pobytu
+- **Max. množství** — pokud je > 1, zákazník si volí počet (1 až maximum); hodí se např. pro počet psů nebo elektrokoloběžek; v administraci i formuláři se zobrazí číselník
+- **Popisek množství** — krátký popis číselníku, např. „Počet psů"; nastavuje se per jazyk; zobrazí se vedle číselníku ve formuláři
+- **Povinný příplatek** — povinné příplatky jsou zákazníkovi přidány automaticky bez možnosti odebrat; volitelné zákazník zaškrtne sám
+- **Nezobrazovat ve formuláři** — příplatek se skryje zákazníkům v rezervačním formuláři; v administraci zůstane viditelný (hodí se např. pro interní položky)
 - **Zobrazit pro typy ubytování** — lze vybrat konkrétní typy, pro které se příplatek zobrazí; pokud nevyberete žádný, příplatek se zobrazí pro všechny typy
 - **Pořadí** — přetáhněte příplatek za ikonu ⠿ vlevo a pusťte na požadované místo; pořadí se uloží automaticky
+
+Povinné příplatky jsou v seznamu označeny štítkem **Povinný** vedle názvu.
 
 ---
 

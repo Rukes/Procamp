@@ -31,9 +31,13 @@ export function getEffectivePricePerNight(type: PublicAccommodationType, nights:
 export interface PublicSurcharge {
   id: string;
   name: string;
-  pricePerNight: number;
+  price: number;
+  pricingType: "PER_NIGHT" | "PER_STAY";
+  maxQuantity: number;
   isOptional: boolean;
   note?: string | null;
+  quantityLabel?: string | null;
+  applicableTypeIds?: string[];
 }
 
 interface CampPublic extends Omit<Camp, "surcharges" | "accommodationTypes"> {

@@ -35,12 +35,14 @@ interface Props {
   adults: number;
   children: number;
   selectedSurchargeIds: string[];
-  lang: Language;
+  surchargeQuantities: Record<string, number>;
   onChangeAdults: (n: number) => void;
   onChangeChildren: (n: number) => void;
   onChangeSurcharges: (ids: string[]) => void;
+  onChangeSurchargeQuantities: (q: Record<string, number>) => void;
   onNext: () => void;
   onBack: () => void;
+  lang: Language;
 }
 
 function Counter({ label, sub, value, onChange, min = 0, max }: { label: string; sub: string; value: number; onChange: (v: number) => void; min?: number; max?: number }) {
@@ -70,14 +72,14 @@ function Counter({ label, sub, value, onChange, min = 0, max }: { label: string;
 }
 
 export default function ConfigStep({
-  camp, type, checkIn, checkOut, adults, children, selectedSurchargeIds, lang,
-  onChangeAdults, onChangeChildren, onChangeSurcharges, onNext, onBack,
+  camp, type, checkIn, checkOut, adults, children, selectedSurchargeIds, surchargeQuantities,
+  lang, onChangeAdults, onChangeChildren, onChangeSurcharges, onChangeSurchargeQuantities, onNext, onBack,
 }: Props) {
   const t = useT(lang.code);
   const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / 86400000);
   const mandatoryIds = camp.surcharges.filter((s) => !s.isOptional && (!s.applicableTypeIds?.length || s.applicableTypeIds.includes(type.id))).map((s) => s.id);
   const allSelected = [...new Set([...mandatoryIds, ...selectedSurchargeIds])];
-  const breakdown = calcBreakdown(camp, type, checkIn, checkOut, adults, children, allSelected, lang, t);
+  const breakdown = calcBreakdown(camp, type, checkIn, checkOut, adults, children, allSelected, lang, t, surchargeQuantities);
 
   const appliesToType = (s: { applicableTypeIds?: string[] }) =>
     !s.applicableTypeIds?.length || s.applicableTypeIds.includes(type.id);
@@ -109,36 +111,66 @@ export default function ConfigStep({
 
           {mandatory.length > 0 && (
             <div className="mb-3">
-              {mandatory.map((s) => (
-                <div key={s.id} className="flex items-center justify-between py-2.5 border-b border-gray-100">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900 flex items-center">{s.name}{s.note && <SurchargeNote note={s.note} />}</p>
-                    <p className="text-xs text-gray-500">{formatPrice(s.pricePerNight, lang)} {t.configNights(nights)}</p>
+              {mandatory.map((s) => {
+                const qty = Math.min(surchargeQuantities[s.id] ?? 1, s.maxQuantity);
+                const total = s.pricingType === "PER_STAY" ? s.price * qty : s.price * qty * nights;
+                return (
+                  <div key={s.id} className="flex items-center justify-between py-2.5 border-b border-gray-100 gap-2">
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900 flex items-center">{s.name}{s.note && <SurchargeNote note={s.note} />}</p>
+                      <p className="text-xs text-gray-500">{formatPrice(s.price, lang)} {s.pricingType === "PER_STAY" ? "" : t.configNights(nights)} = {formatPrice(total, lang)}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {s.maxQuantity > 1 && (
+                        <div className="flex flex-col items-center gap-0.5">
+                          {s.quantityLabel && <span className="text-xs text-gray-400">{s.quantityLabel}</span>}
+                          <div className="flex items-center gap-1">
+                            <button type="button" onClick={() => onChangeSurchargeQuantities({ ...surchargeQuantities, [s.id]: Math.max(1, qty - 1) })} className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 text-sm leading-none">−</button>
+                            <span className="w-5 text-center text-sm font-semibold">{qty}</span>
+                            <button type="button" onClick={() => onChangeSurchargeQuantities({ ...surchargeQuantities, [s.id]: Math.min(s.maxQuantity, qty + 1) })} className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 text-sm leading-none">+</button>
+                          </div>
+                        </div>
+                      )}
+                      <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">{t.configMandatory}</span>
+                    </div>
                   </div>
-                  <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded">{t.configMandatory}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
 
           {optional.map((s) => {
             const checked = selectedSurchargeIds.includes(s.id);
+            const qty = Math.min(surchargeQuantities[s.id] ?? 1, s.maxQuantity);
+            const total = s.pricingType === "PER_STAY" ? s.price * qty : s.price * qty * nights;
             return (
-              <label key={s.id} className={`flex items-center gap-3 py-2.5 px-3 -mx-3 rounded-xl cursor-pointer transition-colors ${checked ? "bg-blue-50" : "hover:bg-gray-50"}`}>
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  onChange={() => toggleSurcharge(s.id)}
-                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900 flex items-center">{s.name}{s.note && <SurchargeNote note={s.note} />}</p>
-                  <p className="text-xs text-gray-500">
-                    {formatPrice(s.pricePerNight, lang)} {t.configPerNight}
-                    {checked && ` ${t.configNights(nights)} = ${formatPrice(s.pricePerNight * nights, lang)}`}
-                  </p>
-                </div>
-              </label>
+              <div key={s.id} className={`flex items-center gap-3 py-2.5 px-3 -mx-3 rounded-xl transition-colors ${checked ? "bg-blue-50" : "hover:bg-gray-50"}`}>
+                <label className="flex items-center gap-3 flex-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggleSurcharge(s.id)}
+                    className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900 flex items-center">{s.name}{s.note && <SurchargeNote note={s.note} />}</p>
+                    <p className="text-xs text-gray-500">
+                      {formatPrice(s.price, lang)} {s.pricingType === "PER_STAY" ? "" : t.configPerNight}
+                      {checked && ` = ${formatPrice(total, lang)}`}
+                    </p>
+                  </div>
+                </label>
+                {checked && s.maxQuantity > 1 && (
+                  <div className="flex flex-col items-center gap-0.5">
+                    {s.quantityLabel && <span className="text-xs text-gray-400">{s.quantityLabel}</span>}
+                    <div className="flex items-center gap-1">
+                      <button type="button" onClick={() => onChangeSurchargeQuantities({ ...surchargeQuantities, [s.id]: Math.max(1, qty - 1) })} className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 text-sm leading-none">−</button>
+                      <span className="w-5 text-center text-sm font-semibold">{qty}</span>
+                      <button type="button" onClick={() => onChangeSurchargeQuantities({ ...surchargeQuantities, [s.id]: Math.min(s.maxQuantity, qty + 1) })} className="w-6 h-6 rounded-full border border-gray-300 flex items-center justify-center text-gray-600 hover:bg-gray-50 text-sm leading-none">+</button>
+                    </div>
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>

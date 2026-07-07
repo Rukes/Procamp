@@ -68,11 +68,11 @@ export async function publicFormRoutes(app: FastifyInstance) {
 
     const surcharges = camp.surcharges.flatMap((s) => {
       if (s.isHidden) return [];
-      const translations = s.translations as Record<string, { name: string; note?: string }>;
+      const translations = s.translations as Record<string, { name: string; note?: string; quantityLabel?: string }>;
       const tr = translations[lang] ?? translations["cs"] ?? {};
       const name = tr.name ?? "";
-      const price = s.prices.find((p) => p.languageCode === lang) ?? s.prices[0];
-      return [{ id: s.id, name, pricePerNight: price?.pricePerNight ?? 0, isOptional: s.isOptional, note: tr.note ?? null, applicableTypeIds: s.applicableTypeIds ?? [] }];
+      const sp = s.prices.find((p) => p.languageCode === lang) ?? s.prices[0];
+      return [{ id: s.id, name, price: sp?.price ?? 0, pricingType: s.pricingType, maxQuantity: s.maxQuantity, isOptional: s.isOptional, note: tr.note ?? null, quantityLabel: tr.quantityLabel ?? null, applicableTypeIds: s.applicableTypeIds ?? [] }];
     });
 
     return { camp: { ...publicCamp, accommodationTypes, surcharges }, languages, currentLang: lang, termsText, requireTermsAcceptance, gaTrackingId, hideCopyright };
@@ -134,11 +134,14 @@ export async function publicFormRoutes(app: FastifyInstance) {
     const personsPrice = body.adults * adultPrice + body.children * childPrice;
 
     const selectedSurcharges = camp.surcharges.filter((s) => body.selectedSurchargeIds.includes(s.id));
+    const quantities = body.surchargeQuantities ?? {};
     const surchargesPrice = selectedSurcharges.reduce((sum, s) => {
       const p = s.prices.find((p) => p.languageCode === body.languageCode) ?? s.prices[0];
-      return sum + (p?.pricePerNight ?? 0);
+      const unitPrice = p?.price ?? 0;
+      const qty = Math.min(quantities[s.id] ?? 1, s.maxQuantity);
+      return sum + (s.pricingType === "PER_STAY" ? unitPrice * qty : unitPrice * qty * nights);
     }, 0);
-    const totalPrice = (pricePerNight + personsPrice + surchargesPrice) * nights;
+    const totalPrice = (pricePerNight + personsPrice) * nights + surchargesPrice;
 
     const bookingCode = await generateUniqueBookingCode(app.prisma);
     const reservation = await app.prisma.reservation.create({
@@ -162,7 +165,8 @@ export async function publicFormRoutes(app: FastifyInstance) {
         surcharges: {
           create: selectedSurcharges.map((s) => {
             const p = s.prices.find((p) => p.languageCode === body.languageCode) ?? s.prices[0];
-            return { surchargeId: s.id, priceSnapshot: p?.pricePerNight ?? 0 };
+            const qty = Math.min(quantities[s.id] ?? 1, s.maxQuantity);
+            return { surchargeId: s.id, priceSnapshot: p?.price ?? 0, quantity: qty };
           }),
         },
       },

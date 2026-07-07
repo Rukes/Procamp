@@ -4,7 +4,7 @@ import { api } from "../api/client";
 import ReservationModal from "../components/ReservationModal";
 import HelpModal from "../components/HelpModal";
 import { getDaysInMonth, format, addDays } from "date-fns";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { DayPicker } from "react-day-picker";
 import { cs } from "date-fns/locale";
 import "react-day-picker/dist/style.css";
@@ -280,6 +280,7 @@ function ReservationPopover({ state, onClose, onOpen }: {
 export default function CalendarPage() {
   useTitle("Kalendář");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [helpOpen, setHelpOpen] = useState(false);
   const [modalId, setModalId] = useState<string | null>(null);
   const [blockingModalId, setBlockingModalId] = useState<string | null>(null);
@@ -307,7 +308,9 @@ export default function CalendarPage() {
   useEffect(() => {
     api.get("/camps/for-filter").then((r) => {
       setCamps(r.data);
-      if (r.data.length > 0) setCampId(r.data[0].id);
+      const preId = searchParams.get("campId");
+      if (preId && r.data.some((c: Camp) => c.id === preId)) setCampId(preId);
+      else if (r.data.length > 0) setCampId(r.data[0].id);
     }).catch(() => {});
   }, []);
 
@@ -555,7 +558,7 @@ export default function CalendarPage() {
             {/* Header row */}
             <div className="flex bg-gray-50 border-b border-gray-200">
               <div
-                className="sticky left-0 z-20 bg-gray-50 border-r border-gray-200 flex items-center px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide flex-shrink-0"
+                className="sm:sticky left-0 z-20 bg-gray-50 border-r border-gray-200 flex items-center px-3 text-xs font-semibold text-gray-500 uppercase tracking-wide flex-shrink-0"
                 style={{ width: UNIT_COL_W, height: 40 }}
               >
                 Jednotka
@@ -598,7 +601,7 @@ export default function CalendarPage() {
 
                   {/* Sticky label */}
                   <div
-                    className="sticky left-0 z-10 border-r border-gray-200 px-3 flex items-center flex-shrink-0 bg-white"
+                    className="sm:sticky left-0 z-10 border-r border-gray-200 px-3 flex items-center flex-shrink-0 bg-white"
                     style={{ width: UNIT_COL_W, height: rowH }}
                   >
                     <span className="text-sm font-medium text-gray-800 truncate">{typeName(type)}</span>
@@ -654,6 +657,10 @@ export default function CalendarPage() {
                       const blockTop = LANE_PAD + block.lane * LANE_H + 2;
                       const height = LANE_H - 4;
 
+                      const roundCls = block.startsThisMonth && block.endsThisMonth ? "rounded" : block.startsThisMonth ? "rounded-l" : block.endsThisMonth ? "rounded-r" : "rounded-none";
+                      const padL = block.startsThisMonth ? "pl-2" : "pl-1";
+                      const padR = block.endsThisMonth ? "pr-2" : "pr-1";
+
                       if (block.kind === "blocked") {
                         const src = (block.source ?? "").toUpperCase();
                         const srcCls = SOURCE_COLOR[src] ?? "bg-gray-200 text-gray-600 border-gray-400";
@@ -665,14 +672,14 @@ export default function CalendarPage() {
                         return (
                           <div
                             key={block.id}
-                            className={`absolute rounded flex items-center px-2 text-[11px] font-medium border border-dashed overflow-hidden whitespace-nowrap cursor-pointer transition-colors z-10 hover:brightness-95 ${srcCls}`}
+                            className={`absolute flex items-center text-[11px] font-medium border border-dashed overflow-hidden whitespace-nowrap cursor-pointer transition-colors z-10 hover:brightness-95 ${roundCls} ${padL} ${padR} ${srcCls}`}
                             style={{ left: blockLeft, width: w, top: blockTop, height }}
                             onMouseDown={(e) => e.stopPropagation()}
                             onMouseEnter={(e) => { if (!isTouch()) openBlockingPopover(e); }}
                             onMouseLeave={() => { if (!isTouch()) setBlockingPopover(null); }}
                             onClick={(e) => { e.stopPropagation(); setBlockingPopover(null); setBlockingModalId(block.id); }}
                           >
-                            {labelSpan > 1 ? block.label : ""}
+                            {block.label && block.label !== "Blokace" ? <span className="truncate">{block.label}</span> : labelSpan > 1 ? <span className="truncate">Blokace</span> : null}
                           </div>
                         );
                       }
@@ -686,7 +693,7 @@ export default function CalendarPage() {
                       return (
                         <div
                           key={block.id}
-                          className={`absolute rounded flex items-center px-2 text-[11px] font-medium overflow-hidden whitespace-nowrap cursor-grab active:cursor-grabbing border z-10 ${cls} hover:brightness-95 transition-all`}
+                          className={`absolute flex items-center text-[11px] font-medium overflow-hidden whitespace-nowrap cursor-grab active:cursor-grabbing border z-10 hover:brightness-95 transition-all ${roundCls} ${padL} ${padR} ${cls}`}
                           style={{ left: blockLeft, width: w, top: blockTop, height }}
                           draggable
                           onDragStart={() => {

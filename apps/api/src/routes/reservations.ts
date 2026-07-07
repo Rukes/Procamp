@@ -61,6 +61,7 @@ export async function reservationRoutes(app: FastifyInstance) {
       campId: string; accommodationTypeId: string;
       checkIn: string; checkOut: string; adults: number; children: number;
       selectedSurchargeIds: string[];
+      surchargeQuantities?: Record<string, number>;
       firstName: string; lastName: string; email: string; phone: string;
       licensePlate?: string; expectedArrival?: string; note?: string;
       languageCode?: string;
@@ -91,11 +92,14 @@ export async function reservationRoutes(app: FastifyInstance) {
     const childPrice = langPrice?.childPricePerNight ?? 0;
     const personsPrice = body.adults * adultPrice + body.children * childPrice;
     const selectedSurcharges = camp.surcharges.filter((s) => body.selectedSurchargeIds.includes(s.id));
+    const quantities = body.surchargeQuantities ?? {};
     const surchargesPrice = selectedSurcharges.reduce((sum, s) => {
       const p = s.prices.find((p) => p.languageCode === lang) ?? s.prices[0];
-      return sum + (p?.pricePerNight ?? 0);
+      const unitPrice = p?.price ?? 0;
+      const qty = Math.min(quantities[s.id] ?? 1, s.maxQuantity);
+      return sum + (s.pricingType === "PER_STAY" ? unitPrice * qty : unitPrice * qty * nights);
     }, 0);
-    const totalPrice = (pricePerNight + personsPrice + surchargesPrice) * nights;
+    const totalPrice = (pricePerNight + personsPrice) * nights + surchargesPrice;
 
     const bookingCode = await generateUniqueBookingCode(app.prisma);
     const reservation = await app.prisma.reservation.create({
@@ -116,7 +120,8 @@ export async function reservationRoutes(app: FastifyInstance) {
         surcharges: {
           create: selectedSurcharges.map((s) => {
             const p = s.prices.find((p) => p.languageCode === lang) ?? s.prices[0];
-            return { surchargeId: s.id, priceSnapshot: p?.pricePerNight ?? 0 };
+            const qty = Math.min(quantities[s.id] ?? 1, s.maxQuantity);
+            return { surchargeId: s.id, priceSnapshot: p?.price ?? 0, quantity: qty };
           }),
         },
       },

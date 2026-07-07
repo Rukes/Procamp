@@ -101,7 +101,7 @@ export async function languageRoutes(app: FastifyInstance) {
               create: {
                 surchargeId: sur.id,
                 languageCode: code,
-                pricePerNight: Math.round(srcPrice.pricePerNight * coeff),
+                price: Math.round((srcPrice as { price?: number; pricePerNight?: number }).price ?? (srcPrice as { pricePerNight?: number }).pricePerNight ?? 0) * coeff,
               },
               update: {},
             });

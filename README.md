@@ -1,8 +1,8 @@
-# MůjKemp.cz — Rezervační systém pro kempingy
+# Ubysoft.cz — Rezervační systém pro kempingy
 
 ## O projektu
 
-Cílem rezervačního systému **MůjKemp.cz** je naprogramovat běžným pronajímatelům jednoduchý systém pouze za provozní poplatek. Vývoj obdobného systému stojí desetitisíce až statisíce korun a je následně náročný na údržbu. Systém vznikl na popud známého jako open source — je celý naprogramovaný pomocí Anthropic Claude.
+Cílem rezervačního systému **Ubysoft.cz** je naprogramovat běžným pronajímatelům jednoduchý systém pouze za provozní poplatek. Vývoj obdobného systému stojí desetitisíce až statisíce korun a je následně náročný na údržbu. Systém vznikl na popud známého jako open source — je celý naprogramovaný pomocí Anthropic Claude.
 
 Cena systému je stanovena pouze za provoz, nikoli za vývoj.
 
@@ -79,7 +79,7 @@ curl -fsSL https://get.docker.com | sh
 
 ```bash
 # 1. Nakopírujte projekt na server a přejděte do složky
-cd /var/www/mujkemp
+cd /var/www/ubysoft
 
 # 2. Vytvořte soubor s proměnnými
 cp .env.example .env
@@ -91,8 +91,8 @@ Vyplňte `.env`:
 ```env
 DB_PASSWORD=silne-heslo-sem
 JWT_SECRET=sem-vlozit-nahodny-retezec-node-e-console.log-crypto.randomBytes-64-toString-hex
-VITE_API_URL=https://api.mujkemp.cz
-VITE_FORM_BASE_URL=https://form.mujkemp.cz
+VITE_API_URL=https://api.ubysoft.cz
+VITE_FORM_BASE_URL=https://form.ubysoft.cz
 
 # Volitelné — systémové Google Analytics (sledování rezervací napříč všemi klienty)
 VITE_GA_ID=G-XXXXXXXXXX
@@ -123,17 +123,17 @@ API health check: `http://IP-SERVERU:3001/api/health`
 Nainstalujte Nginx a Certbot, pak nasměrujte domény na lokální porty:
 
 ```nginx
-# /etc/nginx/sites-available/mujkemp
+# /etc/nginx/sites-available/ubysoft
 server {
-    server_name api.mujkemp.cz;
+    server_name api.ubysoft.cz;
     location / { proxy_pass http://127.0.0.1:3001; proxy_set_header Host $host; }
 }
 server {
-    server_name app.mujkemp.cz;
+    server_name app.ubysoft.cz;
     location / { proxy_pass http://127.0.0.1:3000; }
 }
 server {
-    server_name form.mujkemp.cz;
+    server_name form.ubysoft.cz;
     add_header X-Frame-Options "";
     add_header Content-Security-Policy "frame-ancestors *";
     location / { proxy_pass http://127.0.0.1:3002; }
@@ -141,9 +141,9 @@ server {
 ```
 
 ```bash
-ln -s /etc/nginx/sites-available/mujkemp /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/ubysoft /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
-certbot --nginx -d api.mujkemp.cz -d app.mujkemp.cz -d form.mujkemp.cz
+certbot --nginx -d api.ubysoft.cz -d app.ubysoft.cz -d form.ubysoft.cz
 ```
 
 ### Aktualizace
@@ -156,7 +156,7 @@ docker compose up -d --build
 ### Záloha databáze
 
 ```bash
-docker compose exec db pg_dump -U mujkemp mujkemp > zaloha-$(date +%Y%m%d).sql
+docker compose exec db pg_dump -U ubysoft ubysoft > zaloha-$(date +%Y%m%d).sql
 ```
 
 ---
@@ -213,9 +213,9 @@ apt install -y certbot python3-certbot-nginx
 sudo -u postgres psql
 
 # Vytvořte databázi a uživatele (heslo změňte na vlastní bezpečné heslo)
-CREATE DATABASE mujkemp;
-CREATE USER mujkemp WITH ENCRYPTED PASSWORD 'silne-heslo-sem';
-GRANT ALL PRIVILEGES ON DATABASE mujkemp TO mujkemp;
+CREATE DATABASE ubysoft;
+CREATE USER ubysoft WITH ENCRYPTED PASSWORD 'silne-heslo-sem';
+GRANT ALL PRIVILEGES ON DATABASE ubysoft TO ubysoft;
 \q
 ```
 
@@ -223,12 +223,12 @@ GRANT ALL PRIVILEGES ON DATABASE mujkemp TO mujkemp;
 
 ```bash
 # Vytvořte složku pro aplikaci
-mkdir -p /var/www/mujkemp
-cd /var/www/mujkemp
+mkdir -p /var/www/ubysoft
+cd /var/www/ubysoft
 
 # Zkopírujte celý obsah složky procamp/ na server
 # Můžete použít scp z vašeho počítače:
-# scp -r /cesta/k/procamp/* root@IP-SERVERU:/var/www/mujkemp/
+# scp -r /cesta/k/procamp/* root@IP-SERVERU:/var/www/ubysoft/
 
 # Nebo použijte git, pokud máte repozitář:
 # git clone <URL>.git .
@@ -237,7 +237,7 @@ cd /var/www/mujkemp
 ### 4. Nainstalujte závislosti a sestavte aplikaci
 
 ```bash
-cd /var/www/mujkemp
+cd /var/www/ubysoft
 
 # Nainstalujte všechny závislosti
 pnpm install
@@ -249,7 +249,7 @@ pnpm --filter=@procamp/shared build 2>/dev/null || true
 ### 5. Nastavte proměnné prostředí pro API
 
 ```bash
-cd /var/www/mujkemp/apps/api
+cd /var/www/ubysoft/apps/api
 
 # Zkopírujte vzorový soubor
 cp .env.example .env
@@ -262,7 +262,7 @@ Do souboru `.env` vyplňte:
 
 ```env
 # Připojení k databázi (heslo musí souhlasit s tím, co jste zadali v kroku 2)
-DATABASE_URL="postgresql://mujkemp:silne-heslo-sem@localhost:5432/mujkemp"
+DATABASE_URL="postgresql://ubysoft:silne-heslo-sem@localhost:5432/ubysoft"
 
 # JWT tajný klíč — vygenerujte náhodný řetězec:
 # node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
@@ -274,7 +274,7 @@ PORT=3001
 ### 6. Inicializujte databázi
 
 ```bash
-cd /var/www/mujkemp
+cd /var/www/ubysoft
 
 # Vygenerujte Prisma klienta
 pnpm db:generate
@@ -288,7 +288,7 @@ pnpm db:seed
 
 Po spuštění seedu uvidíte:
 ```
-✅ Super admin created: admin@mujkemp.cz / admin123456
+✅ Super admin created: admin@ubysoft.cz / admin123456
 ⚠️  Change the password after first login!
 ```
 
@@ -297,14 +297,14 @@ Po spuštění seedu uvidíte:
 ### 7. Sestavte API
 
 ```bash
-cd /var/www/mujkemp/apps/api
+cd /var/www/ubysoft/apps/api
 pnpm build
 ```
 
 ### 8. Sestavte frontend aplikace
 
 ```bash
-cd /var/www/mujkemp
+cd /var/www/ubysoft
 
 # Admin panel
 pnpm --filter=admin build
@@ -317,18 +317,18 @@ pnpm --filter=form build
 
 ```bash
 # Vytvořte složky
-mkdir -p /var/www/mujkemp/admin
-mkdir -p /var/www/mujkemp/form
+mkdir -p /var/www/ubysoft/admin
+mkdir -p /var/www/ubysoft/form
 
 # Nakopírujte sestavené soubory
-cp -r /var/www/mujkemp/apps/admin/dist/* /var/www/mujkemp/admin/
-cp -r /var/www/mujkemp/apps/form/dist/* /var/www/mujkemp/form/
+cp -r /var/www/ubysoft/apps/admin/dist/* /var/www/ubysoft/admin/
+cp -r /var/www/ubysoft/apps/form/dist/* /var/www/ubysoft/form/
 ```
 
 ### 10. Spusťte API pomocí PM2
 
 ```bash
-cd /var/www/mujkemp
+cd /var/www/ubysoft
 
 # Spusťte API
 pm2 start ecosystem.config.js
@@ -341,24 +341,24 @@ pm2 save
 Ověřte, že API běží:
 ```bash
 pm2 status
-# Měli byste vidět: mujkemp-api | online
+# Měli byste vidět: ubysoft-api | online
 ```
 
 ### 11. Nastavte Nginx
 
 ```bash
 # Zkopírujte vzorový config
-cp /var/www/mujkemp/nginx.conf.example /etc/nginx/sites-available/mujkemp
+cp /var/www/ubysoft/nginx.conf.example /etc/nginx/sites-available/ubysoft
 
 # Upravte config — změňte domény
-nano /etc/nginx/sites-available/mujkemp
+nano /etc/nginx/sites-available/ubysoft
 ```
 
 Nahraďte v souboru všechny výskyty `vas-domen.cz` vaší skutečnou doménou.
 
 ```bash
 # Aktivujte konfiguraci
-ln -s /etc/nginx/sites-available/mujkemp /etc/nginx/sites-enabled/
+ln -s /etc/nginx/sites-available/ubysoft /etc/nginx/sites-enabled/
 
 # Zkontrolujte správnost konfigurace
 nginx -t
@@ -371,7 +371,7 @@ systemctl restart nginx
 
 ```bash
 # Získejte SSL certifikáty pro všechny tři subdomény
-certbot --nginx -d api.mujkemp.cz -d app.mujkemp.cz -d form.mujkemp.cz
+certbot --nginx -d api.ubysoft.cz -d app.ubysoft.cz -d form.ubysoft.cz
 ```
 
 Certbot automaticky upraví Nginx konfiguraci pro HTTPS a nastaví automatické obnovování certifikátů.
@@ -382,21 +382,21 @@ Certbot automaticky upraví Nginx konfiguraci pro HTTPS a nastaví automatické 
 
 Po instalaci otevřete v prohlížeči:
 
-1. **Admin:** `https://app.mujkemp.cz`
-   - Přihlaste se: `admin@mujkemp.cz` / `admin123456`
+1. **Admin:** `https://app.ubysoft.cz`
+   - Přihlaste se: `admin@ubysoft.cz` / `admin123456`
    - Ihned změňte heslo
 
-2. **API health check:** `https://api.mujkemp.cz/api/health`
+2. **API health check:** `https://api.ubysoft.cz/api/health`
    - Mělo by vrátit: `{"status":"ok"}`
 
-3. **Formulář (demo):** `https://form.mujkemp.cz/form/{org-slug}/{kemp-slug}`
+3. **Formulář (demo):** `https://form.ubysoft.cz/form/{org-slug}/{kemp-slug}`
    - Nahraďte `{org-slug}` slugem organizace a `{kemp-slug}` slugem kempu
 
 ---
 
 ## První kroky v administraci
 
-1. Přihlaste se jako super admin (`admin@mujkemp.cz` / `admin123456`)
+1. Přihlaste se jako super admin (`admin@ubysoft.cz` / `admin123456`)
 2. Přejděte do **Organizace** → **+ Nová organizace** — vytvořte organizaci pro prvního zákazníka
 3. V menu vyberte nově vytvořenou organizaci z přepínače
 4. Přejděte do **Jazyky** → přidejte alespoň jeden jazyk (např. `cs` — Čeština)
@@ -416,7 +416,7 @@ Zkopírujte iframe kód z detailu kempu (záložka „Vložení na web"):
 
 ```html
 <iframe
-  src="https://form.mujkemp.cz/form/{org-slug}/{kemp-slug}"
+  src="https://form.ubysoft.cz/form/{org-slug}/{kemp-slug}"
   width="100%"
   height="700"
   frameborder="0"
@@ -439,9 +439,9 @@ Nastavte globální SMTP server přes env proměnné v `apps/api/.env`:
 ```env
 SYSTEM_SMTP_HOST="smtp.vas-provider.cz"
 SYSTEM_SMTP_PORT=587
-SYSTEM_SMTP_USER="info@mujkemp.cz"
+SYSTEM_SMTP_USER="info@ubysoft.cz"
 SYSTEM_SMTP_PASS="heslo-sem"
-SYSTEM_SMTP_FROM="MůjKemp.cz <info@mujkemp.cz>"
+SYSTEM_SMTP_FROM="Ubysoft.cz <info@ubysoft.cz>"
 ```
 
 Systémový SMTP použijí automaticky všechny objekty které nemají vlastní SMTP. Reply-To se nastaví na notifikační e-mail příslušného objektu.
@@ -470,7 +470,7 @@ Super admin může na stránce **Systém** jedním přepínačem vypnout vešker
 Když dostanete novou verzi kódu:
 
 ```bash
-cd /var/www/mujkemp
+cd /var/www/ubysoft
 
 # Nahrajte nový kód (nebo git pull)
 pnpm install
@@ -486,7 +486,7 @@ cp -r apps/admin/dist/* admin/
 cp -r apps/form/dist/* form/
 
 # Restartujte API
-pm2 restart mujkemp-api
+pm2 restart ubysoft-api
 ```
 
 ---
@@ -498,13 +498,13 @@ pm2 restart mujkemp-api
 pm2 status
 
 # Zobrazit logy API (chyby, přístupy)
-pm2 logs mujkemp-api
+pm2 logs ubysoft-api
 
 # Restart API
-pm2 restart mujkemp-api
+pm2 restart ubysoft-api
 
 # Záloha databáze
-pg_dump -U mujkemp mujkemp > zaloha-$(date +%Y%m%d).sql
+pg_dump -U ubysoft ubysoft > zaloha-$(date +%Y%m%d).sql
 ```
 
 ---
@@ -513,16 +513,16 @@ pg_dump -U mujkemp mujkemp > zaloha-$(date +%Y%m%d).sql
 
 **API nereaguje:**
 ```bash
-pm2 logs mujkemp-api --lines 50
+pm2 logs ubysoft-api --lines 50
 ```
 
 **Chyba databázového připojení:**
-- Zkontrolujte `DATABASE_URL` v souboru `/var/www/mujkemp/apps/api/.env`
+- Zkontrolujte `DATABASE_URL` v souboru `/var/www/ubysoft/apps/api/.env`
 - Ověřte, že PostgreSQL běží: `systemctl status postgresql`
 
 **Formulář nelze vložit do iframe:**
-- Zkontrolujte, že Nginx config pro `form.mujkemp.cz` obsahuje `add_header X-Frame-Options "";`
+- Zkontrolujte, že Nginx config pro `form.ubysoft.cz` obsahuje `add_header X-Frame-Options "";`
 
 **E-maily se neodesílají:**
 - Zkontrolujte SMTP nastavení v detailu kempu
-- Prohlédněte logy: `pm2 logs mujkemp-api | grep -i email`
+- Prohlédněte logy: `pm2 logs ubysoft-api | grep -i email`
