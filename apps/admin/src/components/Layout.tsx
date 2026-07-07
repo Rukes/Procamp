@@ -169,7 +169,7 @@ export default function Layout() {
         </button>
         {user?.isSuperAdmin && import.meta.env.VITE_COMMIT_HASH && import.meta.env.VITE_COMMIT_HASH !== "unknown" && (
           <div className="flex items-center gap-2 text-xs text-gray-400">
-            <i className="fa-regular fa-gears w-4 text-center" />
+            <i className="fa-solid fa-code-branch w-4 text-center" />
             <span className="font-mono">{import.meta.env.VITE_COMMIT_HASH}</span>
           </div>
         )}
