@@ -15,6 +15,8 @@ ARG VITE_FORM_BASE_URL
 ENV VITE_FORM_BASE_URL=$VITE_FORM_BASE_URL
 ARG VITE_HCAPTCHA_SITE_KEY
 ENV VITE_HCAPTCHA_SITE_KEY=$VITE_HCAPTCHA_SITE_KEY
+ARG VITE_COMMIT_HASH=unknown
+ENV VITE_COMMIT_HASH=$VITE_COMMIT_HASH
 COPY packages/shared ./packages/shared
 RUN node_modules/.bin/tsc -p packages/shared/tsconfig.json
 COPY apps/admin ./apps/admin

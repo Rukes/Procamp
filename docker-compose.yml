@@ -43,6 +43,7 @@ services:
         VITE_API_URL: ${VITE_API_URL}
         VITE_FORM_BASE_URL: ${VITE_FORM_BASE_URL}
         VITE_HCAPTCHA_SITE_KEY: ${VITE_HCAPTCHA_SITE_KEY}
+        VITE_COMMIT_HASH: ${VITE_COMMIT_HASH:-unknown}
     restart: unless-stopped
     ports:
       - "3000:80"
