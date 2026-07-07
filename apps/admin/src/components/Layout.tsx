@@ -167,6 +167,9 @@ export default function Layout() {
         <button onClick={handleLogout} className="flex items-center gap-2 w-full text-left text-xs text-gray-400 hover:text-white transition-colors">
           <i className="fa-regular fa-arrow-right-from-bracket" /> Odhlásit se
         </button>
+        {user?.isSuperAdmin && import.meta.env.VITE_COMMIT_HASH && import.meta.env.VITE_COMMIT_HASH !== "unknown" && (
+          <p className="text-xs text-gray-600 font-mono">v {import.meta.env.VITE_COMMIT_HASH}</p>
+        )}
       </div>
       <div className="px-4 py-4 border-t border-gray-700 space-y-2">
         <Link to="/help" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
@@ -191,7 +194,12 @@ export default function Layout() {
         <div className="fixed inset-0 z-[200] flex items-start justify-center bg-black/50 pt-8 px-4" onClick={() => setChangelogOpen(false)}>
           <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl max-h-[85vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between px-6 py-4 border-b">
-              <h2 className="text-lg font-semibold">Changelog</h2>
+              <div>
+                <h2 className="text-lg font-semibold">Changelog</h2>
+                {import.meta.env.VITE_COMMIT_HASH && import.meta.env.VITE_COMMIT_HASH !== "unknown" && (
+                  <p className="text-xs text-gray-400 mt-0.5">Aktuální verze: {import.meta.env.VITE_COMMIT_HASH}</p>
+                )}
+              </div>
               <button onClick={() => setChangelogOpen(false)} className="text-gray-400 hover:text-gray-600 text-xl leading-none">&times;</button>
             </div>
             <div

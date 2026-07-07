@@ -9,6 +9,12 @@ export default function AuthorPage() {
     <div className="p-4 md:p-8">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">O autorovi</h1>
 
+      {import.meta.env.VITE_COMMIT_HASH && import.meta.env.VITE_COMMIT_HASH !== "unknown" && (
+        <div className="max-w-2xl bg-white rounded-xl border border-gray-200 px-6 py-4 mb-4 flex items-center gap-3 text-sm text-gray-600">
+          <i className="fa-regular fa-code-branch text-gray-400" />
+          Aktuální verze systému: <span className="font-mono font-medium text-gray-900">{import.meta.env.VITE_COMMIT_HASH}</span>
+        </div>
+      )}
       <div className="max-w-2xl bg-white rounded-xl border border-gray-200 p-8 space-y-6 text-gray-700 leading-relaxed">
         <p>
           Cílem rezervačního systému <strong>Ubysoft.cz</strong> je naprogramovat běžným pronajímatelům

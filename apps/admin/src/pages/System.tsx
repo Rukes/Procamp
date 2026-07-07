@@ -73,6 +73,13 @@ export default function SystemPage() {
     <div className="p-4 md:p-8 max-w-2xl">
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Systém</h1>
 
+      {import.meta.env.VITE_COMMIT_HASH && import.meta.env.VITE_COMMIT_HASH !== "unknown" && (
+        <div className="card p-4 mb-6 flex items-center gap-3 text-sm text-gray-600">
+          <i className="fa-regular fa-code-branch text-gray-400" />
+          Aktuální verze systému: <span className="font-mono font-medium text-gray-900">{import.meta.env.VITE_COMMIT_HASH}</span>
+        </div>
+      )}
+
       {/* SMTP */}
       <div className="card p-6 mb-6">
         <h2 className="font-semibold text-gray-900 mb-1">E-maily (SMTP)</h2>
