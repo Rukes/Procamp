@@ -23,7 +23,7 @@ export async function campRoutes(app: FastifyInstance) {
   app.get("/", { preHandler: requirePermission("camps_view") }, async (request) => {
     const orgId = orgFilter(request);
     const allowedCampIds = campFilter(request);
-    return app.prisma.camp.findMany({
+    const camps = await app.prisma.camp.findMany({
       where: {
         ...(orgId ? { organizationId: orgId } : {}),
         ...(allowedCampIds ? { id: { in: allowedCampIds } } : {}),
@@ -31,13 +31,14 @@ export async function campRoutes(app: FastifyInstance) {
       include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, icalEnabled: true } } },
       orderBy: { createdAt: "asc" },
     });
+    return camps.map(({ smtpPasswordEncrypted: _omit, ...rest }) => rest);
   });
 
   app.get("/:id", { preHandler: requirePermission("camps_view") }, async (request) => {
     const { id } = request.params as { id: string };
     const orgId = orgFilter(request);
     const allowedCampIds = campFilter(request);
-    return app.prisma.camp.findFirstOrThrow({
+    const { smtpPasswordEncrypted: _omit, ...camp } = await app.prisma.camp.findFirstOrThrow({
       where: {
         id,
         ...(orgId ? { organizationId: orgId } : {}),
@@ -45,6 +46,7 @@ export async function campRoutes(app: FastifyInstance) {
       },
       include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, icalEnabled: true } } },
     });
+    return camp;
   });
 
   app.post("/", { preHandler: requirePermission("camps_create") }, async (request, reply) => {

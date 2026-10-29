@@ -1,3 +1,4 @@
+import DOMPurify from "dompurify";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -68,7 +69,7 @@ export default function ContactStep({ breakdown, lang, termsText, requireTermsAc
             </div>
             <div
               className="overflow-y-auto px-6 py-5 prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: termsText ?? "" }}
+              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(termsText ?? "") }}
             />
           </div>
         </div>

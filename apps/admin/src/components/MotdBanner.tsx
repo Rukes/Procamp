@@ -1,4 +1,5 @@
 import { useMotd, ActiveMotd } from "../hooks/useMotd";
+import DOMPurify from "dompurify";
 
 const COLOR_MAP: Record<string, { bg: string; border: string; text: string; icon: string }> = {
   primary: { bg: "bg-blue-50", border: "border-blue-300", text: "text-blue-800", icon: "fa-circle-info text-blue-500" },
@@ -17,7 +18,7 @@ function MotdCard({ m, onDismiss }: { m: ActiveMotd; onDismiss: () => void }) {
         <p className={`font-semibold text-sm ${c.text}`}>{m.title}</p>
         <div
           className={`text-sm mt-1 ${c.text} prose prose-sm max-w-none`}
-          dangerouslySetInnerHTML={{ __html: m.body }}
+          dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(m.body) }}
         />
         {m.linkUrl && (
           <a href={m.linkUrl} target="_blank" rel="noopener noreferrer" className={`inline-block mt-2 text-xs font-medium underline ${c.text}`}>

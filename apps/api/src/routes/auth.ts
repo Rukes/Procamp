@@ -38,7 +38,7 @@ export async function authRoutes(app: FastifyInstance) {
       organizationId: user.organizationId ?? null,
       tokenVersion: user.tokenVersion,
       globalTokenVersion: settings?.globalTokenVersion ?? 0,
-    });
+    }, { expiresIn: "30d" });
 
     return { token, user: { id: user.id, name: user.name, email: user.email, isSuperAdmin: user.isSuperAdmin, permissions: user.permissions, organizationId: user.organizationId ?? null } };
   });

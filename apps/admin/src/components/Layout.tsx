@@ -6,6 +6,7 @@ import { api } from "../api/client";
 import { Permission } from "@procamp/shared";
 import Tooltip from "./Tooltip";
 import { marked } from "marked";
+import DOMPurify from "dompurify";
 import GlobalSearch from "./GlobalSearch";
 import { MotdBannerMenu, MotdBannerGlobal } from "./MotdBanner";
 
@@ -182,7 +183,7 @@ export default function Layout() {
           <Link to="/author" className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
             <i className="fa-regular fa-id-card" /> Autor
           </Link>
-          <button onClick={() => { if (!changelogHtml) fetch("/changelog.md").then(r => r.text()).then(t => setChangelogHtml(marked(t) as string)); setChangelogOpen(true); }} className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
+          <button onClick={() => { if (!changelogHtml) fetch("/changelog.md").then(r => r.text()).then(t => setChangelogHtml(DOMPurify.sanitize(marked(t) as string))); setChangelogOpen(true); }} className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors">
             <i className="fa-regular fa-clock-rotate-left" /> Changelog
           </button>
         </div>

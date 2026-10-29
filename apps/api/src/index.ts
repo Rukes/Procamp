@@ -73,13 +73,22 @@ async function migrateBookingCodes(prisma: PrismaClient) {
 const app = Fastify({ logger: true });
 
 const start = async () => {
+  const allowedOrigins = process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
+    : true;
+
   await app.register(cors, {
-    origin: true,
+    origin: allowedOrigins,
     credentials: true,
   });
 
+  if (!process.env.JWT_SECRET) {
+    console.error("[security] JWT_SECRET není nastaven! Nastavte env proměnnou JWT_SECRET.");
+    process.exit(1);
+  }
+
   await app.register(jwt, {
-    secret: process.env.JWT_SECRET || "change-this-secret-in-production",
+    secret: process.env.JWT_SECRET,
   });
 
   await app.register(rateLimit, {

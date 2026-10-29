@@ -32,7 +32,7 @@ interface Organization {
   internalNote: string | null;
   gaTrackingId?: string | null;
   goSmsClientId?: string;
-  goSmsClientSecret?: string;
+  goSmsConfigured?: boolean;
   goSmsChannelId?: number | null;
   icalEnabled?: boolean;
   _count: { camps: number; users: number };
@@ -367,7 +367,8 @@ export default function OrganizationDetailPage() {
             </div>
             <div>
               <label className="label">Client Secret</label>
-              <input className="input font-mono" type="password" autoComplete="new-password" value={(form as any).goSmsClientSecret ?? ""} onChange={(e) => setForm((f) => ({ ...f, goSmsClientSecret: e.target.value }))} placeholder="váš client_secret z GoSMS" />
+              {(form as any).goSmsConfigured && <p className="text-xs text-green-600 mb-1"><i className="fa-regular fa-circle-check mr-1" />Secret je nastaven. Vyplňte jen pokud chcete změnit.</p>}
+              <input className="input font-mono" type="password" autoComplete="new-password" value={(form as any).goSmsClientSecret ?? ""} onChange={(e) => setForm((f) => ({ ...f, goSmsClientSecret: e.target.value }))} placeholder={(form as any).goSmsConfigured ? "••••••••••••" : "váš client_secret z GoSMS"} />
             </div>
             <div>
               <label className="label">ID komunikačního kanálu</label>

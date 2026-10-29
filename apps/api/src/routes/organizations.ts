@@ -10,14 +10,15 @@ export async function organizationRoutes(app: FastifyInstance) {
     address: true, city: true, zip: true, contactPerson: true, phone: true, contactEmail: true,
     billingEmail: true, termsText: true, requireTermsAcceptance: true,
     defaultLanguageCode: true, thousandsSeparator: true, decimalSeparator: true, gaTrackingId: true,
-    goSmsClientId: true, goSmsClientSecret: true, goSmsChannelId: true, icalEnabled: true,
+    goSmsClientId: true, goSmsChannelId: true, icalEnabled: true,
     createdAt: true, updatedAt: true,
   };
 
   app.get("/mine", { preHandler: requireAuth }, async (request, reply) => {
     const { organizationId } = request.user;
     if (!organizationId) return reply.status(404).send({ error: "Nemáte přiřazenou organizaci." });
-    return app.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: ORG_PUBLIC_SELECT });
+    const org = await app.prisma.organization.findUniqueOrThrow({ where: { id: organizationId }, select: ORG_PUBLIC_SELECT });
+    return { ...org, goSmsConfigured: !!(await app.prisma.organization.findUnique({ where: { id: organizationId }, select: { goSmsClientSecret: true } }))?.goSmsClientSecret };
   });
 
   app.put("/mine", { preHandler: requireAuth }, async (request, reply) => {
@@ -35,7 +36,7 @@ export async function organizationRoutes(app: FastifyInstance) {
       const diff = diffObjects(before as Record<string, unknown>, org as Record<string, unknown>);
       await logActivity(app.prisma, { userId: request.user.sub, userEmail: request.user.email, action: "UPDATE", entity: "organization", entityId: organizationId, payload: diff });
     }
-    return org;
+    return { ...org, goSmsConfigured: !!(await app.prisma.organization.findUnique({ where: { id: organizationId }, select: { goSmsClientSecret: true } }))?.goSmsClientSecret };
   });
 
   app.get("/", { preHandler: requireSuperAdmin() }, async () => {
