@@ -140,8 +140,13 @@ export async function campRoutes(app: FastifyInstance) {
     return reply.status(201).send(camp);
   });
 
-  app.put("/:id", { preHandler: requirePermission("camps_edit") }, async (request) => {
+  app.put("/:id", { preHandler: requirePermission("camps_edit") }, async (request, reply) => {
     const { id } = request.params as { id: string };
+    const orgId = orgFilter(request);
+    const allowedCampIds = campFilter(request);
+    if (allowedCampIds && !allowedCampIds.includes(id)) return reply.status(404).send({ error: "Objekt nenalezen." });
+    const exists = await app.prisma.camp.findFirst({ where: { id, ...(orgId ? { organizationId: orgId } : {}) }, select: { id: true } });
+    if (!exists) return reply.status(404).send({ error: "Objekt nenalezen." });
     const before = await app.prisma.camp.findUnique({ where: { id }, select: { name: true, slug: true, notificationEmail: true, smtpHost: true, smtpPort: true, smtpUser: true, smtpFrom: true, smtpReplyTo: true, requiresConfirmation: true, useCustomSmtp: true, hideAdults: true, hideChildren: true, info: true, smsNotifyCustomer: true, smsNotifyAdmin: true, smsAdminPhones: true, smsTemplates: true } });
     const body = updateCampSchema.parse(request.body);
     const data: Record<string, unknown> = { ...body };
