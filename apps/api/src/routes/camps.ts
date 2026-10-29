@@ -53,7 +53,7 @@ export async function campRoutes(app: FastifyInstance) {
     const { name, slug, notificationEmail } = request.body as { name: string; slug: string; notificationEmail: string };
     const orgId = orgFilter(request);
     if (!orgId) return reply.status(400).send({ error: "Nejprve vyberte organizaci." });
-    const camp = await app.prisma.camp.create({
+    const { smtpPasswordEncrypted: _omit, ...camp } = await app.prisma.camp.create({
       data: { name, slug, notificationEmail: notificationEmail ?? "", ...(orgId ? { organizationId: orgId } : {}) },
       include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } } } },
     });
@@ -151,7 +151,7 @@ export async function campRoutes(app: FastifyInstance) {
     } else {
       delete data.smtpPassword;
     }
-    const camp = await app.prisma.camp.update({
+    const { smtpPasswordEncrypted: _omit, ...camp } = await app.prisma.camp.update({
       where: { id },
       data,
       include: { surcharges: { include: { prices: true }, orderBy: { sortOrder: "asc" } }, accommodationTypes: { include: { prices: true, nightTiers: { include: { prices: true }, orderBy: { fromNight: "asc" } } }, orderBy: { sortOrder: "asc" } }, organization: { select: { id: true, slug: true, goSmsClientId: true, icalEnabled: true } } },
